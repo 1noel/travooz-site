@@ -29,6 +29,8 @@ const Categories = () => {
     const normalizedName = categoryName.toLowerCase();
     if (normalizedName.includes("eating")) {
       navigate("/eating-out");
+    } else if (normalizedName.includes("activities")) {
+      navigate("/activities");
     } else if (
       normalizedName.includes("tour") ||
       normalizedName.includes("package")

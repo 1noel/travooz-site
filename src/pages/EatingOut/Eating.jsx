@@ -1,13 +1,83 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllEatingPlaces } from "../../api/eating";
+import { eatingPlaceServices, transformApiDataToFrontend, getAllEatingPlaces } from "../../api/eating";
 
 const Eating = () => {
     const navigate = useNavigate()
-    const eatingPlaces = getAllEatingPlaces()
+    const [eatingPlaces, setEatingPlaces] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [activeCategory, setActiveCategory] = useState("All")
+
+    // Fetch eating places from API
+    useEffect(() => {
+        const fetchEatingPlaces = async () => {
+            try {
+                setLoading(true)
+                const response = await eatingPlaceServices.fetchEatingPlaces()
+                
+                if (response.success && response.data) {
+                    // Transform API data to frontend format
+                    const transformedData = response.data.map(transformApiDataToFrontend)
+                    setEatingPlaces(transformedData)
+                } else {
+                    // Fallback to mock data if API fails
+                    console.warn("API response unsuccessful, using mock data")
+                    setEatingPlaces(getAllEatingPlaces())
+                }
+            } catch (error) {
+                console.error("Error fetching eating places:", error)
+                setError("Failed to load eating places")
+                // Fallback to mock data
+                setEatingPlaces(getAllEatingPlaces())
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchEatingPlaces()
+    }, [])
 
     const handleRestaurantClick = (place) => {
         navigate(`/restaurant/${place.id}`)
+    }
+
+    const handleCategoryClick = (category) => {
+        setActiveCategory(category)
+    }
+
+    // Filter eating places based on active category
+    const filteredEatingPlaces = activeCategory === "All" 
+        ? eatingPlaces 
+        : eatingPlaces.filter(place => 
+            place.category === activeCategory || place.cuisine === activeCategory
+        )
+
+    if (loading) {
+        return (
+            <div className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 mt-10">
+                <div className="text-center py-10">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                    <p className="mt-2 text-gray-600">Loading eating places...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 mt-10">
+                <div className="text-center py-10">
+                    <p className="text-red-600">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()} 
+                        className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -17,28 +87,48 @@ const Eating = () => {
                 Explore the best dining options around you. Whether you're craving local cuisine or international flavors, we've got you covered with top-rated restaurants and eateries.
             </p>
 
-            <div className="flex ">
-                <span className="border-b border-green-600 mr-6 cursor-pointer">All</span>
-                <span className="mr-6 cursor-pointer">Local Food</span>
-                <span className="mr-6 cursor-pointer">Street Food</span>
-                <span className="mr-6 cursor-pointer">Fast Food</span>
-                <span className="mr-6 cursor-pointer">Fine Dining</span>
+            <div className="flex flex-wrap gap-4">
+                {["All", "Local Restaurants", "Street Food", "Cafes & Bakeries", "Fast Food", "Fine Dining"].map(category => (
+                    <span 
+                        key={category}
+                        onClick={() => handleCategoryClick(category)}
+                        className={`cursor-pointer pb-1 ${
+                            activeCategory === category 
+                                ? "border-b-2 border-green-600 text-green-600" 
+                                : "hover:text-green-600"
+                        }`}
+                    >
+                        {category}
+                    </span>
+                ))}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-5">
-                {eatingPlaces.map(place => (
+                {filteredEatingPlaces.map(place => (
                     <div key={place.id} onClick={() => handleRestaurantClick(place)} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white cursor-pointer rounded">
                         <img src={place.image} alt={place.name} className="w-full h-35 object-cover" />
                         <div className="px-4 py-2">
                             <h2 className="font-semibold text-gray-800">{place.name}</h2>
-                            <p className="text-xs text-gray-600"> <i className="fa fa-location-dot"></i>{place.location}</p>
+                            <p className="text-xs text-gray-600"> <i className="fa fa-location-dot"></i> {place.location}</p>
                             <p className="text-xs text-gray-500 mt-1">{place.cuisine} • {place.category}</p>
                             <div className="flex items-center gap-2 mt-2">
+                                <div className="flex">
+                                    {[...Array(5)].map((_, i) => (
+                                        <i key={i} className={`fa fa-star text-xs ${i < place.stars ? 'text-yellow-400' : 'text-gray-300'}`}></i>
+                                    ))}
+                                </div>
+                                <span className="text-xs text-gray-500">({place.views} views)</span>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
+
+            {filteredEatingPlaces.length === 0 && (
+                <div className="text-center py-10">
+                    <p className="text-gray-600">No eating places found for "{activeCategory}"</p>
+                </div>
+            )}
         </div>
     );
 }

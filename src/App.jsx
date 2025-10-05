@@ -7,6 +7,8 @@ import Filter from "./components/Filter";
 import HotelDetails from "./pages/hotels/HotelDetails";
 import Eating from "./pages/EatingOut/Eating";
 import EatingDetails from "./pages/EatingOut/EatingDeatils";
+import Activities from "./pages/Activities/Activities";
+import ActivityDetails from "./pages/Activities/ActivityDetails";
 import TourPackages from "./pages/TourPackages/TourPackages";
 import TourPackageDetails from "./pages/TourPackages/TourPackageDetails";
 import Blogs from "./pages/Blogs/Blogs";
@@ -27,6 +29,8 @@ const App = () => {
         <Route path="/hotel/:id" element={<HotelDetails />} />
         <Route path="/eating-out" element={<Eating />} />
         <Route path="/restaurant/:id" element={<EatingDetails />} />
+        <Route path="/activities" element={<Activities />} />
+        <Route path="/activities/:id" element={<ActivityDetails />} />
         <Route path="/tour-packages" element={<TourPackages />} />
         <Route path="/tour-package/:id" element={<TourPackageDetails />} />
         <Route path="/blogs" element={<Blogs />} />

@@ -1,5 +1,98 @@
-// Eating places data - in a real application, this would come from an API
-export const eatingPlaces = [
+import { API_BASE_URL } from "../config";
+
+// Eating places API services
+export const eatingPlaceServices = {
+  // Fetch all eating places from API
+  fetchEatingPlaces: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/eating-out`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching eating places:", error);
+      throw error;
+    }
+  },
+
+  // Fetch eating place by ID
+  fetchEatingPlaceById: async (id) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/eating-out/${id}`
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching eating place:", error);
+      throw error;
+    }
+  },
+};
+
+// Helper function to transform API data to frontend format
+export const transformApiDataToFrontend = (apiEatingPlace) => {
+  // Create full image URL
+  const baseImageUrl = API_BASE_URL.replace("/api/v1", "");
+  const mainImageUrl = apiEatingPlace.main_image
+    ? `${baseImageUrl}${apiEatingPlace.main_image}`
+    : "/src/assets/images/menu.jpg";
+
+  // Generate additional placeholder images for gallery
+  const placeholderImages = [
+    "/src/assets/images/menu.jpg",
+    "/src/assets/images/restu.jpg",
+    "/images/radsn.jpg",
+    "/images/rm1.jpg",
+    "/images/rm2.jpg"
+  ];
+
+  return {
+    id: apiEatingPlace.eating_out_id,
+    name: apiEatingPlace.name,
+    location: apiEatingPlace.location,
+    price: Math.floor(Math.random() * 30) + 10, // Random price since not in API
+    image: mainImageUrl,
+    images: [mainImageUrl, ...placeholderImages.slice(0, 4)],
+    stars: apiEatingPlace.average_rating || Math.floor(Math.random() * 2) + 4, // Use API rating or random 4-5
+    views: Math.floor(Math.random() * 1000) + 200, // Random views since not in API
+    description: apiEatingPlace.description,
+    cuisine: getCuisineFromSubcategory(apiEatingPlace.subcategory_name),
+    category: apiEatingPlace.subcategory_name,
+    phone: apiEatingPlace.phone,
+    parking: apiEatingPlace.parking_available,
+    wifi: apiEatingPlace.wifi_available,
+    delivery: apiEatingPlace.delivery_support,
+    vendor: apiEatingPlace.vendor_name,
+    totalTables: apiEatingPlace.total_tables,
+    availableTables: apiEatingPlace.available_tables,
+    menuItemsCount: apiEatingPlace.menu_items_count,
+    totalReviews: apiEatingPlace.total_reviews,
+    status: apiEatingPlace.status,
+    createdAt: apiEatingPlace.created_at,
+    updatedAt: apiEatingPlace.updated_at
+  };
+};
+
+// Helper function to map subcategory names to cuisine types
+const getCuisineFromSubcategory = (subcategoryName) => {
+  const cuisineMap = {
+    "Local Restaurants": "Rwandan",
+    "Street Food": "Street Food",
+    "Cafes & Bakeries": "Continental",
+    "Fine Dining": "International",
+    "Fast Food": "Fast Food"
+  };
+  return cuisineMap[subcategoryName] || "International";
+};
+
+// Mock data for development/testing (keep for fallback)
+export const mockEatingPlaces = [
     {
         id: 1, 
         name: "Ubuntu Restaurant", 
@@ -88,12 +181,20 @@ export const eatingPlaces = [
     }
 ]
 
-// Function to get eating place by ID
+// Helper functions for mock data (use these if API is not ready)
 export const getEatingPlaceById = (id) => {
-    return eatingPlaces.find(place => place.id === parseInt(id))
+    return mockEatingPlaces.find(place => place.id === parseInt(id))
 }
 
-// Function to get all eating places
 export const getAllEatingPlaces = () => {
-    return eatingPlaces
+    return mockEatingPlaces
+}
+
+// New functions for API integration
+export const getEatingPlacesByCategory = (category) => {
+    return mockEatingPlaces.filter(place => place.category === category)
+}
+
+export const getEatingPlacesByCuisine = (cuisine) => {
+    return mockEatingPlaces.filter(place => place.cuisine === cuisine)
 }

@@ -1,23 +1,57 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getEatingPlaceById } from '../../api/eating'
+import { eatingPlaceServices, transformApiDataToFrontend, getEatingPlaceById } from '../../api/eating'
 
 const EatingDetails = () => {
     const { id } = useParams()
     const navigate = useNavigate()
     
-    // Find the restaurant based on the ID from URL parameters
-    const restaurant = getEatingPlaceById(id)
+    // State management
+    const [restaurant, setRestaurant] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [selectedImage, setSelectedImage] = useState('')
     
-    // State to manage the currently selected main image
-    const [selectedImage, setSelectedImage] = useState(restaurant?.image || '')
-    
-    // Update selected image when restaurant changes
-    React.useEffect(() => {
-        if (restaurant?.image) {
-            setSelectedImage(restaurant.image)
+    // Fetch restaurant details from API
+    useEffect(() => {
+        const fetchRestaurantDetails = async () => {
+            try {
+                setLoading(true)
+                
+                try {
+                    // First try to fetch from API
+                    const response = await eatingPlaceServices.fetchEatingPlaceById(id)
+                    
+                    if (response.success && response.data) {
+                        const transformedData = transformApiDataToFrontend(response.data)
+                        setRestaurant(transformedData)
+                        setSelectedImage(transformedData.image)
+                    } else {
+                        throw new Error("API response unsuccessful")
+                    }
+                } catch (apiError) {
+                    console.warn("API fetch failed, using mock data:", apiError)
+                    // Fallback to mock data
+                    const mockRestaurant = getEatingPlaceById(id)
+                    if (mockRestaurant) {
+                        setRestaurant(mockRestaurant)
+                        setSelectedImage(mockRestaurant.image)
+                    } else {
+                        setError("Restaurant not found")
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching restaurant details:", error)
+                setError("Failed to load restaurant details")
+            } finally {
+                setLoading(false)
+            }
         }
-    }, [restaurant])
+
+        if (id) {
+            fetchRestaurantDetails()
+        }
+    }, [id])
     
     // Mock menu items with food images - in a real app, this would come from the API
     const menuCategories = [
@@ -44,6 +78,42 @@ const EatingDetails = () => {
             ]
         }
     ]
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="max-w-6xl mx-auto p-6">
+                <div className="text-center py-20">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                    <p className="mt-4 text-gray-600">Loading restaurant details...</p>
+                </div>
+            </div>
+        )
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <div className="max-w-6xl mx-auto p-6">
+                <button 
+                    onClick={() => navigate(-1)} 
+                    className="mb-6 flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
+                >
+                    ← Back
+                </button>
+                <div className="text-center py-12">
+                    <h1 className="text-2xl font-bold text-gray-800 mb-4">Error Loading Restaurant</h1>
+                    <p className="text-gray-600 mb-4">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()} 
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        )
+    }
     
     // If restaurant not found, show error message
     if (!restaurant) {
@@ -157,10 +227,12 @@ const EatingDetails = () => {
                                 <i className="fa fa-clock text-green-600 w-5"></i>
                                 <span className="text-gray-700">Open: 10:00 AM - 10:00 PM</span>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <i className="fa fa-phone text-green-600 w-5"></i>
-                                <span className="text-gray-700">+250 123 456 789</span>
-                            </div>
+                            {restaurant.phone && (
+                                <div className="flex items-center gap-3">
+                                    <i className="fa fa-phone text-green-600 w-5"></i>
+                                    <span className="text-gray-700">{restaurant.phone}</span>
+                                </div>
+                            )}
                             <div className="flex items-center gap-3">
                                 <i className="fa fa-envelope text-green-600 w-5"></i>
                                 <span className="text-gray-700">info@{restaurant.name.toLowerCase().replace(/\s+/g, '')}.rw</span>
@@ -173,12 +245,39 @@ const EatingDetails = () => {
                     <div className="bg-white  rounded-lg p-5 shadow-sm">
                         <h4 className="text-lg font-semibold text-gray-800 mb-3">Restaurant Features</h4>
                         <div className="grid grid-cols-2 gap-2">
-                            {['Free WiFi', 'Outdoor Seating', 'Air Conditioning', 'Live Music', 'Parking Available', 'Takeaway'].map((feature, index) => (
-                                <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
+                            {restaurant.wifi && (
+                                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
                                     <span className="text-green-600 text-xs">✓</span>
-                                    <span className="text-gray-700">{feature}</span>
+                                    <span className="text-gray-700">Free WiFi</span>
                                 </div>
-                            ))}
+                            )}
+                            {restaurant.parking && (
+                                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
+                                    <span className="text-green-600 text-xs">✓</span>
+                                    <span className="text-gray-700">Parking Available</span>
+                                </div>
+                            )}
+                            {restaurant.delivery && (
+                                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
+                                    <span className="text-green-600 text-xs">✓</span>
+                                    <span className="text-gray-700">Delivery Support</span>
+                                </div>
+                            )}
+                            {restaurant.totalTables > 0 && (
+                                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
+                                    <span className="text-green-600 text-xs">✓</span>
+                                    <span className="text-gray-700">Table Service</span>
+                                </div>
+                            )}
+                            {/* Default features that are common */}
+                            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
+                                <span className="text-green-600 text-xs">✓</span>
+                                <span className="text-gray-700">Air Conditioning</span>
+                            </div>
+                            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
+                                <span className="text-green-600 text-xs">✓</span>
+                                <span className="text-gray-700">Takeaway</span>
+                            </div>
                         </div>
                     </div>
                 </div>

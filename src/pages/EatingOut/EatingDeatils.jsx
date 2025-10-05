@@ -15,6 +15,50 @@ const EatingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Navigation functions for image gallery
+  const nextImage = () => {
+    if (restaurant && restaurant.images && restaurant.images.length > 1) {
+      const nextIndex = (currentImageIndex + 1) % restaurant.images.length;
+      setCurrentImageIndex(nextIndex);
+      setSelectedImage(restaurant.images[nextIndex]);
+    }
+  };
+
+  const prevImage = () => {
+    if (restaurant && restaurant.images && restaurant.images.length > 1) {
+      const prevIndex = currentImageIndex === 0 ? restaurant.images.length - 1 : currentImageIndex - 1;
+      setCurrentImageIndex(prevIndex);
+      setSelectedImage(restaurant.images[prevIndex]);
+    }
+  };
+
+  const selectImage = (img, index) => {
+    setSelectedImage(img);
+    setCurrentImageIndex(index);
+  };
+
+  // Scroll to top when component mounts or ID changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  // Keyboard navigation for images
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'ArrowLeft') {
+        prevImage();
+      } else if (event.key === 'ArrowRight') {
+        nextImage();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [currentImageIndex, restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch restaurant details from API
   useEffect(() => {
@@ -30,6 +74,7 @@ const EatingDetails = () => {
             const transformedData = transformApiDataToFrontend(response.data);
             setRestaurant(transformedData);
             setSelectedImage(transformedData.image);
+            setCurrentImageIndex(0);
           } else {
             throw new Error("API response unsuccessful");
           }
@@ -40,6 +85,7 @@ const EatingDetails = () => {
           if (mockRestaurant) {
             setRestaurant(mockRestaurant);
             setSelectedImage(mockRestaurant.image);
+            setCurrentImageIndex(0);
           } else {
             setError("Restaurant not found");
           }
@@ -238,12 +284,35 @@ const EatingDetails = () => {
           {/* Restaurant Image Gallery */}
           <div className="mb-6">
             {/* Main Image */}
-            <div className="mb-4">
+            <div className="mb-4 relative">
               <img
                 src={selectedImage || restaurant.image}
                 alt={restaurant.name}
                 className="w-full h-[350px] object-cover rounded-lg shadow-lg"
               />
+              
+              {/* Image Navigation Arrows */}
+              {restaurant.images && restaurant.images.length > 1 && (
+                <>
+                  <button 
+                    onClick={prevImage}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
+                  >
+                    <i className="fa fa-chevron-left text-sm"></i>
+                  </button>
+                  <button 
+                    onClick={nextImage}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
+                  >
+                    <i className="fa fa-chevron-right text-sm"></i>
+                  </button>
+                  
+                  {/* Image Counter */}
+                  <div className="absolute bottom-3 right-3 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                    {currentImageIndex + 1} / {restaurant.images.length}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Image Thumbnails */}
@@ -261,7 +330,7 @@ const EatingDetails = () => {
                           ? "border-green-500 ring-2 ring-green-200 shadow-lg"
                           : "border-gray-200 hover:border-green-300 hover:shadow-md"
                       }`}
-                      onClick={() => setSelectedImage(img)}
+                      onClick={() => selectImage(img, index)}
                       title={`View photo ${index + 1}`}
                     >
                       <img

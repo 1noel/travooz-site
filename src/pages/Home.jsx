@@ -6,25 +6,22 @@ import Cities from "../components/Cities";
 import Hotels from "./hotels/Hotels";
 
 const Home = () => {
-    return (
-        <main className="">
-            <Categories />
-            <section className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 ">
-
-           {/* location */}
+  return (
+    <main className="min-h-screen">
+      <Categories />
+      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 space-y-5">
+        {/* location */}
         <div className="">
-            <Cities />
+          <Cities />
         </div>
-    
-    </section>
+      </section>
 
-        <div>
-            {/* <Hotels /> */}
-            <Hotels />
-        </div>
-
-        </main>
-    )
-}
+      <div>
+        {/* <Hotels /> */}
+        <Hotels />
+      </div>
+    </main>
+  );
+};
 
 export default Home;

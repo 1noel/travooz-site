@@ -142,20 +142,6 @@ const Categories = () => {
             <span className="font-medium">{category.name}</span>
           </button>
         ))}
-
-        {/* Blogs Button */}
-        <button
-          onClick={() => navigate("/blogs")}
-          className="px-3 py-2 lg:px-4 lg:py-2 rounded-xl bg-white shadow-sm border border-gray-100 
-                               text-green-600 hover:bg-green-50 hover:shadow-md hover:border-green-200
-                               transition-all duration-200 ease-in-out cursor-pointer
-                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50
-                               text-sm lg:text-base"
-          title="Read travel blogs and stories"
-        >
-          <i className="fa fa-blog mr-1 lg:mr-2 text-xs lg:text-sm"></i>
-          <span className="font-medium">Travel Blogs</span>
-        </button>
       </div>
     </div>
   );

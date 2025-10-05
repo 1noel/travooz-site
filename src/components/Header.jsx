@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -13,6 +14,9 @@ const Header = () => {
         <div className="hidden md:flex justify-between items-center gap-3 lg:gap-5">
           <span className="text-sm lg:text-base">RWF</span>
           <span className="text-sm lg:text-base">Help</span>
+          <Link to="/blogs" className="text-sm lg:text-base">
+            Travel Blogs
+          </Link>
           <div className="space-x-2 lg:space-x-4">
             <button className="border border-white px-3 lg:px-5 py-1 rounded-md text-sm lg:text-base">
               Register
@@ -54,6 +58,9 @@ const Header = () => {
           <div className="flex flex-col space-y-3">
             <span className="text-sm">RWF</span>
             <span className="text-sm">Help</span>
+            <Link to="/blogs" className="text-sm">
+              Travel Blogs
+            </Link>
             <div className="flex space-x-3">
               <button className="border border-white px-4 py-2 rounded-md text-sm flex-1">
                 Register

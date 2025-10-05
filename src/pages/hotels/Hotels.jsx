@@ -14,7 +14,7 @@ const Hotels = () => {
   // Function to determine hotel type based on real characteristics
   const getHotelType = (hotel) => {
     const name = hotel.name.toLowerCase();
-    
+
     // Categorize based on actual hotel names and characteristics
     if (name.includes("radisson") || name.includes("grand")) {
       return "hotels"; // Traditional hotels
@@ -81,15 +81,24 @@ const Hotels = () => {
                 <h2 className="text-base md:text-lg font-semibold text-gray-800">
                   {hotel.name}
                 </h2>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  getHotelType(hotel) === 'hotels' ? 'bg-blue-100 text-blue-800' :
-                  getHotelType(hotel) === 'resorts' ? 'bg-green-100 text-green-500' :
-                  getHotelType(hotel) === 'villas' ? 'bg-purple-100 text-purple-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {getHotelType(hotel) === 'hotels' ? 'Hotel' :
-                   getHotelType(hotel) === 'resorts' ? 'Resort' :
-                   getHotelType(hotel) === 'villas' ? 'Villa' : 'Apartment'}
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    getHotelType(hotel) === "hotels"
+                      ? "bg-blue-100 text-blue-800"
+                      : getHotelType(hotel) === "resorts"
+                      ? "bg-green-100 text-green-500"
+                      : getHotelType(hotel) === "villas"
+                      ? "bg-purple-100 text-purple-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {getHotelType(hotel) === "hotels"
+                    ? "Hotel"
+                    : getHotelType(hotel) === "resorts"
+                    ? "Resort"
+                    : getHotelType(hotel) === "villas"
+                    ? "Villa"
+                    : "Apartment"}
                 </span>
               </div>
               <p className="text-xs md:text-sm text-gray-600 mb-2">

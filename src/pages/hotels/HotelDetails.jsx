@@ -253,8 +253,8 @@ const HotelDetails = () => {
                       <div className="flex flex-wrap gap-1">
                         {room.features &&
                           room.features.slice(0, 3).map((feature, index) => (
-                            <span 
-                              key={index} 
+                            <span
+                              key={index}
                               className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded"
                             >
                               {feature}

@@ -11,6 +11,8 @@ import TourPackages from "./pages/TourPackages/TourPackages";
 import TourPackageDetails from "./pages/TourPackages/TourPackageDetails";
 import Blogs from "./pages/Blogs/Blogs";
 import BlogDetails from "./pages/Blogs/BlogDetails";
+import Cars from "./pages/Cars/Cars";
+import CarDetails from "./pages/Cars/CarDetails";
 
 const App = () => {
   return (
@@ -29,6 +31,8 @@ const App = () => {
         <Route path="/tour-package/:id" element={<TourPackageDetails />} />
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/blog/:id" element={<BlogDetails />} />
+        <Route path="/cars" element={<Cars />} />
+        <Route path="/car/:id" element={<CarDetails />} />
       </Routes>
     </div>
   );

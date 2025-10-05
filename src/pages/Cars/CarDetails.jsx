@@ -150,12 +150,20 @@ const CarDetails = () => {
               </div>
             </div>
             <div className="text-right">
-              <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold text-white ${
-                availability.color === 'green' ? 'bg-green-600' : 
-                availability.color === 'red' ? 'bg-red-600' : 'bg-yellow-600'
-              }`}>
-                {availability.status === 'available' ? 'Available Now' : 
-                 availability.status === 'unavailable' ? 'Currently Unavailable' : 'Contact for Availability'}
+              <span
+                className={`inline-block px-4 py-2 rounded-full text-sm font-semibold text-white ${
+                  availability.color === "green"
+                    ? "bg-green-600"
+                    : availability.color === "red"
+                    ? "bg-red-600"
+                    : "bg-yellow-600"
+                }`}
+              >
+                {availability.status === "available"
+                  ? "Available Now"
+                  : availability.status === "unavailable"
+                  ? "Currently Unavailable"
+                  : "Contact for Availability"}
               </span>
             </div>
           </div>
@@ -215,10 +223,12 @@ const CarDetails = () => {
         )}
 
         {/* Car Details */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
+        <div className="mb-8">
           {/* Description */}
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Description</h3>
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              Description
+            </h3>
             <div className="prose prose-gray max-w-none">
               <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                 {car.description}
@@ -226,43 +236,67 @@ const CarDetails = () => {
             </div>
           </div>
 
-          {/* Specifications */}
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Specifications</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="font-medium text-gray-600">Year</span>
-                <span className="text-gray-900">{car.year}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="font-medium text-gray-600">Transmission</span>
-                <span className="text-gray-900 capitalize">{car.transmission}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="font-medium text-gray-600">Fuel Type</span>
-                <span className="text-gray-900 capitalize">{car.fuelType}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="font-medium text-gray-600">Seats</span>
-                <span className="text-gray-900">{car.seatCapacity}</span>
-              </div>
-              {car.color && (
+          {/* Vehicle Information */}
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              Vehicle Information
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-3">
                 <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="font-medium text-gray-600">Color</span>
-                  <span className="text-gray-900 capitalize">{car.color}</span>
+                  <span className="font-medium text-gray-600">Brand</span>
+                  <span className="text-gray-900">{car.brand}</span>
                 </div>
-              )}
-              {car.mileage && (
                 <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="font-medium text-gray-600">Mileage</span>
-                  <span className="text-gray-900">{car.mileage} km</span>
+                  <span className="font-medium text-gray-600">Model</span>
+                  <span className="text-gray-900">{car.model}</span>
                 </div>
-              )}
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="font-medium text-gray-600">Year</span>
+                  <span className="text-gray-900">{car.year}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="font-medium text-gray-600">Seats</span>
+                  <span className="text-gray-900">{car.seatCapacity}</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="font-medium text-gray-600">
+                    Transmission
+                  </span>
+                  <span className="text-gray-900 capitalize">
+                    {car.transmission}
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="font-medium text-gray-600">Fuel Type</span>
+                  <span className="text-gray-900 capitalize">
+                    {car.fuelType}
+                  </span>
+                </div>
+                {car.color && (
+                  <div className="flex justify-between py-2 border-b border-gray-200">
+                    <span className="font-medium text-gray-600">Color</span>
+                    <span className="text-gray-900 capitalize">
+                      {car.color}
+                    </span>
+                  </div>
+                )}
+                {car.licensePlate && (
+                  <div className="flex justify-between py-2 border-b border-gray-200">
+                    <span className="font-medium text-gray-600">
+                      License Plate
+                    </span>
+                    <span className="text-gray-900">{car.licensePlate}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Features */}
+        {/* Features - Only show if features exist in API */}
         {car.features && Object.keys(car.features).length > 0 && (
           <div className="mb-8">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Features</h3>
@@ -270,7 +304,10 @@ const CarDetails = () => {
               {Object.entries(car.features)
                 .filter(([, value]) => value === true)
                 .map(([key]) => (
-                  <div key={key} className="flex items-center gap-2 text-gray-700">
+                  <div
+                    key={key}
+                    className="flex items-center gap-2 text-gray-700"
+                  >
                     <i className="fa fa-check text-green-600"></i>
                     <span className="capitalize">{key}</span>
                   </div>
@@ -279,20 +316,26 @@ const CarDetails = () => {
           </div>
         )}
 
-        {/* Pricing */}
+        {/* Pricing - Only show rates that exist in API */}
         <div className="bg-gray-50 rounded-xl p-6 md:p-8 mb-8">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Rental Rates</h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Daily Rate</h4>
-              <p className="text-2xl font-bold text-green-600">
-                {formatPrice(car.rates.daily)}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">per day</p>
-            </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {car.rates.daily > 0 && (
+              <div className="text-center">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  Daily Rate
+                </h4>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatPrice(car.rates.daily)}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">per day</p>
+              </div>
+            )}
             {car.rates.weekly > 0 && (
               <div className="text-center">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">Weekly Rate</h4>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  Weekly Rate
+                </h4>
                 <p className="text-2xl font-bold text-green-600">
                   {formatPrice(car.rates.weekly)}
                 </p>
@@ -301,13 +344,30 @@ const CarDetails = () => {
             )}
             {car.rates.monthly > 0 && (
               <div className="text-center">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">Monthly Rate</h4>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  Monthly Rate
+                </h4>
                 <p className="text-2xl font-bold text-green-600">
                   {formatPrice(car.rates.monthly)}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">per month</p>
               </div>
             )}
+            {car.rates.daily === 0 &&
+              car.rates.weekly === 0 &&
+              car.rates.monthly === 0 && (
+                <div className="text-center col-span-full">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                    Pricing
+                  </h4>
+                  <p className="text-xl font-bold text-green-600">
+                    Contact for Price
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Call us for rates
+                  </p>
+                </div>
+              )}
           </div>
           <div className="mt-6 text-center">
             <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm md:text-base">
@@ -363,7 +423,8 @@ const CarDetails = () => {
           Ready to Hit the Road?
         </h3>
         <p className="text-gray-600 mb-6 text-base md:text-lg">
-          Book this car now or contact us for special rates and custom arrangements.
+          Book this car now or contact us for special rates and custom
+          arrangements.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm md:text-base">

@@ -163,11 +163,13 @@ const TourPackages = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 mt-10">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 space-y-5 mt-10">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Tour Packages</h1>
-        <p className="text-gray-700 text-lg leading-relaxed">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+          Tour Packages
+        </h1>
+        <p className="text-gray-700 text-base md:text-lg leading-relaxed">
           Discover Rwanda's breathtaking landscapes, rich culture, and
           incredible wildlife through our carefully curated tour packages. From
           gorilla trekking adventures to cultural immersion experiences, find
@@ -180,19 +182,19 @@ const TourPackages = () => {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <div className="flex items-center gap-3 text-red-600">
             <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-            <span className="font-medium">{error}</span>
+            <span className="font-medium text-sm md:text-base">{error}</span>
           </div>
         </div>
       )}
 
       {/* Category Filter */}
       <div className="mb-10">
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2 md:gap-3">
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => handleCategoryChange(category)}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+              className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold transition-all duration-200 text-sm md:text-base ${
                 selectedCategory === category
                   ? "bg-green-600 text-white shadow-lg transform -translate-y-0.5"
                   : "bg-white text-gray-700 border-2 border-gray-200 hover:bg-green-50 hover:border-green-300 hover:text-green-700"
@@ -208,21 +210,21 @@ const TourPackages = () => {
       {filteredPackages.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-400 mb-6">
-            <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <div className="w-12 h-12 bg-gray-300 rounded-lg"></div>
+            <div className="w-16 h-16 md:w-24 md:h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <div className="w-8 h-8 md:w-12 md:h-12 bg-gray-300 rounded-lg"></div>
             </div>
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">
             No Tour Packages Found
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 text-sm md:text-base">
             {selectedCategory === "All"
               ? "No tour packages are currently available."
               : `No tour packages found in the "${selectedCategory}" category.`}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 mb-8">
           {filteredPackages.map((tourPackage) => (
             <div
               key={tourPackage.id}
@@ -234,25 +236,25 @@ const TourPackages = () => {
                 <img
                   src={tourPackage.mainImage || tourPackage.image}
                   alt={tourPackage.title}
-                  className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-48 md:h-56 object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1.5 rounded-full text-sm font-medium shadow-lg">
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 px-2 md:px-3 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium shadow-lg">
                   {tourPackage.duration}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
 
               {/* Package Content */}
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 {/* Category Badge */}
                 <div className="mb-3">
-                  <span className="inline-block bg-green-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                  <span className="inline-block bg-green-600 text-white text-xs font-semibold px-2 md:px-3 py-1 md:py-1.5 rounded-full">
                     {tourPackage.category}
                   </span>
                 </div>
 
                 {/* Title */}
-                <h2 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors leading-tight">
+                <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors leading-tight">
                   {tourPackage.title}
                 </h2>
 
@@ -267,7 +269,7 @@ const TourPackages = () => {
                     <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">
                       Location
                     </span>
-                    <span className="text-gray-800 font-semibold">
+                    <span className="text-gray-800 font-semibold truncate">
                       {tourPackage.location}
                     </span>
                   </div>
@@ -302,12 +304,12 @@ const TourPackages = () => {
                 {/* Additional Info Badges */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   {tourPackage.freeCancellation && (
-                    <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-3 py-1.5 rounded-full border border-green-200 font-medium">
+                    <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-green-200 font-medium">
                       Free Cancellation
                     </span>
                   )}
                   {tourPackage.reserveNowPayLater && (
-                    <span className="inline-flex items-center bg-blue-50 text-blue-700 text-xs px-3 py-1.5 rounded-full border border-blue-200 font-medium">
+                    <span className="inline-flex items-center bg-blue-50 text-blue-700 text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-blue-200 font-medium">
                       Reserve & Pay Later
                     </span>
                   )}
@@ -316,16 +318,16 @@ const TourPackages = () => {
                 {/* Price and Book Button */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <div>
-                    <span className="text-2xl font-bold text-green-600">
+                    <span className="text-xl md:text-2xl font-bold text-green-600">
                       {tourPackage.currency === "USD" ? "$" : ""}
                       {tourPackage.price.toLocaleString()}
                       {tourPackage.currency === "RWF" ? " RWF" : ""}
                     </span>
-                    <span className="text-gray-500 text-sm ml-1 block">
+                    <span className="text-gray-500 text-xs md:text-sm ml-1 block">
                       per {tourPackage.duration}
                     </span>
                   </div>
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                  <button className="bg-green-600 hover:bg-green-700 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                     View Details
                   </button>
                 </div>
@@ -336,15 +338,15 @@ const TourPackages = () => {
       )}
 
       {/* Call to Action */}
-      <div className="bg-green-50 rounded-xl p-8 text-center border border-green-100">
-        <h3 className="text-2xl font-bold text-gray-900 mb-3">
+      <div className="bg-green-50 rounded-xl p-6 md:p-8 text-center border border-green-100">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
           Can't Find What You're Looking For?
         </h3>
-        <p className="text-gray-600 mb-6 text-lg">
+        <p className="text-gray-600 mb-6 text-base md:text-lg">
           We can create custom tour packages tailored to your interests and
           budget.
         </p>
-        <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+        <button className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm md:text-base">
           Create Custom Package
         </button>
       </div>

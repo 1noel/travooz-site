@@ -116,22 +116,39 @@ const Categories = () => {
 
   // Main render
   return (
-    <div className="my-5 px-2">
-      <div className="flex justify-center gap-3 items-center flex-wrap">
+    <div className="my-5 px-4">
+      <div className="flex justify-center gap-2 lg:gap-3 items-center flex-wrap max-w-7xl mx-auto">
         {categories.map((category) => (
           <button
             key={category.id}
             onClick={() => handleCategoryClick(category.name)}
-            className="px-4 py-2 rounded-xl bg-white shadow-sm border border-gray-100 
+            className="px-3 py-2 lg:px-4 lg:py-2 rounded-xl bg-white shadow-sm border border-gray-100 
                                  text-green-600 hover:bg-green-50 hover:shadow-md hover:border-green-200
                                  transition-all duration-200 ease-in-out cursor-pointer
-                                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50
+                                 text-sm lg:text-base"
             title={category.description}
           >
-            <i className={`${category.icon} mr-2`}></i>
+            <i
+              className={`${category.icon} mr-1 lg:mr-2 text-xs lg:text-sm`}
+            ></i>
             <span className="font-medium">{category.name}</span>
           </button>
         ))}
+
+        {/* Blogs Button */}
+        <button
+          onClick={() => navigate("/blogs")}
+          className="px-3 py-2 lg:px-4 lg:py-2 rounded-xl bg-white shadow-sm border border-gray-100 
+                               text-green-600 hover:bg-green-50 hover:shadow-md hover:border-green-200
+                               transition-all duration-200 ease-in-out cursor-pointer
+                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50
+                               text-sm lg:text-base"
+          title="Read travel blogs and stories"
+        >
+          <i className="fa fa-blog mr-1 lg:mr-2 text-xs lg:text-sm"></i>
+          <span className="font-medium">Travel Blogs</span>
+        </button>
       </div>
     </div>
   );

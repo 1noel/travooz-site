@@ -284,35 +284,12 @@ const EatingDetails = () => {
           {/* Restaurant Image Gallery */}
           <div className="mb-6">
             {/* Main Image */}
-            <div className="mb-4 relative">
+            <div className="mb-4">
               <img
                 src={selectedImage || restaurant.image}
                 alt={restaurant.name}
                 className="w-full h-[350px] object-cover rounded-lg shadow-lg"
               />
-              
-              {/* Image Navigation Arrows */}
-              {restaurant.images && restaurant.images.length > 1 && (
-                <>
-                  <button 
-                    onClick={prevImage}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
-                  >
-                    <i className="fa fa-chevron-left text-sm"></i>
-                  </button>
-                  <button 
-                    onClick={nextImage}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-200"
-                  >
-                    <i className="fa fa-chevron-right text-sm"></i>
-                  </button>
-                  
-                  {/* Image Counter */}
-                  <div className="absolute bottom-3 right-3 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
-                    {currentImageIndex + 1} / {restaurant.images.length}
-                  </div>
-                </>
-              )}
             </div>
 
             {/* Image Thumbnails */}

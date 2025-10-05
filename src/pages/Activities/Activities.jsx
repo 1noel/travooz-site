@@ -174,7 +174,7 @@ const Activities = () => {
                 placeholder="Search by name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
               />
               <i className="fa fa-search absolute right-3 top-3 text-gray-400"></i>
             </div>
@@ -188,7 +188,7 @@ const Activities = () => {
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
             >
               <option value="">All Locations</option>
               {locations.map((location) => (
@@ -211,7 +211,7 @@ const Activities = () => {
               onChange={(e) =>
                 setPriceRange((prev) => ({ ...prev, min: e.target.value }))
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
             />
           </div>
 
@@ -226,7 +226,7 @@ const Activities = () => {
               onChange={(e) =>
                 setPriceRange((prev) => ({ ...prev, max: e.target.value }))
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
             />
           </div>
         </div>
@@ -275,32 +275,38 @@ const Activities = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {filteredActivities.map((activity) => (
             <div
               key={activity.id}
               onClick={() => handleActivityClick(activity.id)}
-              className="overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white cursor-pointer rounded"
+              className="overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-white cursor-pointer rounded-lg border border-gray-100 hover:border-green-200 group"
             >
-              <img
-                src={activity.mainImage}
-                alt={activity.name}
-                className="w-full h-35 object-cover"
-                onError={(e) => {
-                  e.target.src = "/images/kgl.jpg";
-                }}
-                loading="lazy"
-              />
-              <div className="px-4 py-2">
-                <h2 className="font-semibold text-gray-800">{activity.name}</h2>
-                <p className="text-xs text-gray-600">
-                  <i className="fa fa-location-dot"></i> {activity.location}
+              <div className="relative overflow-hidden">
+                <img
+                  src={activity.mainImage}
+                  alt={activity.name}
+                  className="w-full h-48 md:h-52 object-cover group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    e.target.src = "/images/kgl.jpg";
+                  }}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+              <div className="p-3 md:p-4">
+                <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-2 group-hover:text-green-600 transition-colors line-clamp-1">
+                  {activity.name}
+                </h2>
+                <p className="text-xs md:text-sm text-gray-600 mb-2 flex items-center gap-1">
+                  <i className="fa fa-location-dot text-green-600"></i>{" "}
+                  {activity.location}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mb-2">
                   {activity.subcategory} • {activity.category}
                 </p>
                 {activity.price && (
-                  <p className="text-sm font-medium text-green-600 mt-2">
+                  <p className="text-sm md:text-base font-semibold text-green-600 mt-2">
                     {new Intl.NumberFormat("en-RW", {
                       style: "currency",
                       currency: "RWF",

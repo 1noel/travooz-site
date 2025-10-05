@@ -64,9 +64,12 @@ export const transformCarData = (car) => {
   let features = {};
   if (car.features) {
     try {
-      features = typeof car.features === 'string' ? JSON.parse(car.features) : car.features;
+      features =
+        typeof car.features === "string"
+          ? JSON.parse(car.features)
+          : car.features;
     } catch (error) {
-      console.warn('Failed to parse car features:', error);
+      console.warn("Failed to parse car features:", error);
       features = {};
     }
   }
@@ -84,15 +87,23 @@ export const transformCarData = (car) => {
       16: "Luxury",
       17: "Premium",
     };
-    
+
     // Fallback based on model keywords
-    const modelLower = (model || '').toLowerCase();
-    const brandLower = (brand || '').toLowerCase();
-    
-    if (modelLower.includes('van') || modelLower.includes('bus')) return "SUV & Van";
-    if (modelLower.includes('sport') || modelLower.includes('luxury') || brandLower.includes('lexus') || brandLower.includes('acura')) return "Luxury";
-    if (modelLower.includes('pick') || modelLower.includes('truck')) return "Utility";
-    
+    const modelLower = (model || "").toLowerCase();
+    const brandLower = (brand || "").toLowerCase();
+
+    if (modelLower.includes("van") || modelLower.includes("bus"))
+      return "SUV & Van";
+    if (
+      modelLower.includes("sport") ||
+      modelLower.includes("luxury") ||
+      brandLower.includes("lexus") ||
+      brandLower.includes("acura")
+    )
+      return "Luxury";
+    if (modelLower.includes("pick") || modelLower.includes("truck"))
+      return "Utility";
+
     return categoryMap[subcategoryId] || "Economy";
   };
 
@@ -138,15 +149,15 @@ export const getAvailabilityStatus = (car) => {
 // Format price display
 export const formatPrice = (price, currency = "USD") => {
   if (!price || price === 0) return "Contact for Price";
-  
+
   const formattedPrice = new Intl.NumberFormat().format(price);
-  
+
   if (currency === "USD") {
     return `$${formattedPrice}`;
   } else if (currency === "RWF") {
     return `${formattedPrice} RWF`;
   }
-  
+
   return `$${formattedPrice}`;
 };
 

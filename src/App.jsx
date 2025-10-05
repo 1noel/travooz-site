@@ -9,12 +9,14 @@ import Eating from "./pages/EatingOut/Eating";
 import EatingDetails from "./pages/EatingOut/EatingDeatils";
 import TourPackages from "./pages/TourPackages/TourPackages";
 import TourPackageDetails from "./pages/TourPackages/TourPackageDetails";
+import Blogs from "./pages/Blogs/Blogs";
+import BlogDetails from "./pages/Blogs/BlogDetails";
 
 const App = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
-      <div className="flex justify-center">
+      <div className="flex justify-center px-4">
         <Filter />
       </div>
       <Routes>
@@ -25,6 +27,8 @@ const App = () => {
         <Route path="/restaurant/:id" element={<EatingDetails />} />
         <Route path="/tour-packages" element={<TourPackages />} />
         <Route path="/tour-package/:id" element={<TourPackageDetails />} />
+        <Route path="/blogs" element={<Blogs />} />
+        <Route path="/blog/:id" element={<BlogDetails />} />
       </Routes>
     </div>
   );

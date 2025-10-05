@@ -26,7 +26,7 @@ const HotelDetails = () => {
       <div className="max-w-6xl mx-auto p-6">
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
+          className="mb-6 flex items-center gap-2 text-green-500 hover:text-green-600 font-medium"
         >
           ← Back
         </button>
@@ -48,14 +48,14 @@ const HotelDetails = () => {
       <nav className="mb-6 flex items-center space-x-2 text-md">
         <button
           onClick={() => navigate("/")}
-          className="text-green-600 hover:text-green-800 cursor-pointer"
+          className="text-green-500 hover:text-green-600 cursor-pointer"
         >
           Home
         </button>
         <span className="text-gray-400">{">"}</span>
         <button
           onClick={() => navigate("/hotels")}
-          className="text-green-600 hover:text-green-800 cursor-pointer"
+          className="text-green-500 hover:text-green-600 cursor-pointer"
         >
           Hotels
         </button>
@@ -135,7 +135,7 @@ const HotelDetails = () => {
 
         <div className="mt-6">
           <p className="text-lg text-gray-600 mb-4">
-            <i className="fa fa-location-dot text-green-600"></i>{" "}
+            <i className="fa fa-location-dot text-green-500"></i>{" "}
             {hotel.location}
           </p>
 
@@ -164,101 +164,112 @@ const HotelDetails = () => {
           Available Rooms
         </h2>
         <div className="relative">
-          {/* Left Arrow */}
-          <button
-            onClick={() => {
-              const container = document.getElementById("rooms-container");
-              container.scrollLeft -= 300;
-            }}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white border rounded-full p-2 shadow-md hover:shadow-lg transition-shadow"
-            style={{ marginTop: "20px" }}
-          >
-            <i className="fa fa-chevron-left text-gray-600"></i>
-          </button>
+          {/* Left Arrow - Only show if there are multiple rooms */}
+          {hotel.rooms && hotel.rooms.length > 1 && (
+            <button
+              onClick={() => {
+                const container = document.getElementById("rooms-container");
+                container.scrollLeft -= 300;
+              }}
+              className="absolute left-[-12px] top-1/2 transform -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-200 group"
+            >
+              <i className="fa fa-chevron-left text-gray-600 group-hover:text-green-500 text-sm"></i>
+            </button>
+          )}
 
-          {/* Right Arrow */}
-          <button
-            onClick={() => {
-              const container = document.getElementById("rooms-container");
-              container.scrollLeft += 300;
-            }}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white border rounded-full p-2 shadow-md hover:shadow-lg transition-shadow"
-            style={{ marginTop: "20px" }}
-          >
-            <i className="fa fa-chevron-right text-gray-600"></i>
-          </button>
+          {/* Right Arrow - Only show if there are multiple rooms */}
+          {hotel.rooms && hotel.rooms.length > 1 && (
+            <button
+              onClick={() => {
+                const container = document.getElementById("rooms-container");
+                container.scrollLeft += 300;
+              }}
+              className="absolute right-[-12px] top-1/2 transform -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-200 group"
+            >
+              <i className="fa fa-chevron-right text-gray-600 group-hover:text-green-500 text-sm"></i>
+            </button>
+          )}
 
           <div
             id="rooms-container"
-            className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
+            className="flex gap-6 overflow-x-auto pb-4 px-4 scrollbar-hide scroll-smooth"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
-              WebkitScrollbar: { display: "none" },
             }}
           >
+            <style jsx>{`
+              #rooms-container::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
             {hotel.rooms &&
               hotel.rooms.map((room) => (
                 <div
                   key={room.id}
-                  className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow flex-shrink-0 w-86"
+                  className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow flex-shrink-0 w-80 border border-gray-100"
                 >
                   {/* Room Image - Top */}
-                  <div className="w-full">
+                  <div className="w-full h-48">
                     <img
                       src={room.image}
                       alt={room.name}
-                      className="w-full h-55 object-cover"
+                      className="w-full h-full object-cover"
                     />
                   </div>
 
                   {/* Room Content - Bottom */}
-                  <div className="px-5 py-2">
+                  <div className="p-4">
                     <div className="flex flex-col justify-between mb-3">
                       <h3 className="text-lg font-medium text-gray-800 mb-2">
                         {room.name}
                       </h3>
-                      <span className="text-xl font-semibold text-green-600">
-                        {room.price} RWF
+                      <span className="text-xl font-semibold text-green-500">
+                        ${room.price} /night
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-4 mb-3 text-sm">
-                      <span>
+                    <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
+                      <span className="flex items-center">
                         <i className="fa fa-expand-arrows-alt mr-1"></i>
                         {room.size}
                       </span>
-                      <span>
-                        <i className="fa fa-users mr-1"></i>Up to{" "}
-                        {room.maxGuests} guests
+                      <span className="flex items-center">
+                        <i className="fa fa-users mr-1"></i>
+                        Up to {room.maxGuests} guests
                       </span>
                     </div>
 
-                    <div>
-                      <p className="text-xs text-gray-600 mb-4">
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                         {room.description}
                       </p>
                     </div>
 
                     <div className="mb-4">
-                      <h4 className="text-sm font-semibold mb-2">
+                      <h4 className="text-sm font-semibold mb-2 text-gray-800">
                         Room Features:
                       </h4>
                       <div className="flex flex-wrap gap-1">
                         {room.features &&
-                          room.features.map((feature, index) => (
-                            <span key={index} className="text-gray-600 text-sm">
-                              • {feature}
-                              {index < room.features.length - 1 && (
-                                <span className="ml-2"></span>
-                              )}
+                          room.features.slice(0, 3).map((feature, index) => (
+                            <span 
+                              key={index} 
+                              className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded"
+                            >
+                              {feature}
                             </span>
                           ))}
+                        {room.features && room.features.length > 3 && (
+                          <span className="text-xs text-gray-500">
+                            +{room.features.length - 3} more
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    <button className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
-                      Book
+                    <button className="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 px-4 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                      Book Now
                     </button>
                   </div>
                 </div>
@@ -278,7 +289,7 @@ const HotelDetails = () => {
                 key={index}
                 className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
               >
-                <span className="text-green-600">✓</span>
+                <span className="text-green-500">✓</span>
                 <span>{amenity}</span>
               </div>
             ))}
@@ -318,7 +329,7 @@ const HotelDetails = () => {
                 <option>4+ Guests</option>
               </select>
             </div>
-            <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors">
+            <button className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition-colors">
               Check Availability
             </button>
           </div>

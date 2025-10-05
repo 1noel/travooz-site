@@ -99,7 +99,7 @@ const Eating = () => {
           <p className="text-red-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
             Try Again
           </button>
@@ -131,8 +131,8 @@ const Eating = () => {
             onClick={() => handleCategoryClick(category)}
             className={`cursor-pointer pb-1 ${
               activeCategory === category
-                ? "border-b-2 border-green-600 text-green-600"
-                : "hover:text-green-600"
+                ? "border-b-2 border-green-500 text-green-500"
+                : "hover:text-green-500"
             }`}
           >
             {category}

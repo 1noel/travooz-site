@@ -1,14 +1,40 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllHotels } from "../../api/hotelsData";
 
 const Hotels = () => {
   const navigate = useNavigate();
   const hotels = getAllHotels();
+  const [activeFilter, setActiveFilter] = useState("All");
 
   const handleHotelClick = (hotel) => {
     navigate(`/hotel/${hotel.id}`);
   };
+
+  // Function to determine hotel type based on real characteristics
+  const getHotelType = (hotel) => {
+    const name = hotel.name.toLowerCase();
+    
+    // Categorize based on actual hotel names and characteristics
+    if (name.includes("radisson") || name.includes("grand")) {
+      return "hotels"; // Traditional hotels
+    } else if (name.includes("serena")) {
+      return "resorts"; // Resort-style accommodation
+    } else if (name.includes("peace view")) {
+      return "villas"; // Villa-style lakeside accommodation
+    } else {
+      return "apartments"; // Other accommodations
+    }
+  };
+
+  // Filter hotels based on active filter
+  const filteredHotels = hotels.filter((hotel) => {
+    if (activeFilter === "All") return true;
+    return getHotelType(hotel) === activeFilter.toLowerCase();
+  });
+
+  const filterButtons = ["All", "Hotels", "Resorts", "Apartments", "Villas"];
+
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 space-y-5 mt-10">
       <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4">
@@ -17,23 +43,29 @@ const Hotels = () => {
       {/* Hotel listings will go here */}
 
       <div className="flex flex-wrap gap-4 md:gap-6 text-sm md:text-base">
-        <span className="border-b border-green-600 cursor-pointer">All</span>
-        <span className="cursor-pointer hover:text-green-600 transition-colors">
-          Hotels
-        </span>
-        <span className="cursor-pointer hover:text-green-600 transition-colors">
-          Resorts
-        </span>
-        <span className="cursor-pointer hover:text-green-600 transition-colors">
-          Apartments
-        </span>
-        <span className="cursor-pointer hover:text-green-600 transition-colors">
-          Villas
-        </span>
+        {filterButtons.map((filter) => (
+          <span
+            key={filter}
+            onClick={() => setActiveFilter(filter)}
+            className={`cursor-pointer transition-colors ${
+              activeFilter === filter
+                ? "border-b border-green-500"
+                : "hover:text-green-500"
+            }`}
+          >
+            {filter}
+          </span>
+        ))}
+      </div>
+
+      <div className="mb-4">
+        <p className="text-gray-600">
+          Showing {filteredHotels.length} of {hotels.length} places
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-5">
-        {hotels.map((hotel) => (
+        {filteredHotels.map((hotel) => (
           <div
             key={hotel.id}
             onClick={() => handleHotelClick(hotel)}
@@ -45,9 +77,21 @@ const Hotels = () => {
               className="w-full h-48 md:h-56 lg:h-64 object-cover"
             />
             <div className="p-3 md:p-4">
-              <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-2">
-                {hotel.name}
-              </h2>
+              <div className="flex justify-between items-start mb-2">
+                <h2 className="text-base md:text-lg font-semibold text-gray-800">
+                  {hotel.name}
+                </h2>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  getHotelType(hotel) === 'hotels' ? 'bg-blue-100 text-blue-800' :
+                  getHotelType(hotel) === 'resorts' ? 'bg-green-100 text-green-500' :
+                  getHotelType(hotel) === 'villas' ? 'bg-purple-100 text-purple-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {getHotelType(hotel) === 'hotels' ? 'Hotel' :
+                   getHotelType(hotel) === 'resorts' ? 'Resort' :
+                   getHotelType(hotel) === 'villas' ? 'Villa' : 'Apartment'}
+                </span>
+              </div>
               <p className="text-xs md:text-sm text-gray-600 mb-2">
                 {" "}
                 <i className="fa fa-location-dot mr-1"></i>
@@ -70,7 +114,7 @@ const Hotels = () => {
                   ({hotel.views} views)
                 </span>
               </div>
-              <p className="text-sm md:text-base font-medium text-green-600 mt-2">
+              <p className="text-sm md:text-base font-medium text-green-500 mt-2">
                 ${hotel.price} /night
               </p>
             </div>

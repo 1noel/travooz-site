@@ -5,7 +5,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-green-500 text-white p-4">
+    <header className="bg-green-500 text-white p-4 px-10">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Logo */}
         <h1 className="text-xl md:text-2xl font-bold">Travooz</h1>

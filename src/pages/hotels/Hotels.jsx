@@ -1,11 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllHotels } from "../../api/hotelsData";
+import { subcategoryServices } from "../../api/subcategories";
 
 const Hotels = () => {
   const navigate = useNavigate();
   const hotels = getAllHotels();
   const [activeFilter, setActiveFilter] = useState("All");
+  const [subcategories, setSubcategories] = useState([]);
+  const [filterButtons, setFilterButtons] = useState(["All"]);
+
+  useEffect(() => {
+    // Fetch subcategories for Rest & Stay (category_id: 4)
+    const fetchSubcategories = async () => {
+      try {
+        const response = await subcategoryServices.fetchSubcategoriesByCategory(
+          4
+        );
+        if (response.success && response.data) {
+          setSubcategories(response.data);
+          // Create dynamic filter buttons based on subcategories
+          const subcategoryNames = response.data.map((sub) => sub.name);
+          setFilterButtons([
+            "All",
+            ...subcategoryNames,
+            "Hotels",
+            "Resorts",
+            "Apartments",
+            "Villas",
+          ]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch subcategories:", error);
+        // Fallback to default filters
+        setFilterButtons(["All", "Hotels", "Resorts", "Apartments", "Villas"]);
+      }
+    };
+
+    fetchSubcategories();
+  }, []);
 
   const handleHotelClick = (hotel) => {
     navigate(`/hotel/${hotel.id}`);
@@ -30,10 +63,19 @@ const Hotels = () => {
   // Filter hotels based on active filter
   const filteredHotels = hotels.filter((hotel) => {
     if (activeFilter === "All") return true;
+
+    // Check if it matches subcategory names
+    const matchesSubcategory = subcategories.some(
+      (sub) =>
+        sub.name === activeFilter &&
+        getHotelType(hotel) === sub.name.toLowerCase()
+    );
+
+    if (matchesSubcategory) return true;
+
+    // Fallback to original hotel type matching
     return getHotelType(hotel) === activeFilter.toLowerCase();
   });
-
-  const filterButtons = ["All", "Hotels", "Resorts", "Apartments", "Villas"];
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 space-y-5 mt-10">

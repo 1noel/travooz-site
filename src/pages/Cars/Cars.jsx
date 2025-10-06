@@ -6,12 +6,49 @@ import {
   getAvailabilityStatus,
   formatPrice,
 } from "../../api/cars";
+import { subcategoryServices } from "../../api/subcategories";
 
 const Cars = () => {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [subcategories, setSubcategories] = useState([]);
+  const [categories, setCategories] = useState(["All"]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [filteredCars, setFilteredCars] = useState([]);
   const navigate = useNavigate();
+
+  // Helper function to get subcategory name by ID
+  const getSubcategoryName = React.useCallback(
+    (subcategoryId) => {
+      const subcategory = subcategories.find(
+        (sub) => sub.subcategory_id === subcategoryId
+      );
+      return subcategory ? subcategory.name : "Other";
+    },
+    [subcategories]
+  );
+
+  useEffect(() => {
+    // Fetch subcategories first
+    const fetchSubcategories = async () => {
+      try {
+        const response = await subcategoryServices.fetchSubcategoriesByCategory(
+          5
+        ); // Category 5 is Car Rental
+        if (response.success && response.data) {
+          setSubcategories(response.data);
+          // Create dynamic categories based on subcategories
+          const subcategoryNames = response.data.map((sub) => sub.name);
+          setCategories(["All", ...subcategoryNames]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch subcategories:", error);
+      }
+    };
+
+    fetchSubcategories();
+  }, []);
 
   useEffect(() => {
     const fetchCars = async () => {
@@ -22,7 +59,16 @@ const Cars = () => {
         const response = await carServices.fetchCars();
 
         if (response.success && response.data) {
-          const transformedCars = response.data.map(transformCarData);
+          const transformedCars = response.data
+            .map((car) => {
+              const transformed = transformCarData(car);
+              // Override category with actual subcategory name
+              if (transformed) {
+                transformed.category = getSubcategoryName(car.subcategory_id);
+              }
+              return transformed;
+            })
+            .filter(Boolean);
           setCars(transformedCars);
         } else {
           setError("Failed to load cars");
@@ -35,8 +81,24 @@ const Cars = () => {
       }
     };
 
-    fetchCars();
-  }, []);
+    // Only fetch cars after subcategories are loaded
+    if (subcategories.length > 0) {
+      fetchCars();
+    }
+  }, [subcategories, getSubcategoryName]);
+
+  // Filter cars based on selected category
+  useEffect(() => {
+    if (selectedCategory === "All") {
+      setFilteredCars(cars);
+    } else {
+      setFilteredCars(cars.filter((car) => car.category === selectedCategory));
+    }
+  }, [cars, selectedCategory]);
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+  };
 
   const handleCarClick = (car) => {
     navigate(`/car/${car.id}`);
@@ -109,24 +171,43 @@ const Cars = () => {
         </p>
       </div>
 
+      {/* Category Filter */}
+      <div className="mb-10">
+        <div className="flex flex-wrap gap-2 md:gap-3">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => handleCategoryChange(category)}
+              className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold transition-all duration-200 text-sm md:text-base ${
+                selectedCategory === category
+                  ? "bg-green-600 text-white shadow-lg transform -translate-y-0.5"
+                  : "bg-white text-gray-700 border-2 border-gray-200 hover:bg-green-50 hover:border-green-300 hover:text-green-700"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Featured Car */}
-      {cars.length > 0 && (
+      {filteredCars.length > 0 && (
         <div className="mb-10 md:mb-14">
           <div
-            onClick={() => handleCarClick(cars[0])}
+            onClick={() => handleCarClick(filteredCars[0])}
             className="relative cursor-pointer group overflow-hidden rounded-xl shadow-lg bg-white border border-gray-100 hover:border-green-200"
           >
             <div className="grid lg:grid-cols-2 items-center">
               <div className="relative h-64 md:h-72 lg:h-80 overflow-hidden">
                 <img
-                  src={cars[0].mainImage}
-                  alt={`${cars[0].brand} ${cars[0].model}`}
+                  src={filteredCars[0].mainImage}
+                  alt={`${filteredCars[0].brand} ${filteredCars[0].model}`}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="absolute top-4 right-4">
                   {(() => {
-                    const availability = getAvailabilityStatus(cars[0]);
+                    const availability = getAvailabilityStatus(filteredCars[0]);
                     return (
                       <span
                         className={`px-3 py-1.5 rounded-full text-sm font-semibold text-white ${
@@ -152,19 +233,23 @@ const Cars = () => {
                   <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold">
                     Featured Vehicle
                   </span>
+                  <span className="bg-blue-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold">
+                    {filteredCars[0].category}
+                  </span>
                 </div>
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors leading-tight">
-                  {cars[0].brand} {cars[0].model}
+                  {filteredCars[0].brand} {filteredCars[0].model}
                 </h2>
                 <p className="text-gray-600 text-sm mb-4">
-                  {cars[0].year} • {cars[0].transmission} • {cars[0].fuelType}
+                  {filteredCars[0].year} • {filteredCars[0].transmission} •{" "}
+                  {filteredCars[0].fuelType}
                 </p>
                 <p className="text-gray-600 leading-relaxed mb-6 line-clamp-3 text-sm md:text-base">
-                  {cars[0].description}
+                  {filteredCars[0].description}
                 </p>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="text-xl md:text-2xl font-bold text-green-600">
-                    {formatPrice(cars[0].rates.daily)}/day
+                    {formatPrice(filteredCars[0].rates.daily)}/day
                   </div>
                   <button className="bg-green-600 hover:bg-green-700 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base">
                     View Details
@@ -177,7 +262,7 @@ const Cars = () => {
       )}
 
       {/* Cars Grid */}
-      {cars.length === 0 ? (
+      {filteredCars.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-400 mb-6">
             <div className="w-16 h-16 md:w-24 md:h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -188,12 +273,14 @@ const Cars = () => {
             No Cars Available
           </h3>
           <p className="text-gray-500 text-sm md:text-base">
-            No cars are currently available for rent.
+            {selectedCategory === "All"
+              ? "No cars are currently available for rent."
+              : `No cars found in the "${selectedCategory}" category.`}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 mb-8">
-          {cars.slice(1).map((car) => (
+          {filteredCars.slice(1).map((car) => (
             <div
               key={car.id}
               onClick={() => handleCarClick(car)}
@@ -233,6 +320,13 @@ const Cars = () => {
 
               {/* Car Content */}
               <div className="p-4 md:p-6">
+                {/* Category Badge */}
+                <div className="mb-3">
+                  <span className="inline-block bg-blue-600 text-white text-xs font-semibold px-2 md:px-3 py-1 md:py-1.5 rounded-full">
+                    {car.category}
+                  </span>
+                </div>
+
                 {/* Title */}
                 <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors leading-tight">
                   {car.brand} {car.model}

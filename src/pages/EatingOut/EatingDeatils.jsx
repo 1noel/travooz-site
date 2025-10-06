@@ -212,14 +212,14 @@ const EatingDetails = () => {
         >
           Home
         </button>
-        <span className="text-gray-400">{">"}</span>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/eating-out")}
           className="text-green-600 hover:text-green-800 cursor-pointer"
         >
           Eating Out
         </button>
-        <span className="text-gray-400">{">"}</span>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600">{restaurant.name}</span>
       </nav>
 

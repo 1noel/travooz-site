@@ -4,17 +4,7 @@ import {
   tourPackageServices,
   getAllTourPackages,
 } from "../../api/tourPackages";
-
-// Helper function to map subcategory IDs to categories
-const getCategoryFromSubcategoryId = (subcategoryId) => {
-  const categoryMap = {
-    18: "Wildlife & Nature",
-    19: "Wildlife & Nature",
-    20: "Cultural & Historical",
-    21: "Adventure & Water Sports",
-  };
-  return categoryMap[subcategoryId] || "Adventure & Water Sports";
-};
+import { subcategoryServices } from "../../api/subcategories";
 
 const TourPackages = () => {
   const navigate = useNavigate();
@@ -23,13 +13,40 @@ const TourPackages = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [filteredPackages, setFilteredPackages] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [categories, setCategories] = useState(["All"]);
 
-  const categories = [
-    "All",
-    "Wildlife & Nature",
-    "Adventure & Water Sports",
-    "Cultural & Historical",
-  ];
+  // Helper function to get subcategory name by ID
+  const getSubcategoryName = React.useCallback(
+    (subcategoryId) => {
+      const subcategory = subcategories.find(
+        (sub) => sub.subcategory_id === subcategoryId
+      );
+      return subcategory ? subcategory.name : "Other";
+    },
+    [subcategories]
+  );
+
+  useEffect(() => {
+    // Fetch subcategories first
+    const fetchSubcategories = async () => {
+      try {
+        const response = await subcategoryServices.fetchSubcategoriesByCategory(
+          6
+        ); // Category 6 is Tour Packages
+        if (response.success && response.data) {
+          setSubcategories(response.data);
+          // Create dynamic categories based on subcategories
+          const subcategoryNames = response.data.map((sub) => sub.name);
+          setCategories(["All", ...subcategoryNames]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch subcategories:", error);
+      }
+    };
+
+    fetchSubcategories();
+  }, []);
 
   useEffect(() => {
     const fetchTourPackages = async () => {
@@ -90,7 +107,7 @@ const TourPackages = () => {
               : [],
             meetingPoint: pkg.meeting_point_details,
             thingsToKnow: pkg.things_to_know,
-            category: getCategoryFromSubcategoryId(pkg.subcategory_id),
+            category: getSubcategoryName(pkg.subcategory_id),
           }));
           setTourPackages(transformedPackages);
         } else {
@@ -108,8 +125,11 @@ const TourPackages = () => {
       }
     };
 
-    fetchTourPackages();
-  }, []);
+    // Only fetch tour packages after subcategories are loaded
+    if (subcategories.length > 0) {
+      fetchTourPackages();
+    }
+  }, [subcategories, getSubcategoryName]);
 
   // Filter packages based on selected category
   useEffect(() => {
@@ -169,12 +189,6 @@ const TourPackages = () => {
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
           Tour Packages
         </h1>
-        <p className="text-gray-700 text-base md:text-lg leading-relaxed">
-          Discover Rwanda's breathtaking landscapes, rich culture, and
-          incredible wildlife through our carefully curated tour packages. From
-          gorilla trekking adventures to cultural immersion experiences, find
-          the perfect journey for your interests and budget.
-        </p>
       </div>
 
       {/* Error message */}
@@ -336,20 +350,6 @@ const TourPackages = () => {
           ))}
         </div>
       )}
-
-      {/* Call to Action */}
-      <div className="bg-green-50 rounded-xl p-6 md:p-8 text-center border border-green-100">
-        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
-          Can't Find What You're Looking For?
-        </h3>
-        <p className="text-gray-600 mb-6 text-base md:text-lg">
-          We can create custom tour packages tailored to your interests and
-          budget.
-        </p>
-        <button className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm md:text-base">
-          Create Custom Package
-        </button>
-      </div>
     </div>
   );
 };

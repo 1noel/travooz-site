@@ -111,11 +111,6 @@ const Eating = () => {
   return (
     <div className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 mt-10">
       <h1 className="text-2xl font-bold mb-4">Eating Out</h1>
-      <p className="text-gray-700 mb-6">
-        Explore the best dining options around you. Whether you're craving local
-        cuisine or international flavors, we've got you covered with top-rated
-        restaurants and eateries.
-      </p>
 
       <div className="flex flex-wrap gap-4">
         {[
@@ -129,7 +124,7 @@ const Eating = () => {
           <span
             key={category}
             onClick={() => handleCategoryClick(category)}
-            className={`cursor-pointer pb-1 ${
+            className={`cursor-pointer pb-1 transition-colors ${
               activeCategory === category
                 ? "border-b-2 border-green-500 text-green-500"
                 : "hover:text-green-500"
@@ -140,7 +135,7 @@ const Eating = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
         {filteredEatingPlaces.map((place) => (
           <div
             key={place.id}
@@ -150,7 +145,7 @@ const Eating = () => {
             <img
               src={place.image}
               alt={place.name}
-              className="w-full h-35 object-cover"
+              className="w-full h-48 md:h-56 object-cover"
             />
             <div className="px-4 py-2">
               <h2 className="font-semibold text-gray-800">{place.name}</h2>
@@ -159,7 +154,7 @@ const Eating = () => {
                 <i className="fa fa-location-dot"></i> {place.location}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                {place.cuisine} • {place.category}
+                {place.cuisine} / {place.category}
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <div className="flex">

@@ -148,7 +148,7 @@ const TourPackages = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 mt-10">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-3/4 mb-6"></div>
@@ -178,7 +178,7 @@ const TourPackages = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 space-y-5 mt-10">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
@@ -247,21 +247,11 @@ const TourPackages = () => {
                   alt={tourPackage.title}
                   className="w-full h-48 md:h-56 object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 px-2 md:px-3 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium shadow-lg">
-                  {tourPackage.duration}
-                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
 
               {/* Package Content */}
               <div className="p-4 md:p-6">
-                {/* Category Badge */}
-                <div className="mb-3">
-                  <span className="inline-block bg-green-600 text-white text-xs font-semibold px-2 md:px-3 py-1 md:py-1.5 rounded-full">
-                    {tourPackage.category}
-                  </span>
-                </div>
-
                 {/* Title */}
                 <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors leading-tight">
                   {tourPackage.title}
@@ -272,68 +262,13 @@ const TourPackages = () => {
                   {tourPackage.description}
                 </p>
 
-                {/* Details */}
-                <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">
-                      Location
-                    </span>
-                    <span className="text-gray-800 font-semibold truncate">
-                      {tourPackage.location}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">
-                      Duration
-                    </span>
-                    <span className="text-gray-800 font-semibold">
-                      {tourPackage.duration}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">
-                      Group Size
-                    </span>
-                    <span className="text-gray-800 font-semibold">
-                      {tourPackage.groupSize}
-                    </span>
-                  </div>
-                  {tourPackage.instructorLanguage && (
-                    <div className="flex flex-col">
-                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">
-                        Language
-                      </span>
-                      <span className="text-gray-800 font-semibold truncate">
-                        {tourPackage.instructorLanguage}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Additional Info Badges */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {tourPackage.freeCancellation && (
-                    <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-green-200 font-medium">
-                      Free Cancellation
-                    </span>
-                  )}
-                  {tourPackage.reserveNowPayLater && (
-                    <span className="inline-flex items-center bg-blue-50 text-blue-700 text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-blue-200 font-medium">
-                      Reserve & Pay Later
-                    </span>
-                  )}
-                </div>
-
                 {/* Price and Book Button */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between pt-4">
                   <div>
                     <span className="text-xl md:text-2xl font-bold text-green-600">
                       {tourPackage.currency === "USD" ? "$" : ""}
                       {tourPackage.price.toLocaleString()}
                       {tourPackage.currency === "RWF" ? " RWF" : ""}
-                    </span>
-                    <span className="text-gray-500 text-xs md:text-sm ml-1 block">
-                      per {tourPackage.duration}
                     </span>
                   </div>
                   <button className="bg-green-600 hover:bg-green-700 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">

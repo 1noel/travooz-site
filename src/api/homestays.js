@@ -66,8 +66,9 @@ export const transformHomestayData = (homestay) => {
       11: "Hotels",
       12: "Motels",
       13: "Homestays",
+      // Add more mappings if you know other subcategory IDs
     };
-    return categoryMap[subcategoryId] || "Homestays";
+    return categoryMap[subcategoryId] || "Accommodation";
   };
 
   const transformedData = {

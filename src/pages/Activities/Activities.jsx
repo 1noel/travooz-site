@@ -140,7 +140,7 @@ const Activities = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
         {/* Header skeleton */}
         <div className="text-center mb-8 animate-pulse">
           <div className="h-8 bg-gray-300 rounded w-1/3 mx-auto mb-2"></div>
@@ -186,7 +186,7 @@ const Activities = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
         <div className="text-center">
           <div className="text-red-500 text-xl mb-4">
             <i className="fa fa-exclamation-triangle"></i>
@@ -207,7 +207,7 @@ const Activities = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">

@@ -66,7 +66,7 @@ const Eating = () => {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 mt-10">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-3/4 mb-6"></div>
@@ -98,7 +98,7 @@ const Eating = () => {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 mt-10">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
         <div className="text-center py-10">
           <p className="text-red-600">{error}</p>
           <button
@@ -113,7 +113,7 @@ const Eating = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 mt-10">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
       <h1 className="text-2xl font-bold mb-4">Eating Out</h1>
 
       <div className="flex flex-wrap gap-4">

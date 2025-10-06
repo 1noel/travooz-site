@@ -9,7 +9,7 @@ const Home = () => {
   return (
     <main className="min-h-screen">
       <Categories />
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 space-y-5">
+      <section className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5">
         {/* location */}
         <div className="">
           <Cities />

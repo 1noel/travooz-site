@@ -14,11 +14,14 @@ const Categories = () => {
       Activities: "fa fa-person-hiking",
       "Eating Out": "fa fa-utensils",
       "Nightlife and entertainment": "fa fa-cocktail",
-      "Rest & Stay": "fa fa-bed",
+      "Home Stays": "fa fa-bed",
+      "Rest & Stay": "fa fa-bed", // Keep for backward compatibility
       "Car Rental": "fa fa-car",
       "Tour Packages": "fa fa-map-marked-alt",
       Hospital: "fa fa-hospital",
       "Forex Bureau": "fa fa-exchange-alt",
+      Other: "fa fa-ellipsis-h",
+      other: "fa fa-ellipsis-h",
     };
     return iconMap[categoryName] || "fa fa-tag";
   };
@@ -44,7 +47,9 @@ const Categories = () => {
     } else if (
       normalizedName.includes("rest") ||
       normalizedName.includes("stay") ||
-      normalizedName.includes("hotel")
+      normalizedName.includes("hotel") ||
+      normalizedName.includes("home stays") ||
+      normalizedName.includes("homestays")
     ) {
       navigate("/hotels");
     }

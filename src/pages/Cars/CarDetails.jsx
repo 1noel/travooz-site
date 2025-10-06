@@ -142,23 +142,6 @@ const CarDetails = () => {
             />
           </div>
 
-          {/* Car Specs - Moved below image */}
-          <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-4">
-            <span className="font-semibold">{car.year}</span>
-            <span>•</span>
-            <span>{car.transmission}</span>
-            <span>•</span>
-            <span>{car.fuelType}</span>
-            <span>•</span>
-            <span>{car.seatCapacity} seats</span>
-          </div>
-
-          {/* Location - Moved below image */}
-          <div className="flex items-center gap-2 text-gray-600 mb-8">
-            <i className="fa fa-location-dot text-green-600"></i>
-            <span className="font-medium">{car.location}</span>
-          </div>
-
           {/* Image Gallery */}
           {car.images && car.images.length > 1 && (
             <div className="mb-8">

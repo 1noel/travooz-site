@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  carServices,
-  transformCarData,
-  getAvailabilityStatus,
-  formatPrice,
-} from "../../api/cars";
+import { carServices, transformCarData, formatPrice } from "../../api/cars";
 import { subcategoryServices } from "../../api/subcategories";
 
 const Cars = () => {

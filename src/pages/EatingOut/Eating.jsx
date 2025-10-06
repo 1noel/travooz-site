@@ -157,19 +157,23 @@ const Eating = () => {
                 {place.cuisine} / {place.category}
               </p>
               <div className="flex items-center gap-2 mt-2">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <i
-                      key={i}
-                      className={`fa fa-star text-xs ${
-                        i < place.stars ? "text-yellow-400" : "text-gray-300"
-                      }`}
-                    ></i>
-                  ))}
-                </div>
-                <span className="text-xs text-gray-500">
-                  ({place.views} views)
-                </span>
+                {place.stars && (
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <i
+                        key={i}
+                        className={`fa fa-star text-xs ${
+                          i < place.stars ? "text-yellow-400" : "text-gray-300"
+                        }`}
+                      ></i>
+                    ))}
+                  </div>
+                )}
+                {place.views && (
+                  <span className="text-xs text-gray-500">
+                    ({place.views} views)
+                  </span>
+                )}
               </div>
             </div>
           </div>

@@ -1,10 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { homestayServices, transformHomestayData } from "../../api/homestays";
 import { getHotelById } from "../../api/hotelsData";
 
 const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [hotel, setHotel] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedImage, setSelectedImage] = useState("");
+
+  useEffect(() => {
+    const fetchHotelDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Try to fetch from homestays API first
+        const response = await homestayServices.getHomestayById(id);
+
+        if (response.success && response.data) {
+          const transformedHomestay = transformHomestayData(response.data);
+          setHotel(transformedHomestay);
+          setSelectedImage(transformedHomestay.mainImage || "");
+        } else {
+          // Fallback to static data if API fails
+          const fallbackHotel = getHotelById(id);
+          if (fallbackHotel) {
+            setHotel(fallbackHotel);
+            setSelectedImage(fallbackHotel.image || "");
+          } else {
+            setError("Hotel not found");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching hotel details:", err);
+        // Try fallback data
+        const fallbackHotel = getHotelById(id);
+        if (fallbackHotel) {
+          setHotel(fallbackHotel);
+          setSelectedImage(fallbackHotel.image || "");
+        } else {
+          setError("Failed to load hotel details");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHotelDetails();
+  }, [id]);
+
   const amenities = [
     "Free WiFi",
     "Swimming Pool",
@@ -14,11 +61,49 @@ const HotelDetails = () => {
     "Room Service",
   ];
 
-  // Find the hotel based on the ID from URL parameters
-  const hotel = getHotelById(id);
+  // Loading state
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="h-96 bg-gray-200 rounded"></div>
+            <div className="space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-20 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // State to manage the currently selected image
-  const [selectedImage, setSelectedImage] = useState(hotel?.image || "");
+  // Error state
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center gap-2 text-green-500 hover:text-green-600 font-medium"
+        >
+          ← Back
+        </button>
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Error</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // If hotel not found, show error message
   if (!hotel) {
@@ -141,19 +226,26 @@ const HotelDetails = () => {
 
           {/* Rating and Views */}
           <div className="flex items-center gap-4 mb-4">
-            <div className="flex text-yellow-500 text-xl">
-              {[...Array(5)].map((_, i) => (
-                <span
-                  key={i}
-                  className={
-                    i < hotel.stars ? "text-yellow-500" : "text-gray-300"
-                  }
-                >
-                  ★
-                </span>
-              ))}
-            </div>
-            <span className="text-gray-600">({hotel.stars} stars)</span>
+            {hotel.stars && (
+              <>
+                <div className="flex text-yellow-500 text-xl">
+                  {[...Array(5)].map((_, i) => (
+                    <span
+                      key={i}
+                      className={
+                        i < hotel.stars ? "text-yellow-500" : "text-gray-300"
+                      }
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <span className="text-gray-600">({hotel.stars} stars)</span>
+              </>
+            )}
+            {hotel.views && (
+              <span className="text-gray-600">{hotel.views} views</span>
+            )}
           </div>
         </div>
       </div>
@@ -224,20 +316,26 @@ const HotelDetails = () => {
                       <h3 className="text-lg font-medium text-gray-800 mb-2">
                         {room.name}
                       </h3>
-                      <span className="text-xl font-semibold text-green-500">
-                        ${room.price} /night
-                      </span>
+                      {room.price && (
+                        <span className="text-xl font-semibold text-green-500">
+                          ${room.price} /night
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
-                      <span className="flex items-center">
-                        <i className="fa fa-expand-arrows-alt mr-1"></i>
-                        {room.size}
-                      </span>
-                      <span className="flex items-center">
-                        <i className="fa fa-users mr-1"></i>
-                        Up to {room.maxGuests} guests
-                      </span>
+                      {room.size && (
+                        <span className="flex items-center">
+                          <i className="fa fa-expand-arrows-alt mr-1"></i>
+                          {room.size}
+                        </span>
+                      )}
+                      {room.maxGuests && (
+                        <span className="flex items-center">
+                          <i className="fa fa-users mr-1"></i>
+                          Up to {room.maxGuests} guests
+                        </span>
+                      )}
                     </div>
 
                     <div className="mb-4">

@@ -73,17 +73,11 @@ export const transformApiDataToFrontend = (apiEatingPlace) => {
   if (apiEatingPlace.phone) {
     transformedData.phone = apiEatingPlace.phone;
   }
-  if (apiEatingPlace.price !== undefined && apiEatingPlace.price !== null) {
-    transformedData.price = apiEatingPlace.price;
-  }
   if (
     apiEatingPlace.average_rating !== undefined &&
     apiEatingPlace.average_rating !== null
   ) {
     transformedData.stars = apiEatingPlace.average_rating;
-  }
-  if (apiEatingPlace.views !== undefined && apiEatingPlace.views !== null) {
-    transformedData.views = apiEatingPlace.views;
   }
   if (apiEatingPlace.parking_available !== undefined) {
     transformedData.parking = apiEatingPlace.parking_available;
@@ -110,7 +104,7 @@ const getCuisineFromSubcategory = (subcategoryName) => {
   return cuisineMap[subcategoryName] || "International";
 };
 
-// Mock data for development/testing (keep for fallback)
+// Mock data for development/testing
 export const mockEatingPlaces = [
   {
     id: 1,
@@ -206,16 +200,7 @@ export const mockEatingPlaces = [
   },
 ];
 
-// Helper functions for mock data (use these if API is not ready)
-export const getEatingPlaceById = (id) => {
-  return mockEatingPlaces.find((place) => place.id === parseInt(id));
-};
-
-export const getAllEatingPlaces = () => {
-  return mockEatingPlaces;
-};
-
-// New functions for API integration
+// API integration functions for categories and cuisines
 export const getEatingPlacesByCategory = (category) => {
   return mockEatingPlaces.filter((place) => place.category === category);
 };

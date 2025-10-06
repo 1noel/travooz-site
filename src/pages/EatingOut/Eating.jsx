@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   eatingPlaceServices,
   transformApiDataToFrontend,
-  getAllEatingPlaces,
 } from "../../api/eating";
 
 const Eating = () => {
@@ -12,6 +11,13 @@ const Eating = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState("All");
+  const [availableCategories, setAvailableCategories] = useState(["All"]);
+
+  // Get unique categories from API data
+  const getUniqueCategories = (places) => {
+    const categories = places.map((place) => place.category).filter(Boolean);
+    return ["All", ...new Set(categories)];
+  };
 
   // Fetch eating places from API
   useEffect(() => {
@@ -24,16 +30,14 @@ const Eating = () => {
           // Transform API data to frontend format
           const transformedData = response.data.map(transformApiDataToFrontend);
           setEatingPlaces(transformedData);
+          // Set available categories from API data
+          setAvailableCategories(getUniqueCategories(transformedData));
         } else {
-          // Fallback to mock data if API fails
-          console.warn("API response unsuccessful, using mock data");
-          setEatingPlaces(getAllEatingPlaces());
+          setError("Failed to load eating places");
         }
       } catch (error) {
         console.error("Error fetching eating places:", error);
         setError("Failed to load eating places");
-        // Fallback to mock data
-        setEatingPlaces(getAllEatingPlaces());
       } finally {
         setLoading(false);
       }
@@ -113,14 +117,7 @@ const Eating = () => {
       <h1 className="text-2xl font-bold mb-4">Eating Out</h1>
 
       <div className="flex flex-wrap gap-4">
-        {[
-          "All",
-          "Local Restaurants",
-          "Street Food",
-          "Cafes & Bakeries",
-          "Fast Food",
-          "Fine Dining",
-        ].map((category) => (
+        {availableCategories.map((category) => (
           <span
             key={category}
             onClick={() => handleCategoryClick(category)}

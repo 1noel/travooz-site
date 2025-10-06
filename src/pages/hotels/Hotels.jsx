@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllHotels } from "../../api/hotelsData";
 import { subcategoryServices } from "../../api/subcategories";
 import { homestayServices, transformHomestayData } from "../../api/homestays";
 
@@ -39,8 +38,6 @@ const Hotels = () => {
         }
       } catch (error) {
         console.error("Failed to fetch subcategories:", error);
-        // Fallback to default categories
-        setCategories(["All", "Hotels", "Motels", "Homestays"]);
       }
     };
 
@@ -71,15 +68,11 @@ const Hotels = () => {
             .filter(Boolean);
           setHotels(transformedHomestays);
         } else {
-          // Fallback to mock data if API fails
-          console.warn("API response unsuccessful, using mock data");
-          setHotels(getAllHotels());
+          setError("Failed to load homestays");
         }
       } catch (err) {
         console.error("Error fetching homestays:", err);
         setError("Failed to load homestays");
-        // Fallback to mock data
-        setHotels(getAllHotels());
       } finally {
         setLoading(false);
       }
@@ -159,11 +152,6 @@ const Hotels = () => {
       <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
         Rest & Stay
       </h1>
-      <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-6">
-        Discover comfortable accommodations for your stay in Rwanda. From luxury
-        hotels to cozy homestays, find the perfect place to rest and recharge
-        during your journey.
-      </p>
 
       {/* Category Filter */}
       <div className="mb-10">
@@ -232,17 +220,7 @@ const Hotels = () => {
                     ))}
                   </div>
                 )}
-                {hotel.views && (
-                  <span className="text-xs md:text-sm text-gray-500">
-                    ({hotel.views} views)
-                  </span>
-                )}
               </div>
-              {hotel.price && (
-                <p className="text-sm md:text-base font-medium text-green-500 mt-2">
-                  ${hotel.price} /night
-                </p>
-              )}
               {hotel.phone && (
                 <p className="text-xs md:text-sm text-gray-600 mt-2">
                   <i className="fa fa-phone mr-1"></i>

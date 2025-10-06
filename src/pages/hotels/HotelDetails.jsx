@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { homestayServices, transformHomestayData } from "../../api/homestays";
-import { getHotelById } from "../../api/hotelsData";
 
 const HotelDetails = () => {
   const { id } = useParams();
@@ -25,25 +24,11 @@ const HotelDetails = () => {
           setHotel(transformedHomestay);
           setSelectedImage(transformedHomestay.mainImage || "");
         } else {
-          // Fallback to static data if API fails
-          const fallbackHotel = getHotelById(id);
-          if (fallbackHotel) {
-            setHotel(fallbackHotel);
-            setSelectedImage(fallbackHotel.image || "");
-          } else {
-            setError("Hotel not found");
-          }
+          setError("Homestay not found");
         }
       } catch (err) {
         console.error("Error fetching hotel details:", err);
-        // Try fallback data
-        const fallbackHotel = getHotelById(id);
-        if (fallbackHotel) {
-          setHotel(fallbackHotel);
-          setSelectedImage(fallbackHotel.image || "");
-        } else {
-          setError("Failed to load hotel details");
-        }
+        setError("Failed to load homestay details");
       } finally {
         setLoading(false);
       }
@@ -52,14 +37,41 @@ const HotelDetails = () => {
     fetchHotelDetails();
   }, [id]);
 
-  const amenities = [
-    "Free WiFi",
-    "Swimming Pool",
-    "Restaurant",
-    "Gym",
-    "Spa",
-    "Room Service",
-  ];
+  // Only show amenities/features that exist in the API response
+  const getAvailableAmenities = (hotel) => {
+    if (!hotel || !hotel.features) return [];
+
+    const amenityMap = {
+      freeWifi: "Free WiFi",
+      parking: "Parking",
+      swimmingPool: "Swimming Pool",
+      restaurant: "Restaurant",
+      spa: "Spa",
+      fitnessCenter: "Fitness Center",
+      roomService: "Room Service",
+      barLounge: "Bar & Lounge",
+      airConditioning: "Air Conditioning",
+      laundryService: "Laundry Service",
+      airportShuttle: "Airport Shuttle",
+      breakfastIncluded: "Breakfast Included",
+      petFriendly: "Pet Friendly",
+      familyRooms: "Family Rooms",
+      nonSmokingRooms: "Non-Smoking Rooms",
+      kitchenFacilities: "Kitchen Facilities",
+      balcony: "Balcony",
+      oceanView: "Ocean View",
+      gardenView: "Garden View",
+      wheelchairAccessible: "Wheelchair Accessible",
+      meetingRooms: "Meeting Rooms",
+      conferenceFacilities: "Conference Facilities",
+      security24h: "24/7 Security",
+    };
+
+    return Object.entries(hotel.features)
+      .filter(([, value]) => value === true || value === 1)
+      .map(([key]) => amenityMap[key])
+      .filter(Boolean);
+  };
 
   // Loading state
   if (loading) {
@@ -224,7 +236,7 @@ const HotelDetails = () => {
             {hotel.location}
           </p>
 
-          {/* Rating and Views */}
+          {/* Rating */}
           <div className="flex items-center gap-4 mb-4">
             {hotel.stars && (
               <>
@@ -243,156 +255,67 @@ const HotelDetails = () => {
                 <span className="text-gray-600">({hotel.stars} stars)</span>
               </>
             )}
-            {hotel.views && (
-              <span className="text-gray-600">{hotel.views} views</span>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Rooms Section */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          Available Rooms
-        </h2>
-        <div className="relative">
-          {/* Left Arrow - Only show if there are multiple rooms */}
-          {hotel.rooms && hotel.rooms.length > 1 && (
-            <button
-              onClick={() => {
-                const container = document.getElementById("rooms-container");
-                container.scrollLeft -= 300;
-              }}
-              className="absolute left-[-12px] top-1/2 transform -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-200 group"
-            >
-              <i className="fa fa-chevron-left text-gray-600 group-hover:text-green-500 text-sm"></i>
-            </button>
-          )}
-
-          {/* Right Arrow - Only show if there are multiple rooms */}
-          {hotel.rooms && hotel.rooms.length > 1 && (
-            <button
-              onClick={() => {
-                const container = document.getElementById("rooms-container");
-                container.scrollLeft += 300;
-              }}
-              className="absolute right-[-12px] top-1/2 transform -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-200 group"
-            >
-              <i className="fa fa-chevron-right text-gray-600 group-hover:text-green-500 text-sm"></i>
-            </button>
-          )}
-
-          <div
-            id="rooms-container"
-            className="flex gap-6 overflow-x-auto pb-4 px-4 scrollbar-hide scroll-smooth"
-            style={{
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}
-          >
-            <style jsx>{`
-              #rooms-container::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
-            {hotel.rooms &&
-              hotel.rooms.map((room) => (
-                <div
-                  key={room.id}
-                  className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow flex-shrink-0 w-80 border border-gray-100"
-                >
-                  {/* Room Image - Top */}
-                  <div className="w-full h-48">
-                    <img
-                      src={room.image}
-                      alt={room.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Room Content - Bottom */}
-                  <div className="p-4">
-                    <div className="flex flex-col justify-between mb-3">
-                      <h3 className="text-lg font-medium text-gray-800 mb-2">
-                        {room.name}
-                      </h3>
-                      {room.price && (
-                        <span className="text-xl font-semibold text-green-500">
-                          ${room.price} /night
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
-                      {room.size && (
-                        <span className="flex items-center">
-                          <i className="fa fa-expand-arrows-alt mr-1"></i>
-                          {room.size}
-                        </span>
-                      )}
-                      {room.maxGuests && (
-                        <span className="flex items-center">
-                          <i className="fa fa-users mr-1"></i>
-                          Up to {room.maxGuests} guests
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {room.description}
-                      </p>
-                    </div>
-
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold mb-2 text-gray-800">
-                        Room Features:
-                      </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {room.features &&
-                          room.features.slice(0, 3).map((feature, index) => (
-                            <span
-                              key={index}
-                              className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded"
-                            >
-                              {feature}
-                            </span>
-                          ))}
-                        {room.features && room.features.length > 3 && (
-                          <span className="text-xs text-gray-500">
-                            +{room.features.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <button className="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 px-4 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                      Book Now
-                    </button>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Amenities and Booking Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Amenities */}
-        <div className="lg:col-span-2">
-          <h3 className="text-xl font-semibold mb-4">Hotel Amenities</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {amenities.map((amenity, index) => (
+      {/* Rooms Section - Only show if rooms data exists */}
+      {hotel.rooms && hotel.rooms.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            Available Rooms
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hotel.rooms.map((room) => (
               <div
-                key={index}
-                className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
+                key={room.id}
+                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100"
               >
-                <span className="text-green-500">✓</span>
-                <span>{amenity}</span>
+                <div className="w-full h-48">
+                  <img
+                    src={room.image}
+                    alt={room.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">
+                    {room.name}
+                  </h3>
+                  {room.description && (
+                    <p className="text-sm text-gray-600 mb-3">
+                      {room.description}
+                    </p>
+                  )}
+                  <button className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                    Book Now
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {/* Amenities and Booking Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Amenities - Only show if hotel has features */}
+        {hotel && hotel.features && (
+          <div className="lg:col-span-2">
+            <h3 className="text-xl font-semibold mb-4">Hotel Amenities</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {getAvailableAmenities(hotel).map((amenity, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
+                >
+                  <span className="text-green-500">✓</span>
+                  <span>{amenity}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Booking Card */}
         <div className="bg-white border rounded-lg p-6 shadow-lg h-fit">

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  tourPackageServices,
-  getTourPackageById,
-} from "../../api/tourPackages";
+import { tourPackageServices } from "../../api/tourPackages";
 
 // Helper function to map subcategory IDs to categories
 const getCategoryFromSubcategoryId = (subcategoryId) => {
@@ -91,25 +88,11 @@ const TourPackageDetails = () => {
           setTourPackage(transformedPackage);
           setSelectedImage(transformedPackage.mainImage);
         } else {
-          // Fallback to mock data
-          const mockPackage = getTourPackageById(id);
-          if (mockPackage) {
-            setTourPackage(mockPackage);
-            setSelectedImage(mockPackage.mainImage || mockPackage.image);
-          } else {
-            setError("Tour package not found");
-          }
+          setError("Tour package not found");
         }
       } catch (err) {
         console.error("Failed to fetch tour package:", err);
-        // Use mock data if API fails
-        const mockPackage = getTourPackageById(id);
-        if (mockPackage) {
-          setTourPackage(mockPackage);
-          setSelectedImage(mockPackage.mainImage || mockPackage.image);
-        } else {
-          setError("Tour package not found");
-        }
+        setError("Failed to load tour package");
       } finally {
         setLoading(false);
       }

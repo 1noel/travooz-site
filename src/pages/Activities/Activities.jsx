@@ -213,9 +213,6 @@ const Activities = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-2">
           Activities & Adventures
         </h1>
-        <p className="text-gray-600">
-          Discover exciting activities and experiences
-        </p>
       </div>
 
       {/* Search and Filters */}

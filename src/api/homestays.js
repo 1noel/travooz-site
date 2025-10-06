@@ -60,22 +60,6 @@ export const transformHomestayData = (homestay) => {
         }))
     : [];
 
-  // Calculate rating based on features (mock rating calculation)
-  const calculateRating = (homestay) => {
-    const features = [
-      homestay.free_wifi,
-      homestay.parking_available,
-      homestay.swimming_pool,
-      homestay.spa,
-      homestay.fitness_center,
-      homestay.restaurant,
-      homestay.bar_lounge,
-      homestay.breakfast_included,
-    ];
-    const activeFeatures = features.filter(Boolean).length;
-    return Math.min(5, Math.max(3, Math.round(3 + (activeFeatures / 8) * 2)));
-  };
-
   // Determine category based on subcategory_id
   const getHomestayCategory = (subcategoryId) => {
     const categoryMap = {
@@ -129,21 +113,9 @@ export const transformHomestayData = (homestay) => {
       .replace(/(^-|-$)/g, ""),
   };
 
-  // Only add fields that exist in the API response
+  // Only add phone if it exists in the API response
   if (homestay.phone) {
     transformedData.phone = homestay.phone;
-  }
-  if (homestay.price !== undefined && homestay.price !== null) {
-    transformedData.price = homestay.price;
-  }
-  if (homestay.rating !== undefined && homestay.rating !== null) {
-    transformedData.stars = homestay.rating;
-  } else {
-    // Calculate rating based on available features only if no rating provided
-    transformedData.stars = calculateRating(homestay);
-  }
-  if (homestay.views !== undefined && homestay.views !== null) {
-    transformedData.views = homestay.views;
   }
 
   return transformedData;

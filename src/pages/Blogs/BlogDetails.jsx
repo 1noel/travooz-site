@@ -261,13 +261,9 @@ const BlogDetails = () => {
 
       {/* CTA Section */}
       <div className="bg-green-50 rounded-xl p-6 md:p-8 text-center border border-green-100 mt-8 md:mt-12 shadow-sm">
-        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
           Ready to Start Your Adventure?
         </h3>
-        <p className="text-gray-600 mb-6 text-base md:text-lg">
-          Explore our tour packages and find the perfect travel experience for
-          you.
-        </p>
         <button
           onClick={() => navigate("/tour-packages")}
           className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm md:text-base"

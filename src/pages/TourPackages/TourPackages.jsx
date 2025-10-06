@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  tourPackageServices,
-  getAllTourPackages,
-} from "../../api/tourPackages";
+import { tourPackageServices } from "../../api/tourPackages";
 import { subcategoryServices } from "../../api/subcategories";
 
 const TourPackages = () => {
@@ -111,15 +108,13 @@ const TourPackages = () => {
           }));
           setTourPackages(transformedPackages);
         } else {
-          // Fallback to mock data
-          console.log("API response format unexpected, using mock data");
-          setTourPackages(getAllTourPackages());
+          console.log("API response format unexpected");
+          setTourPackages([]);
         }
       } catch (err) {
         console.error("Failed to fetch tour packages:", err);
         setError("Failed to load tour packages");
-        // Still try to load mock data on error
-        setTourPackages(getAllTourPackages());
+        setTourPackages([]);
       } finally {
         setLoading(false);
       }

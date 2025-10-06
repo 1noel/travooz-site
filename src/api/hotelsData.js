@@ -212,13 +212,3 @@ export const hotels = [
     ],
   },
 ];
-
-// Function to get hotel by ID
-export const getHotelById = (id) => {
-  return hotels.find((hotel) => hotel.id === parseInt(id));
-};
-
-// Function to get all hotels
-export const getAllHotels = () => {
-  return hotels;
-};

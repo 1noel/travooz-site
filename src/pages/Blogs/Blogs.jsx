@@ -95,10 +95,6 @@ const Blogs = () => {
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
           Travel Stories & Insights
         </h1>
-        <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          Discover amazing destinations, travel tips, and inspiring stories from
-          fellow travelers. Let our guides inspire your next adventure.
-        </p>
       </div>
 
       {/* Featured Blog */}

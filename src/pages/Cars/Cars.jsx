@@ -164,11 +164,6 @@ const Cars = () => {
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
           Car Rentals
         </h1>
-        <p className="text-gray-700 text-base md:text-lg leading-relaxed">
-          Find the perfect vehicle for your journey in Rwanda. From economy cars
-          for city exploration to luxury vehicles for special occasions, we have
-          a wide range of well-maintained cars available for rent.
-        </p>
       </div>
 
       {/* Category Filter */}

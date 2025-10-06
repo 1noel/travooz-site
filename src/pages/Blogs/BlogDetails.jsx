@@ -114,14 +114,14 @@ const BlogDetails = () => {
         >
           Home
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/blogs")}
           className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
         >
           Blogs
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600 font-medium truncate">{blog.title}</span>
       </nav>
 
@@ -138,13 +138,13 @@ const BlogDetails = () => {
               <span className="text-sm font-medium">Published on</span>
               <span className="font-semibold">{blog.date}</span>
             </div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+            <span className="text-gray-400">{"/"}</span>
             <span className="text-sm font-medium">
               {getReadingTime(blog.description)}
             </span>
             {blog.time && (
               <>
-                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                <span className="text-gray-400">{"/"}</span>
                 <span className="text-sm font-medium">
                   Updated at {blog.time}
                 </span>
@@ -261,13 +261,9 @@ const BlogDetails = () => {
 
       {/* CTA Section */}
       <div className="bg-green-50 rounded-xl p-6 md:p-8 text-center border border-green-100 mt-8 md:mt-12 shadow-sm">
-        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
           Ready to Start Your Adventure?
         </h3>
-        <p className="text-gray-600 mb-6 text-base md:text-lg">
-          Explore our tour packages and find the perfect travel experience for
-          you.
-        </p>
         <button
           onClick={() => navigate("/tour-packages")}
           className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm md:text-base"

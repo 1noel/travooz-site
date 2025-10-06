@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  tourPackageServices,
-  getTourPackageById,
-} from "../../api/tourPackages";
+import { tourPackageServices } from "../../api/tourPackages";
 
 // Helper function to map subcategory IDs to categories
 const getCategoryFromSubcategoryId = (subcategoryId) => {
@@ -91,25 +88,11 @@ const TourPackageDetails = () => {
           setTourPackage(transformedPackage);
           setSelectedImage(transformedPackage.mainImage);
         } else {
-          // Fallback to mock data
-          const mockPackage = getTourPackageById(id);
-          if (mockPackage) {
-            setTourPackage(mockPackage);
-            setSelectedImage(mockPackage.mainImage || mockPackage.image);
-          } else {
-            setError("Tour package not found");
-          }
+          setError("Tour package not found");
         }
       } catch (err) {
         console.error("Failed to fetch tour package:", err);
-        // Use mock data if API fails
-        const mockPackage = getTourPackageById(id);
-        if (mockPackage) {
-          setTourPackage(mockPackage);
-          setSelectedImage(mockPackage.mainImage || mockPackage.image);
-        } else {
-          setError("Tour package not found");
-        }
+        setError("Failed to load tour package");
       } finally {
         setLoading(false);
       }
@@ -123,7 +106,7 @@ const TourPackageDetails = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -145,7 +128,7 @@ const TourPackageDetails = () => {
   // Error state
   if (error || !tourPackage) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6">
         <button
           onClick={() => navigate(-1)}
           className="mb-6 flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
@@ -176,13 +159,10 @@ const TourPackageDetails = () => {
     );
   }
 
-  const tabs = [
-    { id: "overview", label: "Overview" },
-    { id: "itinerary", label: "Itinerary" },
-  ];
+  const tabs = [{ id: "overview", label: "Overview" }];
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6">
       {/* Breadcrumb Navigation */}
       <nav className="mb-8 flex items-center space-x-3 text-sm">
         <button
@@ -191,14 +171,14 @@ const TourPackageDetails = () => {
         >
           Home
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/tour-packages")}
           className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
         >
           Tour Packages
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600 font-medium">{tourPackage.title}</span>
       </nav>
 
@@ -209,42 +189,6 @@ const TourPackageDetails = () => {
             <h1 className="text-4xl font-bold text-gray-900 mb-6">
               {tourPackage.title}
             </h1>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="flex flex-col">
-                <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                  Location
-                </span>
-                <span className="text-gray-900 font-semibold">
-                  {tourPackage.location}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                  Duration
-                </span>
-                <span className="text-gray-900 font-semibold">
-                  {tourPackage.duration}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                  Group Size
-                </span>
-                <span className="text-gray-900 font-semibold">
-                  {tourPackage.groupSize}
-                </span>
-              </div>
-              {tourPackage.instructorLanguage && (
-                <div className="flex flex-col">
-                  <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                    Language
-                  </span>
-                  <span className="text-gray-900 font-semibold">
-                    {tourPackage.instructorLanguage}
-                  </span>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -341,80 +285,58 @@ const TourPackageDetails = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <h4 className="text-xl font-bold text-gray-900 mb-4">
-                      Tour Details
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span className="text-gray-600 font-medium">
-                          Duration:
+                <div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-4">
+                    Tour Details
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                        Location
+                      </span>
+                      <span className="text-gray-900 font-semibold">
+                        {tourPackage.location}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                        Duration
+                      </span>
+                      <span className="text-gray-900 font-semibold">
+                        {tourPackage.duration}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                        Group Size
+                      </span>
+                      <span className="text-gray-900 font-semibold">
+                        {tourPackage.groupSize}
+                      </span>
+                    </div>
+                    {tourPackage.instructorLanguage && (
+                      <div className="flex flex-col">
+                        <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                          Language
                         </span>
-                        <span className="font-semibold text-gray-900">
-                          {tourPackage.duration}
+                        <span className="text-gray-900 font-semibold">
+                          {tourPackage.instructorLanguage}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span className="text-gray-600 font-medium">
-                          Group Size:
+                    )}
+                  </div>
+                  {tourPackage.phone && (
+                    <div className="mt-4">
+                      <div className="flex flex-col">
+                        <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                          Contact
                         </span>
-                        <span className="font-semibold text-gray-900">
-                          {tourPackage.groupSize}
+                        <span className="text-gray-900 font-semibold">
+                          {tourPackage.phone}
                         </span>
                       </div>
-                      {tourPackage.instructorLanguage && (
-                        <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                          <span className="text-gray-600 font-medium">
-                            Languages:
-                          </span>
-                          <span className="font-semibold text-gray-900">
-                            {tourPackage.instructorLanguage}
-                          </span>
-                        </div>
-                      )}
-                      {tourPackage.phone && (
-                        <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                          <span className="text-gray-600 font-medium">
-                            Contact:
-                          </span>
-                          <span className="font-semibold text-gray-900">
-                            {tourPackage.phone}
-                          </span>
-                        </div>
-                      )}
                     </div>
-                  </div>
-
-                  <div className="bg-blue-50 rounded-xl p-6">
-                    <h4 className="text-xl font-bold text-gray-900 mb-4">
-                      Special Features
-                    </h4>
-                    <div className="space-y-3">
-                      {tourPackage.freeCancellation && (
-                        <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-green-200">
-                          <span className="text-gray-800 font-medium">
-                            Free Cancellation Available
-                          </span>
-                        </div>
-                      )}
-                      {tourPackage.reserveNowPayLater && (
-                        <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-blue-200">
-                          <span className="text-gray-800 font-medium">
-                            Reserve Now, Pay Later Option
-                          </span>
-                        </div>
-                      )}
-                      {!tourPackage.freeCancellation &&
-                        !tourPackage.reserveNowPayLater && (
-                          <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-                            <span className="text-gray-600 font-medium">
-                              Standard booking terms apply
-                            </span>
-                          </div>
-                        )}
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Meeting Point */}
@@ -464,63 +386,6 @@ const TourPackageDetails = () => {
                 )}
               </div>
             )}
-
-            {activeTab === "itinerary" && (
-              <div>
-                {tourPackage.itinerary && tourPackage.itinerary.length > 0 ? (
-                  <>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                      Day by Day Itinerary
-                    </h3>
-                    <div className="space-y-6">
-                      {tourPackage.itinerary.map((day, index) => (
-                        <div
-                          key={index}
-                          className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm"
-                        >
-                          <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
-                            Day {day.day}: {day.title}
-                          </h4>
-                          <div className="space-y-3">
-                            {day.activities.map((activity, actIndex) => (
-                              <div
-                                key={actIndex}
-                                className="p-3 bg-gray-50 rounded-lg border-l-4 border-green-600"
-                              >
-                                <span className="text-gray-800 font-medium leading-relaxed">
-                                  {activity}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                      <div className="w-10 h-10 bg-gray-300 rounded-lg"></div>
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                      Detailed Itinerary Available Upon Request
-                    </h3>
-                    <p className="text-gray-600 mb-6">
-                      Contact us for a complete day-by-day schedule and activity
-                      breakdown.
-                    </p>
-                    {tourPackage.phone && (
-                      <a
-                        href={`tel:${tourPackage.phone}`}
-                        className="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
-                      >
-                        Call {tourPackage.phone}
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -531,7 +396,7 @@ const TourPackageDetails = () => {
               <div className="text-center mb-6">
                 <div className="bg-green-600 text-white p-4 rounded-xl mb-4">
                   <span className="text-3xl font-bold">
-                    {tourPackage.currency === "USD" ? "$" : ""}
+                    From {tourPackage.currency === "USD" ? "$" : ""}
                     {tourPackage.price.toLocaleString()}
                     {tourPackage.currency === "RWF" ? " RWF" : ""}
                   </span>

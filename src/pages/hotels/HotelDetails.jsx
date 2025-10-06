@@ -1,24 +1,121 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getHotelById } from "../../api/hotelsData";
+import { homestayServices, transformHomestayData } from "../../api/homestays";
 
 const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const amenities = [
-    "Free WiFi",
-    "Swimming Pool",
-    "Restaurant",
-    "Gym",
-    "Spa",
-    "Room Service",
-  ];
+  const [hotel, setHotel] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedImage, setSelectedImage] = useState("");
 
-  // Find the hotel based on the ID from URL parameters
-  const hotel = getHotelById(id);
+  useEffect(() => {
+    const fetchHotelDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  // State to manage the currently selected image
-  const [selectedImage, setSelectedImage] = useState(hotel?.image || "");
+        // Try to fetch from homestays API first
+        const response = await homestayServices.getHomestayById(id);
+
+        if (response.success && response.data) {
+          const transformedHomestay = transformHomestayData(response.data);
+          setHotel(transformedHomestay);
+          setSelectedImage(transformedHomestay.mainImage || "");
+        } else {
+          setError("Homestay not found");
+        }
+      } catch (err) {
+        console.error("Error fetching hotel details:", err);
+        setError("Failed to load homestay details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHotelDetails();
+  }, [id]);
+
+  // Only show amenities/features that exist in the API response
+  const getAvailableAmenities = (hotel) => {
+    if (!hotel || !hotel.features) return [];
+
+    const amenityMap = {
+      freeWifi: "Free WiFi",
+      parking: "Parking",
+      swimmingPool: "Swimming Pool",
+      restaurant: "Restaurant",
+      spa: "Spa",
+      fitnessCenter: "Fitness Center",
+      roomService: "Room Service",
+      barLounge: "Bar & Lounge",
+      airConditioning: "Air Conditioning",
+      laundryService: "Laundry Service",
+      airportShuttle: "Airport Shuttle",
+      breakfastIncluded: "Breakfast Included",
+      petFriendly: "Pet Friendly",
+      familyRooms: "Family Rooms",
+      nonSmokingRooms: "Non-Smoking Rooms",
+      kitchenFacilities: "Kitchen Facilities",
+      balcony: "Balcony",
+      oceanView: "Ocean View",
+      gardenView: "Garden View",
+      wheelchairAccessible: "Wheelchair Accessible",
+      meetingRooms: "Meeting Rooms",
+      conferenceFacilities: "Conference Facilities",
+      security24h: "24/7 Security",
+    };
+
+    return Object.entries(hotel.features)
+      .filter(([, value]) => value === true || value === 1)
+      .map(([key]) => amenityMap[key])
+      .filter(Boolean);
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="h-96 bg-gray-200 rounded"></div>
+            <div className="space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-20 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center gap-2 text-green-500 hover:text-green-600 font-medium"
+        >
+          ← Back
+        </button>
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Error</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // If hotel not found, show error message
   if (!hotel) {
@@ -52,14 +149,14 @@ const HotelDetails = () => {
         >
           Home
         </button>
-        <span className="text-gray-400">{">"}</span>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/hotels")}
           className="text-green-500 hover:text-green-600 cursor-pointer"
         >
           Hotels
         </button>
-        <span className="text-gray-400">{">"}</span>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600">{hotel.name}</span>
       </nav>
 
@@ -139,162 +236,86 @@ const HotelDetails = () => {
             {hotel.location}
           </p>
 
-          {/* Rating and Views */}
+          {/* Rating */}
           <div className="flex items-center gap-4 mb-4">
-            <div className="flex text-yellow-500 text-xl">
-              {[...Array(5)].map((_, i) => (
-                <span
-                  key={i}
-                  className={
-                    i < hotel.stars ? "text-yellow-500" : "text-gray-300"
-                  }
-                >
-                  ★
-                </span>
-              ))}
-            </div>
-            <span className="text-gray-600">({hotel.stars} stars)</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Rooms Section */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          Available Rooms
-        </h2>
-        <div className="relative">
-          {/* Left Arrow - Only show if there are multiple rooms */}
-          {hotel.rooms && hotel.rooms.length > 1 && (
-            <button
-              onClick={() => {
-                const container = document.getElementById("rooms-container");
-                container.scrollLeft -= 300;
-              }}
-              className="absolute left-[-12px] top-1/2 transform -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-200 group"
-            >
-              <i className="fa fa-chevron-left text-gray-600 group-hover:text-green-500 text-sm"></i>
-            </button>
-          )}
-
-          {/* Right Arrow - Only show if there are multiple rooms */}
-          {hotel.rooms && hotel.rooms.length > 1 && (
-            <button
-              onClick={() => {
-                const container = document.getElementById("rooms-container");
-                container.scrollLeft += 300;
-              }}
-              className="absolute right-[-12px] top-1/2 transform -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-200 group"
-            >
-              <i className="fa fa-chevron-right text-gray-600 group-hover:text-green-500 text-sm"></i>
-            </button>
-          )}
-
-          <div
-            id="rooms-container"
-            className="flex gap-6 overflow-x-auto pb-4 px-4 scrollbar-hide scroll-smooth"
-            style={{
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}
-          >
-            <style jsx>{`
-              #rooms-container::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
-            {hotel.rooms &&
-              hotel.rooms.map((room) => (
-                <div
-                  key={room.id}
-                  className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow flex-shrink-0 w-80 border border-gray-100"
-                >
-                  {/* Room Image - Top */}
-                  <div className="w-full h-48">
-                    <img
-                      src={room.image}
-                      alt={room.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Room Content - Bottom */}
-                  <div className="p-4">
-                    <div className="flex flex-col justify-between mb-3">
-                      <h3 className="text-lg font-medium text-gray-800 mb-2">
-                        {room.name}
-                      </h3>
-                      <span className="text-xl font-semibold text-green-500">
-                        ${room.price} /night
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
-                      <span className="flex items-center">
-                        <i className="fa fa-expand-arrows-alt mr-1"></i>
-                        {room.size}
-                      </span>
-                      <span className="flex items-center">
-                        <i className="fa fa-users mr-1"></i>
-                        Up to {room.maxGuests} guests
-                      </span>
-                    </div>
-
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {room.description}
-                      </p>
-                    </div>
-
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold mb-2 text-gray-800">
-                        Room Features:
-                      </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {room.features &&
-                          room.features.slice(0, 3).map((feature, index) => (
-                            <span
-                              key={index}
-                              className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded"
-                            >
-                              {feature}
-                            </span>
-                          ))}
-                        {room.features && room.features.length > 3 && (
-                          <span className="text-xs text-gray-500">
-                            +{room.features.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <button className="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 px-4 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                      Book Now
-                    </button>
-                  </div>
+            {hotel.stars && (
+              <>
+                <div className="flex text-yellow-500 text-xl">
+                  {[...Array(5)].map((_, i) => (
+                    <span
+                      key={i}
+                      className={
+                        i < hotel.stars ? "text-yellow-500" : "text-gray-300"
+                      }
+                    >
+                      ★
+                    </span>
+                  ))}
                 </div>
-              ))}
+                <span className="text-gray-600">({hotel.stars} stars)</span>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Amenities and Booking Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Amenities */}
-        <div className="lg:col-span-2">
-          <h3 className="text-xl font-semibold mb-4">Hotel Amenities</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {amenities.map((amenity, index) => (
+      {/* Rooms Section - Only show if rooms data exists */}
+      {hotel.rooms && hotel.rooms.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            Available Rooms
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hotel.rooms.map((room) => (
               <div
-                key={index}
-                className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
+                key={room.id}
+                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100"
               >
-                <span className="text-green-500">✓</span>
-                <span>{amenity}</span>
+                <div className="w-full h-48">
+                  <img
+                    src={room.image}
+                    alt={room.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">
+                    {room.name}
+                  </h3>
+                  {room.description && (
+                    <p className="text-sm text-gray-600 mb-3">
+                      {room.description}
+                    </p>
+                  )}
+                  <button className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                    Book Now
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {/* Amenities and Booking Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Amenities - Only show if hotel has features */}
+        {hotel && hotel.features && (
+          <div className="lg:col-span-2">
+            <h3 className="text-xl font-semibold mb-4">Hotel Amenities</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {getAvailableAmenities(hotel).map((amenity, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
+                >
+                  <span className="text-green-500">✓</span>
+                  <span>{amenity}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Booking Card */}
         <div className="bg-white border rounded-lg p-6 shadow-lg h-fit">

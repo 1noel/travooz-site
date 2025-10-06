@@ -118,14 +118,14 @@ const CarDetails = () => {
         >
           Home
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/cars")}
           className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
         >
           Cars
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600 font-medium truncate">
           {car.brand} {car.model}
         </span>

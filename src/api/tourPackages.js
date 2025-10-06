@@ -592,15 +592,6 @@ export const mockTourPackages = [
   },
 ];
 
-// Helper functions for mock data (use these if API is not ready)
-export const getTourPackageById = (id) => {
-  return mockTourPackages.find((pkg) => pkg.id === parseInt(id));
-};
-
-export const getAllTourPackages = () => {
-  return mockTourPackages;
-};
-
 export const getFeaturedTourPackages = () => {
   return mockTourPackages.filter((pkg) => pkg.featured);
 };

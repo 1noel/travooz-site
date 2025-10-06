@@ -6,6 +6,7 @@ import {
   getUniqueLocations,
   filterActivities,
 } from "../../api/activities";
+import { subcategoryServices } from "../../api/subcategories";
 
 const Activities = () => {
   const [activities, setActivities] = useState([]);
@@ -16,8 +17,39 @@ const Activities = () => {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [locations, setLocations] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
 
   const navigate = useNavigate();
+
+  // Helper function to get subcategory name by ID
+  const getSubcategoryName = React.useCallback(
+    (subcategoryId) => {
+      const subcategory = subcategories.find(
+        (sub) => sub.subcategory_id === subcategoryId
+      );
+      return subcategory ? subcategory.name : "Other";
+    },
+    [subcategories]
+  );
+
+  // Fetch subcategories for Activities (category_id: 1)
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      try {
+        const response = await subcategoryServices.fetchSubcategoriesByCategory(
+          1
+        );
+        if (response.success && response.data) {
+          setSubcategories(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch subcategories:", error);
+      }
+    };
+
+    fetchSubcategories();
+  }, []);
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -29,9 +61,16 @@ const Activities = () => {
         console.log("Activities API Response:", response);
 
         if (response?.data && Array.isArray(response.data)) {
-          const transformedActivities = response.data.map(
-            transformActivityToFrontend
-          );
+          const transformedActivities = response.data.map((activity) => {
+            const transformed = transformActivityToFrontend(activity);
+            // Add subcategory name if available
+            if (activity.subcategory_id && subcategories.length > 0) {
+              transformed.subcategory = getSubcategoryName(
+                activity.subcategory_id
+              );
+            }
+            return transformed;
+          });
           setActivities(transformedActivities);
           setFilteredActivities(transformedActivities);
 
@@ -49,8 +88,11 @@ const Activities = () => {
       }
     };
 
-    fetchActivities();
-  }, []);
+    // Only fetch activities after subcategories are loaded
+    if (subcategories.length > 0) {
+      fetchActivities();
+    }
+  }, [subcategories, getSubcategoryName]);
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -62,13 +104,28 @@ const Activities = () => {
     const filters = {
       search: searchTerm,
       location: selectedLocation,
+      subcategory: selectedSubcategory,
       minPrice: priceRange.min ? parseFloat(priceRange.min) : null,
       maxPrice: priceRange.max ? parseFloat(priceRange.max) : null,
     };
 
-    const filtered = filterActivities(activities, filters);
+    let filtered = filterActivities(activities, filters);
+
+    // Additional subcategory filtering
+    if (selectedSubcategory) {
+      filtered = filtered.filter(
+        (activity) => activity.subcategory === selectedSubcategory
+      );
+    }
+
     setFilteredActivities(filtered);
-  }, [activities, searchTerm, selectedLocation, priceRange]);
+  }, [
+    activities,
+    searchTerm,
+    selectedLocation,
+    selectedSubcategory,
+    priceRange,
+  ]);
 
   const handleActivityClick = (activityId) => {
     navigate(`/activities/${activityId}`);
@@ -77,12 +134,13 @@ const Activities = () => {
   const clearFilters = () => {
     setSearchTerm("");
     setSelectedLocation("");
+    setSelectedSubcategory("");
     setPriceRange({ min: "", max: "" });
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
         {/* Header skeleton */}
         <div className="text-center mb-8 animate-pulse">
           <div className="h-8 bg-gray-300 rounded w-1/3 mx-auto mb-2"></div>
@@ -128,7 +186,7 @@ const Activities = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
         <div className="text-center">
           <div className="text-red-500 text-xl mb-4">
             <i className="fa fa-exclamation-triangle"></i>
@@ -149,20 +207,17 @@ const Activities = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">
           Activities & Adventures
         </h1>
-        <p className="text-gray-600">
-          Discover exciting activities and experiences
-        </p>
       </div>
 
       {/* Search and Filters */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -194,6 +249,28 @@ const Activities = () => {
               {locations.map((location) => (
                 <option key={location} value={location}>
                   {location}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Subcategory Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <select
+              value={selectedSubcategory}
+              onChange={(e) => setSelectedSubcategory(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+            >
+              <option value="">All Categories</option>
+              {subcategories.map((subcategory) => (
+                <option
+                  key={subcategory.subcategory_id}
+                  value={subcategory.name}
+                >
+                  {subcategory.name}
                 </option>
               ))}
             </select>
@@ -234,6 +311,7 @@ const Activities = () => {
         {/* Clear Filters */}
         {(searchTerm ||
           selectedLocation ||
+          selectedSubcategory ||
           priceRange.min ||
           priceRange.max) && (
           <div className="mt-4 text-center">
@@ -246,6 +324,28 @@ const Activities = () => {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Category Filter Tabs */}
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-4">
+          {["All", ...subcategories.map((sub) => sub.name)].map((category) => (
+            <span
+              key={category}
+              onClick={() =>
+                setSelectedSubcategory(category === "All" ? "" : category)
+              }
+              className={`cursor-pointer pb-1 transition-colors ${
+                (category === "All" && selectedSubcategory === "") ||
+                selectedSubcategory === category
+                  ? "border-b-2 border-green-500 text-green-500"
+                  : "hover:text-green-500"
+              }`}
+            >
+              {category}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* Results Summary */}
@@ -275,7 +375,7 @@ const Activities = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {filteredActivities.map((activity) => (
             <div
               key={activity.id}

@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   eatingPlaceServices,
   transformApiDataToFrontend,
-  getEatingPlaceById,
 } from "../../api/eating";
 
 const EatingDetails = () => {
@@ -31,18 +30,11 @@ const EatingDetails = () => {
             setRestaurant(transformedData);
             setSelectedImage(transformedData.image);
           } else {
-            throw new Error("API response unsuccessful");
-          }
-        } catch (apiError) {
-          console.warn("API fetch failed, using mock data:", apiError);
-          // Fallback to mock data
-          const mockRestaurant = getEatingPlaceById(id);
-          if (mockRestaurant) {
-            setRestaurant(mockRestaurant);
-            setSelectedImage(mockRestaurant.image);
-          } else {
             setError("Restaurant not found");
           }
+        } catch (apiError) {
+          console.error("API fetch failed:", apiError);
+          setError("Failed to load restaurant details");
         }
       } catch (error) {
         console.error("Error fetching restaurant details:", error);
@@ -56,67 +48,6 @@ const EatingDetails = () => {
       fetchRestaurantDetails();
     }
   }, [id]);
-
-  // Mock menu items with food images - in a real app, this would come from the API
-  const menuCategories = [
-    {
-      category: "Appetizers",
-      items: [
-        {
-          name: "Spring Rolls",
-          price: 8,
-          description: "Fresh vegetables wrapped in rice paper",
-          image: "/src/assets/images/menu.jpg",
-        },
-        {
-          name: "Soup of the Day",
-          price: 6,
-          description: "Chef's special soup made fresh daily",
-          image: "/src/assets/images/restu.jpg",
-        },
-      ],
-    },
-    {
-      category: "Main Courses",
-      items: [
-        {
-          name: "Grilled Chicken",
-          price: 15,
-          description: "Tender chicken breast with herbs and spices",
-          image: "/images/rm1.jpg",
-        },
-        {
-          name: "Fish Curry",
-          price: 18,
-          description: "Fresh fish in aromatic curry sauce",
-          image: "/images/rm2.jpg",
-        },
-        {
-          name: "Vegetarian Platter",
-          price: 12,
-          description: "Mixed vegetables with rice and beans",
-          image: "/src/assets/images/menu.jpg",
-        },
-      ],
-    },
-    {
-      category: "Desserts",
-      items: [
-        {
-          name: "Chocolate Cake",
-          price: 5,
-          description: "Rich chocolate cake with cream",
-          image: "/images/rm3.jpg",
-        },
-        {
-          name: "Fruit Salad",
-          price: 4,
-          description: "Fresh seasonal fruits",
-          image: "/src/assets/images/restu.jpg",
-        },
-      ],
-    },
-  ];
 
   // Loading state
   if (loading) {
@@ -212,14 +143,14 @@ const EatingDetails = () => {
         >
           Home
         </button>
-        <span className="text-gray-400">{">"}</span>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/eating-out")}
           className="text-green-600 hover:text-green-800 cursor-pointer"
         >
           Eating Out
         </button>
-        <span className="text-gray-400">{">"}</span>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600">{restaurant.name}</span>
       </nav>
 
@@ -352,77 +283,26 @@ const EatingDetails = () => {
                   <span className="text-gray-700">Table Service</span>
                 </div>
               )}
-              {/* Default features that are common */}
-              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
-                <span className="text-green-600 text-xs">✓</span>
-                <span className="text-gray-700">Air Conditioning</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
-                <span className="text-green-600 text-xs">✓</span>
-                <span className="text-gray-700">Takeaway</span>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Right Side - Menu (40%) */}
+        {/* Right Side - Restaurant Info (40%) */}
         <div className="lg:col-span-2">
           <div className="sticky top-4">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Menu</h3>
-            <div className="bg-white rounded-lg shadow-sm max-h-[700px] overflow-y-auto">
-              {menuCategories.map((category, categoryIndex) => (
-                <div key={categoryIndex} className="border-b last:border-b-0">
-                  <div className="bg-green-50 px-3 py-2 border-b">
-                    <h4 className="text-sm font-semibold text-gray-800">
-                      {category.category}
-                    </h4>
-                  </div>
-                  <div className="p-3 space-y-3">
-                    {category.items.map((item, itemIndex) => (
-                      <div
-                        key={itemIndex}
-                        className="border-b border-gray-100 pb-3 last:border-b-0 last:pb-0"
-                      >
-                        <div className="flex gap-3">
-                          {/* Food Image */}
-                          <div className="flex-shrink-0">
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-16 h-12 object-cover rounded-md"
-                            />
-                          </div>
-
-                          {/* Food Details */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1 pr-2">
-                                <h5 className="text-sm font-medium text-gray-800 mb-1">
-                                  {item.name}
-                                </h5>
-                                <p className="text-gray-600 text-xs leading-relaxed">
-                                  {item.description}
-                                </p>
-                              </div>
-                              <div className="text-right flex-shrink-0">
-                                <span className="text-sm font-bold text-green-600">
-                                  RWF{item.price}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Quick Reservation Button */}
-            <div className="mt-4 bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg text-center cursor-pointer transition-colors">
-              <h4 className="font-semibold mb-1">Reserve Table</h4>
-              <p className="text-sm opacity-90">Click to make a reservation</p>
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Restaurant Info
+            </h3>
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              {restaurant.menuItemsCount > 0 ? (
+                <p className="text-gray-600 text-center py-8">
+                  Menu has {restaurant.menuItemsCount} items
+                </p>
+              ) : (
+                <p className="text-gray-600 text-center py-8">
+                  Menu information not available
+                </p>
+              )}
             </div>
           </div>
         </div>

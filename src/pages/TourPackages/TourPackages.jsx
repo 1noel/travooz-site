@@ -1,20 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  tourPackageServices,
-  getAllTourPackages,
-} from "../../api/tourPackages";
-
-// Helper function to map subcategory IDs to categories
-const getCategoryFromSubcategoryId = (subcategoryId) => {
-  const categoryMap = {
-    18: "Wildlife & Nature",
-    19: "Wildlife & Nature",
-    20: "Cultural & Historical",
-    21: "Adventure & Water Sports",
-  };
-  return categoryMap[subcategoryId] || "Adventure & Water Sports";
-};
+import { tourPackageServices } from "../../api/tourPackages";
+import { subcategoryServices } from "../../api/subcategories";
 
 const TourPackages = () => {
   const navigate = useNavigate();
@@ -23,13 +10,40 @@ const TourPackages = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [filteredPackages, setFilteredPackages] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [categories, setCategories] = useState(["All"]);
 
-  const categories = [
-    "All",
-    "Wildlife & Nature",
-    "Adventure & Water Sports",
-    "Cultural & Historical",
-  ];
+  // Helper function to get subcategory name by ID
+  const getSubcategoryName = React.useCallback(
+    (subcategoryId) => {
+      const subcategory = subcategories.find(
+        (sub) => sub.subcategory_id === subcategoryId
+      );
+      return subcategory ? subcategory.name : "Other";
+    },
+    [subcategories]
+  );
+
+  useEffect(() => {
+    // Fetch subcategories first
+    const fetchSubcategories = async () => {
+      try {
+        const response = await subcategoryServices.fetchSubcategoriesByCategory(
+          6
+        ); // Category 6 is Tour Packages
+        if (response.success && response.data) {
+          setSubcategories(response.data);
+          // Create dynamic categories based on subcategories
+          const subcategoryNames = response.data.map((sub) => sub.name);
+          setCategories(["All", ...subcategoryNames]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch subcategories:", error);
+      }
+    };
+
+    fetchSubcategories();
+  }, []);
 
   useEffect(() => {
     const fetchTourPackages = async () => {
@@ -90,26 +104,27 @@ const TourPackages = () => {
               : [],
             meetingPoint: pkg.meeting_point_details,
             thingsToKnow: pkg.things_to_know,
-            category: getCategoryFromSubcategoryId(pkg.subcategory_id),
+            category: getSubcategoryName(pkg.subcategory_id),
           }));
           setTourPackages(transformedPackages);
         } else {
-          // Fallback to mock data
-          console.log("API response format unexpected, using mock data");
-          setTourPackages(getAllTourPackages());
+          console.log("API response format unexpected");
+          setTourPackages([]);
         }
       } catch (err) {
         console.error("Failed to fetch tour packages:", err);
         setError("Failed to load tour packages");
-        // Still try to load mock data on error
-        setTourPackages(getAllTourPackages());
+        setTourPackages([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTourPackages();
-  }, []);
+    // Only fetch tour packages after subcategories are loaded
+    if (subcategories.length > 0) {
+      fetchTourPackages();
+    }
+  }, [subcategories, getSubcategoryName]);
 
   // Filter packages based on selected category
   useEffect(() => {
@@ -133,7 +148,7 @@ const TourPackages = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-5 md:px-10 space-y-5 mt-10">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-3/4 mb-6"></div>
@@ -163,18 +178,12 @@ const TourPackages = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 space-y-5 mt-10">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
           Tour Packages
         </h1>
-        <p className="text-gray-700 text-base md:text-lg leading-relaxed">
-          Discover Rwanda's breathtaking landscapes, rich culture, and
-          incredible wildlife through our carefully curated tour packages. From
-          gorilla trekking adventures to cultural immersion experiences, find
-          the perfect journey for your interests and budget.
-        </p>
       </div>
 
       {/* Error message */}
@@ -189,19 +198,19 @@ const TourPackages = () => {
 
       {/* Category Filter */}
       <div className="mb-10">
-        <div className="flex flex-wrap gap-2 md:gap-3">
+        <div className="flex flex-wrap gap-4">
           {categories.map((category) => (
-            <button
+            <span
               key={category}
               onClick={() => handleCategoryChange(category)}
-              className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold transition-all duration-200 text-sm md:text-base ${
+              className={`cursor-pointer pb-1 transition-colors ${
                 selectedCategory === category
-                  ? "bg-green-600 text-white shadow-lg transform -translate-y-0.5"
-                  : "bg-white text-gray-700 border-2 border-gray-200 hover:bg-green-50 hover:border-green-300 hover:text-green-700"
+                  ? "border-b-2 border-green-500 text-green-500"
+                  : "hover:text-green-500"
               }`}
             >
               {category}
-            </button>
+            </span>
           ))}
         </div>
       </div>
@@ -224,7 +233,7 @@ const TourPackages = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8">
           {filteredPackages.map((tourPackage) => (
             <div
               key={tourPackage.id}
@@ -238,21 +247,11 @@ const TourPackages = () => {
                   alt={tourPackage.title}
                   className="w-full h-48 md:h-56 object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 px-2 md:px-3 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium shadow-lg">
-                  {tourPackage.duration}
-                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
 
               {/* Package Content */}
               <div className="p-4 md:p-6">
-                {/* Category Badge */}
-                <div className="mb-3">
-                  <span className="inline-block bg-green-600 text-white text-xs font-semibold px-2 md:px-3 py-1 md:py-1.5 rounded-full">
-                    {tourPackage.category}
-                  </span>
-                </div>
-
                 {/* Title */}
                 <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors leading-tight">
                   {tourPackage.title}
@@ -263,68 +262,13 @@ const TourPackages = () => {
                   {tourPackage.description}
                 </p>
 
-                {/* Details */}
-                <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">
-                      Location
-                    </span>
-                    <span className="text-gray-800 font-semibold truncate">
-                      {tourPackage.location}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">
-                      Duration
-                    </span>
-                    <span className="text-gray-800 font-semibold">
-                      {tourPackage.duration}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">
-                      Group Size
-                    </span>
-                    <span className="text-gray-800 font-semibold">
-                      {tourPackage.groupSize}
-                    </span>
-                  </div>
-                  {tourPackage.instructorLanguage && (
-                    <div className="flex flex-col">
-                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">
-                        Language
-                      </span>
-                      <span className="text-gray-800 font-semibold truncate">
-                        {tourPackage.instructorLanguage}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Additional Info Badges */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {tourPackage.freeCancellation && (
-                    <span className="inline-flex items-center bg-green-50 text-green-700 text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-green-200 font-medium">
-                      Free Cancellation
-                    </span>
-                  )}
-                  {tourPackage.reserveNowPayLater && (
-                    <span className="inline-flex items-center bg-blue-50 text-blue-700 text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-blue-200 font-medium">
-                      Reserve & Pay Later
-                    </span>
-                  )}
-                </div>
-
                 {/* Price and Book Button */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between pt-4">
                   <div>
                     <span className="text-xl md:text-2xl font-bold text-green-600">
                       {tourPackage.currency === "USD" ? "$" : ""}
                       {tourPackage.price.toLocaleString()}
                       {tourPackage.currency === "RWF" ? " RWF" : ""}
-                    </span>
-                    <span className="text-gray-500 text-xs md:text-sm ml-1 block">
-                      per {tourPackage.duration}
                     </span>
                   </div>
                   <button className="bg-green-600 hover:bg-green-700 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
@@ -336,20 +280,6 @@ const TourPackages = () => {
           ))}
         </div>
       )}
-
-      {/* Call to Action */}
-      <div className="bg-green-50 rounded-xl p-6 md:p-8 text-center border border-green-100">
-        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
-          Can't Find What You're Looking For?
-        </h3>
-        <p className="text-gray-600 mb-6 text-base md:text-lg">
-          We can create custom tour packages tailored to your interests and
-          budget.
-        </p>
-        <button className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm md:text-base">
-          Create Custom Package
-        </button>
-      </div>
     </div>
   );
 };

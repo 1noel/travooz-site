@@ -41,6 +41,12 @@ const Categories = () => {
       normalizedName.includes("rental")
     ) {
       navigate("/cars");
+    } else if (
+      normalizedName.includes("rest") ||
+      normalizedName.includes("stay") ||
+      normalizedName.includes("hotel")
+    ) {
+      navigate("/hotels");
     }
     // Add more navigation logic for other categories as needed
   };

@@ -52,14 +52,14 @@ const HotelDetails = () => {
         >
           Home
         </button>
-        <span className="text-gray-400">{">"}</span>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/hotels")}
           className="text-green-500 hover:text-green-600 cursor-pointer"
         >
           Hotels
         </button>
-        <span className="text-gray-400">{">"}</span>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600">{hotel.name}</span>
       </nav>
 

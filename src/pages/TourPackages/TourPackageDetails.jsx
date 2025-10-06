@@ -191,14 +191,14 @@ const TourPackageDetails = () => {
         >
           Home
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/tour-packages")}
           className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
         >
           Tour Packages
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600 font-medium">{tourPackage.title}</span>
       </nav>
 

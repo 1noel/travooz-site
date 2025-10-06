@@ -329,6 +329,28 @@ const Activities = () => {
         )}
       </div>
 
+      {/* Category Filter Tabs */}
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-4">
+          {["All", ...subcategories.map((sub) => sub.name)].map((category) => (
+            <span
+              key={category}
+              onClick={() =>
+                setSelectedSubcategory(category === "All" ? "" : category)
+              }
+              className={`cursor-pointer pb-1 transition-colors ${
+                (category === "All" && selectedSubcategory === "") ||
+                selectedSubcategory === category
+                  ? "border-b-2 border-green-500 text-green-500"
+                  : "hover:text-green-500"
+              }`}
+            >
+              {category}
+            </span>
+          ))}
+        </div>
+      </div>
+
       {/* Results Summary */}
       <div className="mb-6">
         <p className="text-gray-600">
@@ -356,7 +378,7 @@ const Activities = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {filteredActivities.map((activity) => (
             <div
               key={activity.id}

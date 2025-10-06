@@ -114,14 +114,14 @@ const BlogDetails = () => {
         >
           Home
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/blogs")}
           className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
         >
           Blogs
         </button>
-        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600 font-medium truncate">{blog.title}</span>
       </nav>
 
@@ -138,13 +138,13 @@ const BlogDetails = () => {
               <span className="text-sm font-medium">Published on</span>
               <span className="font-semibold">{blog.date}</span>
             </div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+            <span className="text-gray-400">{"/"}</span>
             <span className="text-sm font-medium">
               {getReadingTime(blog.description)}
             </span>
             {blog.time && (
               <>
-                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                <span className="text-gray-400">{"/"}</span>
                 <span className="text-sm font-medium">
                   Updated at {blog.time}
                 </span>

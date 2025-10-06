@@ -173,19 +173,19 @@ const Cars = () => {
 
       {/* Category Filter */}
       <div className="mb-10">
-        <div className="flex flex-wrap gap-2 md:gap-3">
+        <div className="flex flex-wrap gap-4">
           {categories.map((category) => (
-            <button
+            <span
               key={category}
               onClick={() => handleCategoryChange(category)}
-              className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold transition-all duration-200 text-sm md:text-base ${
+              className={`cursor-pointer pb-1 transition-colors ${
                 selectedCategory === category
-                  ? "bg-green-600 text-white shadow-lg transform -translate-y-0.5"
-                  : "bg-white text-gray-700 border-2 border-gray-200 hover:bg-green-50 hover:border-green-300 hover:text-green-700"
+                  ? "border-b-2 border-green-500 text-green-500"
+                  : "hover:text-green-500"
               }`}
             >
               {category}
-            </button>
+            </span>
           ))}
         </div>
       </div>
@@ -279,7 +279,7 @@ const Cars = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8">
           {filteredCars.slice(1).map((car) => (
             <div
               key={car.id}

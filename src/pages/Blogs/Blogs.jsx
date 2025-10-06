@@ -168,7 +168,7 @@ const Blogs = () => {
                 {/* Meta Info */}
                 <div className="flex items-center gap-3 mb-3 text-sm text-gray-500">
                   <span className="font-medium">{blog.date}</span>
-                  <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                  <span className="text-gray-400">{"/"}</span>
                   <span>{getReadingTime(blog.description)}</span>
                 </div>
 

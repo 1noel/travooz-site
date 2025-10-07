@@ -149,10 +149,13 @@ const Hotels = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
-      <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-        Home Stays
-      </h1>
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10 pb-16">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+          Home Stays
+        </h1>
+      </div>
 
       {/* Search Filter */}
       <Filter />
@@ -176,61 +179,75 @@ const Hotels = () => {
         </div>
       </div>
 
-      <div className="mb-4">
-        <p className="text-gray-600">
-          Showing {filteredHotels.length} of {hotels.length} places
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8">
         {filteredHotels.map((hotel) => (
           <div
             key={hotel.id}
             onClick={() => handleHotelClick(hotel)}
-            className="overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white cursor-pointer rounded-lg"
+            className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group border border-gray-100 hover:border-green-200"
           >
-            <img
-              src={hotel.mainImage || hotel.image}
-              alt={hotel.name}
-              className="w-full h-48 md:h-56 object-cover"
-            />
-            <div className="p-3 md:p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h2 className="text-base md:text-lg font-semibold text-gray-800">
-                  {hotel.name}
-                </h2>
-                <span className="inline-block bg-green-600 text-white text-xs font-semibold px-2 md:px-3 py-1 md:py-1.5 rounded-full">
+            {/* Hotel Image */}
+            <div className="relative overflow-hidden">
+              <img
+                src={hotel.mainImage || hotel.image}
+                alt={hotel.name}
+                className="w-full h-48 md:h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+
+            {/* Hotel Content */}
+            <div className="p-4 md:p-6">
+              {/* Category Badge */}
+              <div className="mb-3">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                   {hotel.category}
                 </span>
               </div>
+
+              {/* Title */}
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors leading-tight">
+                {hotel.name}
+              </h2>
+
+              {/* Location */}
               {hotel.location && (
-                <p className="text-xs md:text-sm text-gray-600 mb-2">
-                  <i className="fa fa-location-dot mr-1"></i>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed flex items-center">
+                  <i className="fa fa-location-dot mr-2"></i>
                   {hotel.location}
                 </p>
               )}
-              <div className="flex items-center gap-2 mt-2 mb-2">
-                {hotel.stars && (
-                  <div className="flex text-yellow-500">
-                    {[...Array(5)].map((_, i) => (
-                      <span
-                        key={i}
-                        className={`text-sm ${
-                          i < hotel.stars ? "text-yellow-500" : "text-gray-300"
-                        }`}
-                      >
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                )}
+
+              {/* Bottom Section */}
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex flex-col">
+                  {hotel.stars && (
+                    <div className="flex text-yellow-500 text-sm mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <span
+                          key={i}
+                          className={`${
+                            i < hotel.stars
+                              ? "text-yellow-500"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {hotel.phone && (
+                    <p className="text-gray-600 text-xs flex items-center">
+                      <i className="fa fa-phone mr-2"></i>
+                      {hotel.phone}
+                    </p>
+                  )}
+                </div>
+                <button className="bg-green-600 hover:bg-green-700 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                  View Details
+                </button>
               </div>
-              {hotel.phone && (
-                <p className="text-xs md:text-sm text-gray-600 mt-2">
-                  <i className="fa fa-phone mr-1"></i>
-                  {hotel.phone}
-                </p>
-              )}
             </div>
           </div>
         ))}

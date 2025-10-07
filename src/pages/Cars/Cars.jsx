@@ -106,7 +106,12 @@ const Cars = () => {
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-3/4 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="flex gap-4 mb-6">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="h-8 bg-gray-200 rounded w-24"></div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }, (_, i) => (
               <div
                 key={i}
@@ -153,13 +158,23 @@ const Cars = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10 pb-16">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
           Car Rentals
         </h1>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-3 text-red-600">
+            <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+            <span className="font-medium text-sm md:text-base">{error}</span>
+          </div>
+        </div>
+      )}
 
       {/* Category Filter */}
       <div className="mb-10">
@@ -217,6 +232,13 @@ const Cars = () => {
 
               {/* Car Content */}
               <div className="p-4 md:p-6">
+                {/* Category Badge */}
+                <div className="mb-3">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                    {car.category}
+                  </span>
+                </div>
+
                 {/* Title */}
                 <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors leading-tight">
                   {car.brand} {car.model}

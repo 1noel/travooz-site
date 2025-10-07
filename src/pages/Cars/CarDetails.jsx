@@ -10,6 +10,239 @@ const CarDetails = () => {
   const [selectedImage, setSelectedImage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDays, setSelectedDays] = useState("1 Day");
+  const [showDaysDropdown, setShowDaysDropdown] = useState(false);
+
+  // Calendar component
+  const CustomCalendar = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const [displayMonth, setDisplayMonth] = useState(currentMonth);
+    const [displayYear, setDisplayYear] = useState(currentYear);
+
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const getDaysInMonth = (month, year) => {
+      return new Date(year, month + 1, 0).getDate();
+    };
+
+    const getFirstDayOfMonth = (month, year) => {
+      return new Date(year, month, 1).getDay();
+    };
+
+    const handleDateSelect = (day) => {
+      const date = new Date(displayYear, displayMonth, day);
+      const formattedDate = date.toLocaleDateString("en-CA"); // YYYY-MM-DD format
+      setSelectedDate(formattedDate);
+      setShowCalendar(false);
+    };
+
+    const handlePrevMonth = () => {
+      if (displayMonth === 0) {
+        setDisplayMonth(11);
+        setDisplayYear(displayYear - 1);
+      } else {
+        setDisplayMonth(displayMonth - 1);
+      }
+    };
+
+    const handleNextMonth = () => {
+      if (displayMonth === 11) {
+        setDisplayMonth(0);
+        setDisplayYear(displayYear + 1);
+      } else {
+        setDisplayMonth(displayMonth + 1);
+      }
+    };
+
+    const daysInMonth = getDaysInMonth(displayMonth, displayYear);
+    const firstDay = getFirstDayOfMonth(displayMonth, displayYear);
+    const days = [];
+
+    // Empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-10"></div>);
+    }
+
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday =
+        day === today.getDate() &&
+        displayMonth === currentMonth &&
+        displayYear === currentYear;
+      const isPast =
+        new Date(displayYear, displayMonth, day) <
+        new Date(currentYear, currentMonth, today.getDate());
+
+      days.push(
+        <button
+          key={day}
+          onClick={() => !isPast && handleDateSelect(day)}
+          disabled={isPast}
+          className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200 ${
+            isToday
+              ? "bg-green-600 text-white shadow-lg"
+              : isPast
+              ? "text-gray-300 cursor-not-allowed"
+              : "text-gray-700 hover:bg-green-100 hover:text-green-600"
+          }`}
+        >
+          {day}
+        </button>
+      );
+    }
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handlePrevMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <h3 className="text-lg font-semibold text-gray-800">
+            {monthNames[displayMonth]} {displayYear}
+          </h3>
+          <button
+            onClick={handleNextMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Days of Week */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+            <div
+              key={day}
+              className="h-8 flex items-center justify-center text-xs font-medium text-gray-500"
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Days */}
+        <div className="grid grid-cols-7 gap-1">{days}</div>
+
+        {/* Footer */}
+        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={() => setShowCalendar(false)}
+            className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              setSelectedDate("");
+              setShowCalendar(false);
+            }}
+            className="text-green-600 hover:text-green-700 text-sm font-medium"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Custom Days Dropdown component
+  const CustomDaysDropdown = () => {
+    const dayOptions = [
+      { value: "1 Day", label: "1 Day" },
+      { value: "2 Days", label: "2 Days" },
+      { value: "3 Days", label: "3 Days" },
+      { value: "1 Week", label: "1 Week" },
+      { value: "2 Weeks", label: "2 Weeks" },
+      { value: "1 Month", label: "1 Month" },
+    ];
+
+    const handleDaySelect = (option) => {
+      setSelectedDays(option.value);
+      setShowDaysDropdown(false);
+    };
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-2">
+        {dayOptions.map((option, index) => (
+          <button
+            key={option.value}
+            onClick={() => handleDaySelect(option)}
+            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-green-50 hover:text-green-600 transition-all duration-200 ${
+              selectedDays === option.value
+                ? "bg-green-50 text-green-600 font-medium"
+                : "text-gray-700"
+            } ${index === 0 ? "rounded-t-xl" : ""} ${
+              index === dayOptions.length - 1 ? "rounded-b-xl" : ""
+            }`}
+          >
+            <span className="font-medium">{option.label}</span>
+            {selectedDays === option.value && (
+              <span>
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   useEffect(() => {
     const fetchCarData = async () => {
@@ -261,8 +494,8 @@ const CarDetails = () => {
 
         {/* Booking Sidebar */}
         <div className="lg:col-span-1">
-          <div className="sticky top-4 h-fit max-h-[32rem]">
-            <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-8 h-full overflow-y-auto">
+          <div className="sticky top-4">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-8">
               <div className="text-center mb-6">
                 <div className="bg-green-600 text-white p-4 rounded-xl mb-4">
                   <span className="text-3xl font-bold">
@@ -273,29 +506,76 @@ const CarDetails = () => {
               </div>
 
               <div className="space-y-6 mb-8">
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Preferred Date
                   </label>
-                  <input
-                    type="date"
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300"
-                    placeholder="mm/dd/yyyy"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={
+                        selectedDate
+                          ? new Date(selectedDate).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : ""
+                      }
+                      placeholder="Select a date"
+                      readOnly
+                      onClick={() => setShowCalendar(!showCalendar)}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                  {showCalendar && <CustomCalendar />}
                 </div>
 
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Number of Days
                   </label>
-                  <select className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 appearance-none">
-                    <option>1 Day</option>
-                    <option>2 Days</option>
-                    <option>3 Days</option>
-                    <option>1 Week</option>
-                    <option>2 Weeks</option>
-                    <option>1 Month</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowDaysDropdown(!showDaysDropdown)}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
+                    >
+                      <span className="font-medium">{selectedDays}</span>
+                      <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          showDaysDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        ></path>
+                      </svg>
+                    </button>
+                    {showDaysDropdown && <CustomDaysDropdown />}
+                  </div>
                 </div>
 
                 <div>
@@ -303,30 +583,40 @@ const CarDetails = () => {
                     Special Requests
                   </label>
                   <textarea
-                    rows="3"
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 resize-none"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 h-24 resize-none transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300"
                     placeholder="Any special requirements or requests..."
                   ></textarea>
                 </div>
               </div>
 
-              <div className="space-y-3 mb-6">
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+              <div className="space-y-4">
+                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                   Book Now
-                </button>
-                <button className="w-full border-2 border-green-600 text-green-600 hover:bg-green-50 py-4 px-6 rounded-lg font-bold text-lg transition-colors duration-200">
-                  Get Quote
                 </button>
               </div>
 
-              <div className="text-center">
-                <p className="text-gray-600 text-sm mb-2">
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-sm text-gray-600 mb-4 text-center font-medium">
                   Need help? Contact us:
                 </p>
-                <p className="text-green-600 font-semibold text-lg">
-                  +250 780006775
-                </p>
-                <p className="text-green-600 text-sm mt-2">info@travooz.com</p>
+                <div className="space-y-3">
+                  <a
+                    href="tel:+250780006775"
+                    className="flex items-center justify-center text-green-600 hover:text-green-700 hover:bg-green-50 p-4 rounded-xl transition-all duration-200 border border-green-200"
+                  >
+                    <span className="text-sm font-semibold">
+                      +250 780006775
+                    </span>
+                  </a>
+                  <a
+                    href="mailto:info@travooz.com"
+                    className="flex items-center justify-center text-green-600 hover:text-green-700 hover:bg-green-50 p-4 rounded-xl transition-all duration-200 border border-green-200"
+                  >
+                    <span className="text-sm font-semibold">
+                      info@travooz.com
+                    </span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>

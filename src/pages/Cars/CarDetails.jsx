@@ -266,29 +266,29 @@ const CarDetails = () => {
               <div className="text-center mb-6">
                 <div className="bg-green-600 text-white p-4 rounded-xl mb-4">
                   <span className="text-3xl font-bold">
-                    From {formatPrice(car.rates.daily, "RWF")}/day
+                    From {formatPrice(car.rates.daily, "$")}/day
                   </span>
                   <div className="text-green-100 text-sm mt-1">per day</div>
                 </div>
               </div>
 
-              <div className="space-y-5 mb-8">
+              <div className="space-y-6 mb-8">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Preferred Date
                   </label>
                   <input
                     type="date"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300"
                     placeholder="mm/dd/yyyy"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Number of Days
                   </label>
-                  <select className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                  <select className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 appearance-none">
                     <option>1 Day</option>
                     <option>2 Days</option>
                     <option>3 Days</option>
@@ -299,19 +299,19 @@ const CarDetails = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Special Requests
                   </label>
                   <textarea
                     rows="3"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 resize-none"
                     placeholder="Any special requirements or requests..."
                   ></textarea>
                 </div>
               </div>
 
               <div className="space-y-3 mb-6">
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-lg font-bold text-lg transition-colors duration-200">
+                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                   Book Now
                 </button>
                 <button className="w-full border-2 border-green-600 text-green-600 hover:bg-green-50 py-4 px-6 rounded-lg font-bold text-lg transition-colors duration-200">

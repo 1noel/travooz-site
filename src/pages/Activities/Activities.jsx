@@ -220,7 +220,7 @@ const Activities = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Search Activities
             </label>
             <div className="relative">
@@ -229,21 +229,21 @@ const Activities = () => {
                 placeholder="Search by name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300"
               />
-              <i className="fa fa-search absolute right-3 top-3 text-gray-400"></i>
+              <i className="fa fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
             </div>
           </div>
 
           {/* Location Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Location
             </label>
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 appearance-none"
             >
               <option value="">All Locations</option>
               {locations.map((location) => (
@@ -256,13 +256,13 @@ const Activities = () => {
 
           {/* Subcategory Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Category
             </label>
             <select
               value={selectedSubcategory}
               onChange={(e) => setSelectedSubcategory(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 appearance-none"
             >
               <option value="">All Categories</option>
               {subcategories.map((subcategory) => (
@@ -278,7 +278,7 @@ const Activities = () => {
 
           {/* Price Range */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Min Price (RWF)
             </label>
             <input
@@ -288,12 +288,12 @@ const Activities = () => {
               onChange={(e) =>
                 setPriceRange((prev) => ({ ...prev, min: e.target.value }))
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Max Price (RWF)
             </label>
             <input
@@ -303,7 +303,7 @@ const Activities = () => {
               onChange={(e) =>
                 setPriceRange((prev) => ({ ...prev, max: e.target.value }))
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300"
             />
           </div>
         </div>

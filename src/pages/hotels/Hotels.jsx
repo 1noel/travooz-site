@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { subcategoryServices } from "../../api/subcategories";
 import { homestayServices, transformHomestayData } from "../../api/homestays";
+import Filter from "../../components/Filter";
 
 const Hotels = () => {
   const navigate = useNavigate();
@@ -152,6 +153,9 @@ const Hotels = () => {
       <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
         Home Stays
       </h1>
+
+      {/* Search Filter */}
+      <Filter />
 
       {/* Category Filter */}
       <div className="mb-10">

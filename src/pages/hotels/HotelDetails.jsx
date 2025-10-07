@@ -318,39 +318,39 @@ const HotelDetails = () => {
         )}
 
         {/* Booking Card */}
-        <div className="bg-white border rounded-lg p-6 shadow-lg h-fit">
-          <h3 className="text-xl font-semibold mb-4">Quick Booking</h3>
-          <div className="space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg h-fit">
+          <h3 className="text-xl font-semibold mb-6">Quick Booking</h3>
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Check-in
               </label>
               <input
                 type="date"
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Check-out
               </label>
               <input
                 type="date"
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Guests
               </label>
-              <select className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+              <select className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 appearance-none">
                 <option>1 Guest</option>
                 <option>2 Guests</option>
                 <option>3 Guests</option>
                 <option>4+ Guests</option>
               </select>
             </div>
-            <button className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition-colors">
+            <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
               Check Availability
             </button>
           </div>

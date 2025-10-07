@@ -21,6 +21,238 @@ const TourPackageDetails = () => {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedTravelers, setSelectedTravelers] = useState("1 Person");
+  const [showTravelersDropdown, setShowTravelersDropdown] = useState(false);
+
+  // Calendar component
+  const CustomCalendar = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const [displayMonth, setDisplayMonth] = useState(currentMonth);
+    const [displayYear, setDisplayYear] = useState(currentYear);
+
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const getDaysInMonth = (month, year) => {
+      return new Date(year, month + 1, 0).getDate();
+    };
+
+    const getFirstDayOfMonth = (month, year) => {
+      return new Date(year, month, 1).getDay();
+    };
+
+    const handleDateSelect = (day) => {
+      const date = new Date(displayYear, displayMonth, day);
+      const formattedDate = date.toLocaleDateString("en-CA"); // YYYY-MM-DD format
+      setSelectedDate(formattedDate);
+      setShowCalendar(false);
+    };
+
+    const handlePrevMonth = () => {
+      if (displayMonth === 0) {
+        setDisplayMonth(11);
+        setDisplayYear(displayYear - 1);
+      } else {
+        setDisplayMonth(displayMonth - 1);
+      }
+    };
+
+    const handleNextMonth = () => {
+      if (displayMonth === 11) {
+        setDisplayMonth(0);
+        setDisplayYear(displayYear + 1);
+      } else {
+        setDisplayMonth(displayMonth + 1);
+      }
+    };
+
+    const daysInMonth = getDaysInMonth(displayMonth, displayYear);
+    const firstDay = getFirstDayOfMonth(displayMonth, displayYear);
+    const days = [];
+
+    // Empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-10"></div>);
+    }
+
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday =
+        day === today.getDate() &&
+        displayMonth === currentMonth &&
+        displayYear === currentYear;
+      const isPast =
+        new Date(displayYear, displayMonth, day) <
+        new Date(currentYear, currentMonth, today.getDate());
+
+      days.push(
+        <button
+          key={day}
+          onClick={() => !isPast && handleDateSelect(day)}
+          disabled={isPast}
+          className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200 ${
+            isToday
+              ? "bg-green-600 text-white shadow-lg"
+              : isPast
+              ? "text-gray-300 cursor-not-allowed"
+              : "text-gray-700 hover:bg-green-100 hover:text-green-600"
+          }`}
+        >
+          {day}
+        </button>
+      );
+    }
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handlePrevMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <h3 className="text-lg font-semibold text-gray-800">
+            {monthNames[displayMonth]} {displayYear}
+          </h3>
+          <button
+            onClick={handleNextMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Days of Week */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+            <div
+              key={day}
+              className="h-8 flex items-center justify-center text-xs font-medium text-gray-500"
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Days */}
+        <div className="grid grid-cols-7 gap-1">{days}</div>
+
+        {/* Footer */}
+        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={() => setShowCalendar(false)}
+            className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              setSelectedDate("");
+              setShowCalendar(false);
+            }}
+            className="text-green-600 hover:text-green-700 text-sm font-medium"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Custom Travelers Dropdown component
+  const CustomTravelersDropdown = () => {
+    const travelerOptions = [
+      { value: "1 Person", label: "1 Person" },
+      { value: "2 People", label: "2 People" },
+      { value: "3 People", label: "3 People" },
+      { value: "4 People", label: "4 People" },
+      { value: "5+ People", label: "5+ People" },
+    ];
+
+    const handleTravelerSelect = (option) => {
+      setSelectedTravelers(option.value);
+      setShowTravelersDropdown(false);
+    };
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-2">
+        {travelerOptions.map((option, index) => (
+          <button
+            key={option.value}
+            onClick={() => handleTravelerSelect(option)}
+            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-green-50 hover:text-green-600 transition-all duration-200 ${
+              selectedTravelers === option.value
+                ? "bg-green-50 text-green-600 font-medium"
+                : "text-gray-700"
+            } ${index === 0 ? "rounded-t-xl" : ""} ${
+              index === travelerOptions.length - 1 ? "rounded-b-xl" : ""
+            }`}
+          >
+            <span className="font-medium">{option.label}</span>
+            {selectedTravelers === option.value && (
+              <span>
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   useEffect(() => {
     const fetchTourPackage = async () => {
@@ -103,6 +335,23 @@ const TourPackageDetails = () => {
     }
   }, [id]);
 
+  // Close calendar and dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showCalendar && !event.target.closest(".relative")) {
+        setShowCalendar(false);
+      }
+      if (showTravelersDropdown && !event.target.closest(".relative")) {
+        setShowTravelersDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showCalendar, showTravelersDropdown]);
+
   // Loading state
   if (loading) {
     return (
@@ -162,7 +411,7 @@ const TourPackageDetails = () => {
   const tabs = [{ id: "overview", label: "Overview" }];
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6 pb-16">
       {/* Breadcrumb Navigation */}
       <nav className="mb-8 flex items-center space-x-3 text-sm">
         <button
@@ -186,6 +435,12 @@ const TourPackageDetails = () => {
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
           <div className="flex-1">
+            {/* Subcategory Badge */}
+            <div className="mb-4">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                {tourPackage.category}
+              </span>
+            </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-6">
               {tourPackage.title}
             </h1>
@@ -290,6 +545,14 @@ const TourPackageDetails = () => {
                     Tour Details
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                        Category
+                      </span>
+                      <span className="text-gray-900 font-semibold">
+                        {tourPackage.category}
+                      </span>
+                    </div>
                     <div className="flex flex-col">
                       <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
                         Location
@@ -404,34 +667,85 @@ const TourPackageDetails = () => {
                 </div>
               </div>
 
-              <div className="space-y-5 mb-8">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div className="space-y-6 mb-8">
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Preferred Date
                   </label>
-                  <input
-                    type="date"
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 transition-colors"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={
+                        selectedDate
+                          ? new Date(selectedDate).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : ""
+                      }
+                      placeholder="Select a date"
+                      readOnly
+                      onClick={() => setShowCalendar(!showCalendar)}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                  {showCalendar && <CustomCalendar />}
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Number of Travelers
                   </label>
-                  <select className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 transition-colors">
-                    <option>1 Person</option>
-                    <option>2 People</option>
-                    <option>3 People</option>
-                    <option>4 People</option>
-                    <option>5+ People</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowTravelersDropdown(!showTravelersDropdown)
+                      }
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
+                    >
+                      <span className="font-medium">{selectedTravelers}</span>
+                      <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          showTravelersDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        ></path>
+                      </svg>
+                    </button>
+                    {showTravelersDropdown && <CustomTravelersDropdown />}
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Special Requests
                   </label>
                   <textarea
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 h-24 resize-none transition-colors"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 h-24 resize-none transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300"
                     placeholder="Any special requirements or requests..."
                   ></textarea>
                 </div>
@@ -440,9 +754,6 @@ const TourPackageDetails = () => {
               <div className="space-y-4">
                 <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                   Book Now
-                </button>
-                <button className="w-full border-2 border-green-600 text-green-600 hover:bg-green-50 py-4 rounded-xl font-semibold transition-all duration-200">
-                  Get Quote
                 </button>
               </div>
 

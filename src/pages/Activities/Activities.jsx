@@ -22,17 +22,7 @@ const Activities = () => {
 
   const navigate = useNavigate();
 
-  // Helper function to get subcategory name by ID
-  const getSubcategoryName = React.useCallback(
-    (subcategoryId) => {
-      const subcategory = subcategories.find(
-        (sub) => sub.subcategory_id === subcategoryId
-      );
-      return subcategory ? subcategory.name : "Other";
-    },
-    [subcategories]
-  );
-
+  // Note: Activities category doesn't have subcategories in the system
   // Fetch subcategories for Activities (category_id: 1)
   useEffect(() => {
     const fetchSubcategories = async () => {
@@ -63,12 +53,6 @@ const Activities = () => {
         if (response?.data && Array.isArray(response.data)) {
           const transformedActivities = response.data.map((activity) => {
             const transformed = transformActivityToFrontend(activity);
-            // Add subcategory name if available
-            if (activity.subcategory_id && subcategories.length > 0) {
-              transformed.subcategory = getSubcategoryName(
-                activity.subcategory_id
-              );
-            }
             return transformed;
           });
           setActivities(transformedActivities);
@@ -88,11 +72,9 @@ const Activities = () => {
       }
     };
 
-    // Only fetch activities after subcategories are loaded
-    if (subcategories.length > 0) {
-      fetchActivities();
-    }
-  }, [subcategories, getSubcategoryName]);
+    // Fetch activities immediately
+    fetchActivities();
+  }, []);
 
   // Scroll to top when component mounts
   useEffect(() => {

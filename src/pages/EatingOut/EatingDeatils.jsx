@@ -11,6 +11,9 @@ const EatingDetails = () => {
 
   // State management
   const [restaurant, setRestaurant] = useState(null);
+  const [menu, setMenu] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(false);
+  const [menuError, setMenuError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
@@ -48,6 +51,33 @@ const EatingDetails = () => {
       fetchRestaurantDetails();
     }
   }, [id]);
+
+  // Fetch menu data separately
+  useEffect(() => {
+    const fetchMenuData = async () => {
+      if (!restaurant || !id) return;
+
+      try {
+        setMenuLoading(true);
+        setMenuError(null);
+
+        const response = await eatingPlaceServices.fetchMenuById(id);
+
+        if (response.success && response.data && response.data.menu) {
+          setMenu(response.data.menu);
+        } else {
+          setMenuError("Menu not available");
+        }
+      } catch (error) {
+        console.error("Error fetching menu:", error);
+        setMenuError("Failed to load menu");
+      } finally {
+        setMenuLoading(false);
+      }
+    };
+
+    fetchMenuData();
+  }, [restaurant, id]);
 
   // Loading state
   if (loading) {
@@ -287,17 +317,68 @@ const EatingDetails = () => {
           </div>
         </div>
 
-        {/* Right Side - Restaurant Info (40%) */}
+        {/* Right Side - Menu Section (40%) */}
         <div className="lg:col-span-2">
           <div className="sticky top-4">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-              Restaurant Info
-            </h3>
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              {restaurant.menuItemsCount > 0 ? (
-                <p className="text-gray-600 text-center py-8">
-                  Menu has {restaurant.menuItemsCount} items
-                </p>
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Menu</h3>
+            <div className="bg-white rounded-lg shadow-sm p-4 max-h-96 overflow-y-auto">
+              {menuLoading ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, index) => (
+                    <div
+                      key={index}
+                      className="animate-pulse border-b border-gray-100 pb-4 last:border-b-0"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        </div>
+                        <div className="ml-4 flex-shrink-0">
+                          <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : menuError ? (
+                <p className="text-gray-600 text-center py-8">{menuError}</p>
+              ) : menu.length > 0 ? (
+                <div className="space-y-4">
+                  {menu.map((item) => (
+                    <div
+                      key={item.menu_id}
+                      className="border-b border-gray-100 pb-4 last:border-b-0"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-800 mb-1">
+                            {item.name}
+                          </h4>
+                          <p className="text-gray-600 text-sm mb-2">
+                            {item.description}
+                          </p>
+                          <p className="text-green-600 font-bold">
+                            RWF {parseFloat(item.price).toLocaleString()}
+                          </p>
+                        </div>
+                        {item.image && (
+                          <div className="ml-4 flex-shrink-0">
+                            <img
+                              src={`https://travooz.kadgroupltd.com/${item.image}`}
+                              alt={item.name}
+                              className="w-16 h-16 object-cover rounded-lg"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <p className="text-gray-600 text-center py-8">
                   Menu information not available

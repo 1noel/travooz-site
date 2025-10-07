@@ -178,7 +178,7 @@ const TourPackages = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10 pb-16">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
@@ -252,6 +252,13 @@ const TourPackages = () => {
 
               {/* Package Content */}
               <div className="p-4 md:p-6">
+                {/* Category Badge */}
+                <div className="mb-3">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                    {tourPackage.category}
+                  </span>
+                </div>
+
                 {/* Title */}
                 <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors leading-tight">
                   {tourPackage.title}

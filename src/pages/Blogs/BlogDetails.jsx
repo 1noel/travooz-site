@@ -105,171 +105,222 @@ const BlogDetails = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-10">
-      {/* Breadcrumb Navigation */}
-      <nav className="mb-6 md:mb-8 flex items-center space-x-3 text-sm">
-        <button
-          onClick={() => navigate("/")}
-          className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
-        >
-          Home
-        </button>
-        <span className="text-gray-400">{"/"}</span>
-        <button
-          onClick={() => navigate("/blogs")}
-          className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
-        >
-          Blogs
-        </button>
-        <span className="text-gray-400">{"/"}</span>
-        <span className="text-gray-600 font-medium truncate">{blog.title}</span>
-      </nav>
-
-      {/* Article Header */}
-      <article>
-        <header className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10">
+        {/* Breadcrumb Navigation */}
+        <nav className="mb-6 md:mb-8 flex items-center space-x-3 text-sm">
+          <button
+            onClick={() => navigate("/")}
+            className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
+          >
+            Home
+          </button>
+          <span className="text-gray-400">{"/"}</span>
+          <button
+            onClick={() => navigate("/blogs")}
+            className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
+          >
+            Blogs
+          </button>
+          <span className="text-gray-400">{"/"}</span>
+          <span className="text-gray-600 font-medium truncate">
             {blog.title}
-          </h1>
+          </span>
+        </nav>
 
-          {/* Meta Information */}
-          <div className="flex flex-wrap items-center gap-4 md:gap-6 text-gray-600 mb-6 md:mb-8">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Published on</span>
-              <span className="font-semibold">{blog.date}</span>
-            </div>
-            <span className="text-gray-400">{"/"}</span>
-            <span className="text-sm font-medium">
-              {getReadingTime(blog.description)}
-            </span>
-            {blog.time && (
-              <>
+        {/* Article Container */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+          {/* Article Header */}
+          <article>
+            <header className="px-6 md:px-8 pt-8 md:pt-10 pb-6 md:pb-8">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
+                {blog.title}
+              </h1>
+
+              {/* Meta Information */}
+              <div className="flex flex-wrap items-center gap-4 md:gap-6 text-gray-600">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Published on</span>
+                  <span className="font-semibold">{blog.date}</span>
+                </div>
                 <span className="text-gray-400">{"/"}</span>
                 <span className="text-sm font-medium">
-                  Updated at {blog.time}
+                  {getReadingTime(blog.description)}
                 </span>
-              </>
-            )}
-          </div>
-        </header>
+                {blog.time && (
+                  <>
+                    <span className="text-gray-400">{"/"}</span>
+                    <span className="text-sm font-medium">
+                      Updated at {blog.time}
+                    </span>
+                  </>
+                )}
+              </div>
+            </header>
 
-        {/* Featured Image */}
-        <div className="mb-6 md:mb-8">
-          <img
-            src={selectedImage}
-            alt={blog.title}
-            className="w-full h-64 md:h-80 lg:h-96 xl:h-[480px] object-cover rounded-xl shadow-lg"
-          />
-        </div>
-
-        {/* Image Gallery */}
-        {blog.images && blog.images.length > 1 && (
-          <div className="mb-6 md:mb-8">
-            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">
-              Gallery
-            </h3>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {blog.images.map((img, index) => (
-                <div
-                  key={img.id}
-                  className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === img.url
-                      ? "border-green-500 ring-2 ring-green-200"
-                      : "border-gray-200 hover:border-green-300"
-                  }`}
-                  onClick={() => setSelectedImage(img.url)}
-                >
-                  <img
-                    src={img.url}
-                    alt={`${blog.title} gallery ${index + 1}`}
-                    className="w-20 h-16 md:w-24 md:h-20 object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Article Content */}
-        <div className="prose prose-lg max-w-none mb-8 md:mb-10">
-          <div className="text-gray-700 leading-relaxed">
-            <p className="text-base md:text-lg leading-relaxed">
-              {blog.description}
-            </p>
-          </div>
-        </div>
-
-        {/* Sharing */}
-        <div className="border-t border-gray-200 pt-6 md:pt-8 mb-8 md:mb-10">
-          <div className="flex justify-center">
-            <div className="text-center">
-              <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                Share this article
-              </h4>
-              <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-                <button className="bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                  Facebook
-                </button>
-                <button className="bg-blue-400 text-white px-3 md:px-4 py-2 rounded-lg text-sm hover:bg-blue-500 transition-colors">
-                  Twitter
-                </button>
-                <button className="bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors">
-                  WhatsApp
-                </button>
+            {/* Featured Image */}
+            <div className="px-6 md:px-8">
+              <div className="overflow-hidden rounded-lg shadow-md">
+                <img
+                  src={selectedImage}
+                  alt={blog.title}
+                  className="w-full h-64 md:h-80 lg:h-96 xl:h-[480px] object-cover"
+                />
               </div>
             </div>
-          </div>
-        </div>
-      </article>
 
-      {/* Related Blogs */}
-      {relatedBlogs.length > 0 && (
-        <section className="border-t border-gray-200 pt-8 md:pt-12">
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8">
-            Related Articles
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
-            {relatedBlogs.map((relatedBlog) => (
-              <article
-                key={relatedBlog.id}
-                onClick={() => navigate(`/blog/${relatedBlog.id}`)}
-                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 hover:border-green-200 group"
-              >
-                <img
-                  src={relatedBlog.mainImage}
-                  alt={relatedBlog.title}
-                  className="w-full h-40 md:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="p-4 md:p-6">
-                  <h4 className="font-semibold text-gray-900 mb-3 line-clamp-2 hover:text-green-600 transition-colors text-base md:text-lg group-hover:text-green-600">
-                    {relatedBlog.title}
-                  </h4>
-                  <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
-                    {relatedBlog.description}
+            {/* Image Gallery */}
+            {blog.images && blog.images.length > 1 && (
+              <div className="px-6 md:px-8 pt-6 md:pt-8">
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">
+                  Gallery
+                </h3>
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {blog.images.map((img, index) => (
+                    <div
+                      key={img.id}
+                      className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImage === img.url
+                          ? "border-green-500 ring-2 ring-green-200"
+                          : "border-gray-200 hover:border-green-300"
+                      }`}
+                      onClick={() => setSelectedImage(img.url)}
+                    >
+                      <img
+                        src={img.url}
+                        alt={`${blog.title} gallery ${index + 1}`}
+                        className="w-20 h-16 md:w-24 md:h-20 object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Article Content */}
+            <div className="px-6 md:px-8 py-6 md:py-8">
+              <div className="prose prose-lg max-w-none">
+                <div className="text-gray-700 leading-relaxed">
+                  <p className="text-base md:text-lg leading-relaxed">
+                    {blog.description}
                   </p>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <span>{relatedBlog.date}</span>
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
-                    <span>{getReadingTime(relatedBlog.description)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Share Icons */}
+            <div className="px-6 md:px-8 pb-6 md:pb-8">
+              <div className="border-t border-gray-200 pt-6">
+                <div className="flex items-center justify-center">
+                  <div className="text-center">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-4">
+                      Share this article
+                    </h4>
+                    <div className="flex justify-center gap-3">
+                      <button
+                        onClick={() => {
+                          const url = window.location.href;
+                          window.open(
+                            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                              url
+                            )}`,
+                            "_blank"
+                          );
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                      >
+                        Facebook
+                      </button>
+                      <button
+                        onClick={() => {
+                          const url = window.location.href;
+                          const text = `Check out this article: ${blog.title}`;
+                          window.open(
+                            `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                              url
+                            )}&text=${encodeURIComponent(text)}`,
+                            "_blank"
+                          );
+                        }}
+                        className="bg-blue-400 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-500 transition-colors"
+                      >
+                        Twitter
+                      </button>
+                      <button
+                        onClick={() => {
+                          const url = window.location.href;
+                          const text = `Check out this article: ${blog.title} ${url}`;
+                          window.open(
+                            `https://wa.me/?text=${encodeURIComponent(text)}`,
+                            "_blank"
+                          );
+                        }}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors"
+                      >
+                        WhatsApp
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
+              </div>
+            </div>
+          </article>
+        </div>
 
-      {/* CTA Section */}
-      <div className="bg-green-50 rounded-xl p-6 md:p-8 text-center border border-green-100 mt-8 md:mt-12 shadow-sm">
-        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
-          Ready to Start Your Adventure?
-        </h3>
-        <button
-          onClick={() => navigate("/tour-packages")}
-          className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm md:text-base"
-        >
-          Browse Tour Packages
-        </button>
+        {/* Related Blogs */}
+        {relatedBlogs.length > 0 && (
+          <section className="mt-8 md:mt-12">
+            <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 border border-gray-200">
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8">
+                Related Articles
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+                {relatedBlogs.map((relatedBlog) => (
+                  <article
+                    key={relatedBlog.id}
+                    onClick={() => navigate(`/blog/${relatedBlog.id}`)}
+                    className="bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 hover:border-green-300 group"
+                  >
+                    <img
+                      src={relatedBlog.mainImage}
+                      alt={relatedBlog.title}
+                      className="w-full h-40 md:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="p-4 md:p-6">
+                      <h4 className="font-semibold text-gray-900 mb-3 line-clamp-2 group-hover:text-green-600 transition-colors text-base md:text-lg">
+                        {relatedBlog.title}
+                      </h4>
+                      <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
+                        {relatedBlog.description}
+                      </p>
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <span>{relatedBlog.date}</span>
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                        <span>{getReadingTime(relatedBlog.description)}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* CTA Section */}
+        <div className="bg-green-100 rounded-lg p-6 md:p-8 text-center border border-green-200 mt-8 md:mt-12">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">
+            Ready to Start Your Adventure?
+          </h3>
+          <p className="text-gray-700 mb-6 text-sm md:text-base">
+            Discover amazing tour packages and create unforgettable memories
+          </p>
+          <button
+            onClick={() => navigate("/tour-packages")}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base"
+          >
+            Browse Tour Packages
+          </button>
+        </div>
       </div>
     </div>
   );

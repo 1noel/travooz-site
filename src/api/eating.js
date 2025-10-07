@@ -31,6 +31,23 @@ export const eatingPlaceServices = {
       throw error;
     }
   },
+
+  // Fetch menu for a specific eating place
+  fetchMenuById: async (id) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/eating-out/${id}/menu`
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching menu:", error);
+      throw error;
+    }
+  },
 };
 
 // Helper function to transform API data to frontend format

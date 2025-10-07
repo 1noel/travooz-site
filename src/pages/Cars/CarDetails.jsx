@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  carServices,
-  transformCarData,
-  getAvailabilityStatus,
-  formatPrice,
-} from "../../api/cars";
+import { carServices, transformCarData, formatPrice } from "../../api/cars";
 
 const CarDetails = () => {
   const { id } = useParams();
@@ -15,6 +10,239 @@ const CarDetails = () => {
   const [selectedImage, setSelectedImage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDays, setSelectedDays] = useState("1 Day");
+  const [showDaysDropdown, setShowDaysDropdown] = useState(false);
+
+  // Calendar component
+  const CustomCalendar = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const [displayMonth, setDisplayMonth] = useState(currentMonth);
+    const [displayYear, setDisplayYear] = useState(currentYear);
+
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const getDaysInMonth = (month, year) => {
+      return new Date(year, month + 1, 0).getDate();
+    };
+
+    const getFirstDayOfMonth = (month, year) => {
+      return new Date(year, month, 1).getDay();
+    };
+
+    const handleDateSelect = (day) => {
+      const date = new Date(displayYear, displayMonth, day);
+      const formattedDate = date.toLocaleDateString("en-CA"); // YYYY-MM-DD format
+      setSelectedDate(formattedDate);
+      setShowCalendar(false);
+    };
+
+    const handlePrevMonth = () => {
+      if (displayMonth === 0) {
+        setDisplayMonth(11);
+        setDisplayYear(displayYear - 1);
+      } else {
+        setDisplayMonth(displayMonth - 1);
+      }
+    };
+
+    const handleNextMonth = () => {
+      if (displayMonth === 11) {
+        setDisplayMonth(0);
+        setDisplayYear(displayYear + 1);
+      } else {
+        setDisplayMonth(displayMonth + 1);
+      }
+    };
+
+    const daysInMonth = getDaysInMonth(displayMonth, displayYear);
+    const firstDay = getFirstDayOfMonth(displayMonth, displayYear);
+    const days = [];
+
+    // Empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-10"></div>);
+    }
+
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday =
+        day === today.getDate() &&
+        displayMonth === currentMonth &&
+        displayYear === currentYear;
+      const isPast =
+        new Date(displayYear, displayMonth, day) <
+        new Date(currentYear, currentMonth, today.getDate());
+
+      days.push(
+        <button
+          key={day}
+          onClick={() => !isPast && handleDateSelect(day)}
+          disabled={isPast}
+          className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200 ${
+            isToday
+              ? "bg-green-600 text-white shadow-lg"
+              : isPast
+              ? "text-gray-300 cursor-not-allowed"
+              : "text-gray-700 hover:bg-green-100 hover:text-green-600"
+          }`}
+        >
+          {day}
+        </button>
+      );
+    }
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handlePrevMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <h3 className="text-lg font-semibold text-gray-800">
+            {monthNames[displayMonth]} {displayYear}
+          </h3>
+          <button
+            onClick={handleNextMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Days of Week */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+            <div
+              key={day}
+              className="h-8 flex items-center justify-center text-xs font-medium text-gray-500"
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Days */}
+        <div className="grid grid-cols-7 gap-1">{days}</div>
+
+        {/* Footer */}
+        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={() => setShowCalendar(false)}
+            className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              setSelectedDate("");
+              setShowCalendar(false);
+            }}
+            className="text-green-600 hover:text-green-700 text-sm font-medium"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Custom Days Dropdown component
+  const CustomDaysDropdown = () => {
+    const dayOptions = [
+      { value: "1 Day", label: "1 Day" },
+      { value: "2 Days", label: "2 Days" },
+      { value: "3 Days", label: "3 Days" },
+      { value: "1 Week", label: "1 Week" },
+      { value: "2 Weeks", label: "2 Weeks" },
+      { value: "1 Month", label: "1 Month" },
+    ];
+
+    const handleDaySelect = (option) => {
+      setSelectedDays(option.value);
+      setShowDaysDropdown(false);
+    };
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-2">
+        {dayOptions.map((option, index) => (
+          <button
+            key={option.value}
+            onClick={() => handleDaySelect(option)}
+            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-green-50 hover:text-green-600 transition-all duration-200 ${
+              selectedDays === option.value
+                ? "bg-green-50 text-green-600 font-medium"
+                : "text-gray-700"
+            } ${index === 0 ? "rounded-t-xl" : ""} ${
+              index === dayOptions.length - 1 ? "rounded-b-xl" : ""
+            }`}
+          >
+            <span className="font-medium">{option.label}</span>
+            {selectedDays === option.value && (
+              <span>
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   useEffect(() => {
     const fetchCarData = async () => {
@@ -106,12 +334,10 @@ const CarDetails = () => {
     );
   }
 
-  const availability = getAvailabilityStatus(car);
-
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-10">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6">
       {/* Breadcrumb Navigation */}
-      <nav className="mb-6 md:mb-8 flex items-center space-x-3 text-sm">
+      <nav className="mb-8 flex items-center space-x-3 text-sm">
         <button
           onClick={() => navigate("/")}
           className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
@@ -131,251 +357,271 @@ const CarDetails = () => {
         </span>
       </nav>
 
-      {/* Car Header */}
-      <article>
-        <header className="mb-6 md:mb-8">
-          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-            <div>
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 leading-tight">
-                {car.brand} {car.model}
-              </h1>
-              <div className="flex flex-wrap items-center gap-4 text-gray-600">
-                <span className="font-semibold">{car.year}</span>
-                <span>•</span>
-                <span>{car.transmission}</span>
-                <span>•</span>
-                <span>{car.fuelType}</span>
-                <span>•</span>
-                <span>{car.seatCapacity} seats</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <span
-                className={`inline-block px-4 py-2 rounded-full text-sm font-semibold text-white ${
-                  availability.color === "green"
-                    ? "bg-green-600"
-                    : availability.color === "red"
-                    ? "bg-red-600"
-                    : "bg-yellow-600"
-                }`}
-              >
-                {availability.status === "available"
-                  ? "Available Now"
-                  : availability.status === "unavailable"
-                  ? "Currently Unavailable"
-                  : "Contact for Availability"}
-              </span>
-            </div>
+      {/* Main Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          {/* Car Title */}
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-8">
+            {car.brand} {car.model}
+          </h1>
+
+          {/* Main Image */}
+          <div className="mb-6">
+            <img
+              src={selectedImage}
+              alt={`${car.brand} ${car.model}`}
+              className="w-full h-64 md:h-80 lg:h-96 object-cover rounded-xl shadow-lg"
+            />
           </div>
 
-          {/* Location and Category */}
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center gap-2 text-gray-600">
-              <i className="fa fa-location-dot text-green-600"></i>
-              <span className="font-medium">{car.location}</span>
-            </div>
-            <span className="bg-green-600 text-white px-3 py-1.5 rounded-full font-semibold">
-              {car.category}
-            </span>
-            {car.licensePlate && (
-              <span className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium">
-                {car.licensePlate}
-              </span>
-            )}
-          </div>
-        </header>
-
-        {/* Featured Image */}
-        <div className="mb-6 md:mb-8">
-          <img
-            src={selectedImage}
-            alt={`${car.brand} ${car.model}`}
-            className="w-full h-64 md:h-80 lg:h-96 xl:h-[480px] object-cover rounded-xl shadow-lg"
-          />
-        </div>
-
-        {/* Image Gallery */}
-        {car.images && car.images.length > 1 && (
-          <div className="mb-6 md:mb-8">
-            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">
-              Gallery
-            </h3>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {car.images.map((img, index) => (
-                <div
-                  key={img.id}
-                  className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === img.url
-                      ? "border-green-500 ring-2 ring-green-200"
-                      : "border-gray-200 hover:border-green-300"
-                  }`}
-                  onClick={() => setSelectedImage(img.url)}
-                >
-                  <img
-                    src={img.url}
-                    alt={`${car.brand} ${car.model} ${index + 1}`}
-                    className="w-20 h-16 md:w-24 md:h-20 object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Car Details */}
-        <div className="mb-8">
-          {/* Description */}
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Description
-            </h3>
-            <div className="prose prose-gray max-w-none">
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                {car.description}
-              </p>
-            </div>
-          </div>
-
-          {/* Vehicle Information */}
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Vehicle Information
-            </h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="font-medium text-gray-600">Brand</span>
-                  <span className="text-gray-900">{car.brand}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="font-medium text-gray-600">Model</span>
-                  <span className="text-gray-900">{car.model}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="font-medium text-gray-600">Year</span>
-                  <span className="text-gray-900">{car.year}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="font-medium text-gray-600">Seats</span>
-                  <span className="text-gray-900">{car.seatCapacity}</span>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="font-medium text-gray-600">
-                    Transmission
-                  </span>
-                  <span className="text-gray-900 capitalize">
-                    {car.transmission}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="font-medium text-gray-600">Fuel Type</span>
-                  <span className="text-gray-900 capitalize">
-                    {car.fuelType}
-                  </span>
-                </div>
-                {car.color && (
-                  <div className="flex justify-between py-2 border-b border-gray-200">
-                    <span className="font-medium text-gray-600">Color</span>
-                    <span className="text-gray-900 capitalize">
-                      {car.color}
-                    </span>
-                  </div>
-                )}
-                {car.licensePlate && (
-                  <div className="flex justify-between py-2 border-b border-gray-200">
-                    <span className="font-medium text-gray-600">
-                      License Plate
-                    </span>
-                    <span className="text-gray-900">{car.licensePlate}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Features - Only show if features exist in API */}
-        {car.features && Object.keys(car.features).length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Features</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {Object.entries(car.features)
-                .filter(([, value]) => value === true)
-                .map(([key]) => (
+          {/* Image Gallery */}
+          {car.images && car.images.length > 1 && (
+            <div className="mb-8">
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {car.images.map((img, index) => (
                   <div
-                    key={key}
-                    className="flex items-center gap-2 text-gray-700"
+                    key={img.id}
+                    className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImage === img.url
+                        ? "border-green-500 ring-2 ring-green-200"
+                        : "border-gray-200 hover:border-green-300"
+                    }`}
+                    onClick={() => setSelectedImage(img.url)}
                   >
-                    <i className="fa fa-check text-green-600"></i>
-                    <span className="capitalize">{key}</span>
+                    <img
+                      src={img.url}
+                      alt={`${car.brand} ${car.model} ${index + 1}`}
+                      className="w-20 h-16 md:w-24 md:h-20 object-cover"
+                    />
                   </div>
                 ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Pricing - Only show rates that exist in API */}
-        <div className="bg-gray-50 rounded-xl p-6 md:p-8 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Rental Rates</h3>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {car.rates.daily > 0 && (
-              <div className="text-center">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  Daily Rate
-                </h4>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatPrice(car.rates.daily)}
+          {/* Tab Content */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            <div className="space-y-6">
+              {/* About This Car */}
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  About This Car
+                </h3>
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  {car.description}
                 </p>
-                <p className="text-sm text-gray-600 mt-1">per day</p>
               </div>
-            )}
-            {car.rates.weekly > 0 && (
-              <div className="text-center">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  Weekly Rate
+
+              {/* Car Details */}
+              <div>
+                <h4 className="text-xl font-bold text-gray-900 mb-4">
+                  Car Details
                 </h4>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatPrice(car.rates.weekly)}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">per week</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                      Location
+                    </span>
+                    <span className="text-gray-900 font-semibold">
+                      {car.location}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                      Year
+                    </span>
+                    <span className="text-gray-900 font-semibold">
+                      {car.year}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                      Seats
+                    </span>
+                    <span className="text-gray-900 font-semibold">
+                      {car.seatCapacity} people
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                      Transmission
+                    </span>
+                    <span className="text-gray-900 font-semibold">
+                      {car.transmission}
+                    </span>
+                  </div>
+                </div>
+                {car.color && (
+                  <div className="mt-4">
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                        Color
+                      </span>
+                      <span className="text-gray-900 font-semibold">
+                        {car.color}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-            {car.rates.monthly > 0 && (
-              <div className="text-center">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  Monthly Rate
-                </h4>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatPrice(car.rates.monthly)}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">per month</p>
-              </div>
-            )}
-            {car.rates.daily === 0 &&
-              car.rates.weekly === 0 &&
-              car.rates.monthly === 0 && (
-                <div className="text-center col-span-full">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                    Pricing
+
+              {/* Features */}
+              {car.features && Object.keys(car.features).length > 0 && (
+                <div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-6">
+                    Car Features
                   </h4>
-                  <p className="text-xl font-bold text-green-600">
-                    Contact for Price
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Call us for rates
-                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(car.features)
+                      .filter(([, value]) => value === true)
+                      .map(([key]) => (
+                        <div
+                          key={key}
+                          className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <span className="text-gray-800 font-medium leading-relaxed capitalize">
+                            {key}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
                 </div>
               )}
-          </div>
-          <div className="mt-6 text-center">
-            <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm md:text-base">
-              Book Now
-            </button>
+            </div>
           </div>
         </div>
-      </article>
+
+        {/* Booking Sidebar */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-4">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-8">
+              <div className="text-center mb-6">
+                <div className="bg-green-600 text-white p-4 rounded-xl mb-4">
+                  <span className="text-3xl font-bold">
+                    From {formatPrice(car.rates.daily, "$")}/day
+                  </span>
+                  <div className="text-green-100 text-sm mt-1">per day</div>
+                </div>
+              </div>
+
+              <div className="space-y-6 mb-8">
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Preferred Date
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={
+                        selectedDate
+                          ? new Date(selectedDate).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : ""
+                      }
+                      placeholder="Select a date"
+                      readOnly
+                      onClick={() => setShowCalendar(!showCalendar)}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                  {showCalendar && <CustomCalendar />}
+                </div>
+
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Number of Days
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowDaysDropdown(!showDaysDropdown)}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
+                    >
+                      <span className="font-medium">{selectedDays}</span>
+                      <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          showDaysDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        ></path>
+                      </svg>
+                    </button>
+                    {showDaysDropdown && <CustomDaysDropdown />}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Special Requests
+                  </label>
+                  <textarea
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 h-24 resize-none transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300"
+                    placeholder="Any special requirements or requests..."
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                  Book Now
+                </button>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-sm text-gray-600 mb-4 text-center font-medium">
+                  Need help? Contact us:
+                </p>
+                <div className="space-y-3">
+                  <a
+                    href="tel:+250780006775"
+                    className="flex items-center justify-center text-green-600 hover:text-green-700 hover:bg-green-50 p-4 rounded-xl transition-all duration-200 border border-green-200"
+                  >
+                    <span className="text-sm font-semibold">
+                      +250 780006775
+                    </span>
+                  </a>
+                  <a
+                    href="mailto:info@travooz.com"
+                    className="flex items-center justify-center text-green-600 hover:text-green-700 hover:bg-green-50 p-4 rounded-xl transition-all duration-200 border border-green-200"
+                  >
+                    <span className="text-sm font-semibold">
+                      info@travooz.com
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Related Cars */}
       {relatedCars.length > 0 && (
@@ -416,25 +662,6 @@ const CarDetails = () => {
           </div>
         </section>
       )}
-
-      {/* Contact CTA */}
-      <div className="bg-green-50 rounded-xl p-6 md:p-8 text-center border border-green-100 mt-8 md:mt-12 shadow-sm">
-        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
-          Ready to Hit the Road?
-        </h3>
-        <p className="text-gray-600 mb-6 text-base md:text-lg">
-          Book this car now or contact us for special rates and custom
-          arrangements.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm md:text-base">
-            Book This Car
-          </button>
-          <button className="bg-white hover:bg-gray-50 text-green-600 border-2 border-green-600 px-6 md:px-8 py-3 rounded-lg font-semibold transition-all duration-200 text-sm md:text-base">
-            Contact Us
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

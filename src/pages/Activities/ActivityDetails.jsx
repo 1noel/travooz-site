@@ -215,20 +215,6 @@ const ActivityDetails = () => {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
               {activity.name}
             </h1>
-            <div className="flex items-center text-gray-600">
-              {activity.location && (
-                <>
-                  <i className="fa fa-map-marker-alt mr-2 text-green-600"></i>
-                  <span>{activity.location}</span>
-                </>
-              )}
-              {activity.subcategory && (
-                <>
-                  <span className="mx-2">•</span>
-                  <span>{activity.subcategory}</span>
-                </>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -255,9 +241,6 @@ const ActivityDetails = () => {
             {/* Image Thumbnails */}
             {allImages.length > 1 && (
               <div>
-                <p className="text-sm text-gray-600 mb-2">
-                  More Photos ({allImages.length})
-                </p>
                 <div className="flex gap-3 overflow-x-auto pb-2">
                   {allImages.map((image, index) => (
                     <div
@@ -307,12 +290,6 @@ const ActivityDetails = () => {
                 <div>
                   <span className="font-medium text-gray-800">Capacity:</span>{" "}
                   {activity.capacity} people
-                </div>
-              )}
-              {activity.subcategory && (
-                <div>
-                  <span className="font-medium text-gray-800">Category:</span>{" "}
-                  {activity.subcategory}
                 </div>
               )}
               {activity.schedule && (

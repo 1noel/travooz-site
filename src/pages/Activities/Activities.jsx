@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import {
   activityServices,
   transformActivityToFrontend,
-  getUniqueLocations,
   filterActivities,
 } from "../../api/activities";
 import { subcategoryServices } from "../../api/subcategories";
+import { locationServices } from "../../api/locations";
 
 const Activities = () => {
   const [activities, setActivities] = useState([]);
@@ -19,6 +19,8 @@ const Activities = () => {
   const [locations, setLocations] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const navigate = useNavigate();
 
@@ -57,10 +59,6 @@ const Activities = () => {
           });
           setActivities(transformedActivities);
           setFilteredActivities(transformedActivities);
-
-          // Extract unique locations
-          const uniqueLocations = getUniqueLocations(response.data);
-          setLocations(uniqueLocations);
         } else {
           setError("No activities available");
         }
@@ -74,6 +72,26 @@ const Activities = () => {
 
     // Fetch activities immediately
     fetchActivities();
+  }, []);
+
+  // Fetch locations from the dedicated API
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await locationServices.fetchLocations();
+        if (response.success && response.data) {
+          // Extract location names from the API response
+          const locationNames = response.data.map(
+            (location) => location.location_name
+          );
+          setLocations(locationNames);
+        }
+      } catch (error) {
+        console.error("Failed to fetch locations:", error);
+      }
+    };
+
+    fetchLocations();
   }, []);
 
   // Scroll to top when component mounts
@@ -118,7 +136,145 @@ const Activities = () => {
     setSelectedLocation("");
     setSelectedSubcategory("");
     setPriceRange({ min: "", max: "" });
+    setShowLocationDropdown(false);
+    setShowCategoryDropdown(false);
   };
+
+  // Custom Location Dropdown component
+  const CustomLocationDropdown = () => {
+    const locationOptions = [
+      { value: "", label: "All Locations" },
+      ...locations.map((location) => ({ value: location, label: location })),
+    ];
+
+    const handleLocationSelect = (option) => {
+      setSelectedLocation(option.value);
+      setShowLocationDropdown(false);
+    };
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+        {locationOptions.map((option, index) => (
+          <button
+            key={option.value}
+            onClick={() => handleLocationSelect(option)}
+            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-green-50 hover:text-green-600 transition-all duration-200 ${
+              selectedLocation === option.value
+                ? "bg-green-50 text-green-600 font-medium"
+                : "text-gray-700"
+            } ${index === 0 ? "rounded-t-xl" : ""} ${
+              index === locationOptions.length - 1 ? "rounded-b-xl" : ""
+            }`}
+            style={{
+              borderRadius:
+                index === 0
+                  ? "0.75rem 0.75rem 0 0"
+                  : index === locationOptions.length - 1
+                  ? "0 0 0.75rem 0.75rem"
+                  : "0",
+            }}
+          >
+            <span className="font-medium">{option.label}</span>
+            {selectedLocation === option.value && (
+              <span>
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // Custom Category Dropdown component
+  const CustomCategoryDropdown = () => {
+    const categoryOptions = [
+      { value: "", label: "All Categories" },
+      ...subcategories.map((subcategory) => ({
+        value: subcategory.name,
+        label: subcategory.name,
+      })),
+    ];
+
+    const handleCategorySelect = (option) => {
+      setSelectedSubcategory(option.value);
+      setShowCategoryDropdown(false);
+    };
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+        {categoryOptions.map((option, index) => (
+          <button
+            key={option.value}
+            onClick={() => handleCategorySelect(option)}
+            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-green-50 hover:text-green-600 transition-all duration-200 ${
+              selectedSubcategory === option.value
+                ? "bg-green-50 text-green-600 font-medium"
+                : "text-gray-700"
+            } ${index === 0 ? "rounded-t-xl" : ""} ${
+              index === categoryOptions.length - 1 ? "rounded-b-xl" : ""
+            }`}
+            style={{
+              borderRadius:
+                index === 0
+                  ? "0.75rem 0.75rem 0 0"
+                  : index === categoryOptions.length - 1
+                  ? "0 0 0.75rem 0.75rem"
+                  : "0",
+            }}
+          >
+            <span className="font-medium">{option.label}</span>
+            {selectedSubcategory === option.value && (
+              <span>
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showLocationDropdown && !event.target.closest(".location-dropdown")) {
+        setShowLocationDropdown(false);
+      }
+      if (showCategoryDropdown && !event.target.closest(".category-dropdown")) {
+        setShowCategoryDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showLocationDropdown, showCategoryDropdown]);
 
   if (loading) {
     return (
@@ -218,44 +374,71 @@ const Activities = () => {
           </div>
 
           {/* Location Filter */}
-          <div>
+          <div className="location-dropdown">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Location
             </label>
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 appearance-none"
-            >
-              <option value="">All Locations</option>
-              {locations.map((location) => (
-                <option key={location} value={location}>
-                  {location}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+                className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
+              >
+                <span className="font-medium">
+                  {selectedLocation || "All Locations"}
+                </span>
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                    showLocationDropdown ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {showLocationDropdown && <CustomLocationDropdown />}
+            </div>
           </div>
 
           {/* Subcategory Filter */}
-          <div>
+          <div className="category-dropdown">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Category
             </label>
-            <select
-              value={selectedSubcategory}
-              onChange={(e) => setSelectedSubcategory(e.target.value)}
-              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 appearance-none"
-            >
-              <option value="">All Categories</option>
-              {subcategories.map((subcategory) => (
-                <option
-                  key={subcategory.subcategory_id}
-                  value={subcategory.name}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
+              >
+                <span className="font-medium">
+                  {selectedSubcategory || "All Categories"}
+                </span>
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                    showCategoryDropdown ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  {subcategory.name}
-                </option>
-              ))}
-            </select>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {showCategoryDropdown && <CustomCategoryDropdown />}
+            </div>
           </div>
 
           {/* Price Range */}

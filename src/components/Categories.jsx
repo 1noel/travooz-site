@@ -1,12 +1,48 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { categoryServices } from "../api/categories_api";
+import { useFilterContext } from "../context/useFilterContext";
+
+const resolveCategoryConfig = (categoryName) => {
+  const normalizedName = categoryName.toLowerCase();
+
+  if (normalizedName.includes("eating")) {
+    return { route: "/eating-out", filterKey: "eatingOut" };
+  }
+
+  if (normalizedName.includes("activities")) {
+    return { route: "/activities", filterKey: "activities" };
+  }
+
+  if (normalizedName.includes("tour") || normalizedName.includes("package")) {
+    return { route: "/tour-packages", filterKey: "tourPackages" };
+  }
+
+  if (normalizedName.includes("car") || normalizedName.includes("rental")) {
+    return { route: "/cars", filterKey: "carRental" };
+  }
+
+  if (
+    normalizedName.includes("rest") ||
+    normalizedName.includes("stay") ||
+    normalizedName.includes("hotel")
+  ) {
+    return { route: "/hotels", filterKey: "restStay" };
+  }
+
+  if (normalizedName.includes("blog")) {
+    return { route: "/blogs", filterKey: "default" };
+  }
+
+  return { route: null, filterKey: null };
+};
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { activeCategory, setActiveCategory } = useFilterContext();
 
   // Dynamic icon mapping based on category names
   const getIconForCategory = (categoryName) => {
@@ -25,30 +61,15 @@ const Categories = () => {
 
   // Handle category click navigation
   const handleCategoryClick = (categoryName) => {
-    // Check if category name contains "eating" (case insensitive)
-    const normalizedName = categoryName.toLowerCase();
-    if (normalizedName.includes("eating")) {
-      navigate("/eating-out");
-    } else if (normalizedName.includes("activities")) {
-      navigate("/activities");
-    } else if (
-      normalizedName.includes("tour") ||
-      normalizedName.includes("package")
-    ) {
-      navigate("/tour-packages");
-    } else if (
-      normalizedName.includes("car") ||
-      normalizedName.includes("rental")
-    ) {
-      navigate("/cars");
-    } else if (
-      normalizedName.includes("rest") ||
-      normalizedName.includes("stay") ||
-      normalizedName.includes("hotel")
-    ) {
-      navigate("/hotels");
+    const { route, filterKey } = resolveCategoryConfig(categoryName);
+
+    if (filterKey) {
+      setActiveCategory(filterKey);
     }
-    // Add more navigation logic for other categories as needed
+
+    if (route) {
+      navigate(route);
+    }
   };
 
   useEffect(() => {
@@ -131,23 +152,28 @@ const Categories = () => {
   return (
     <div className="my-5 px-4">
       <div className="flex justify-center gap-2 lg:gap-3 items-center flex-wrap max-w-7xl mx-auto">
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => handleCategoryClick(category.name)}
-            className="px-3 py-2 lg:px-4 lg:py-2 rounded-xl bg-white shadow-sm border border-gray-100 
-                                 text-green-500 hover:bg-green-50 hover:shadow-md hover:border-green-200
-                                 transition-all duration-200 ease-in-out cursor-pointer
-                                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50
-                                 text-sm lg:text-base"
-            title={category.description}
-          >
-            <i
-              className={`${category.icon} mr-1 lg:mr-2 text-xs lg:text-sm`}
-            ></i>
-            <span className="font-medium">{category.name}</span>
-          </button>
-        ))}
+        {categories.map((category) => {
+          const { filterKey } = resolveCategoryConfig(category.name);
+          const isActive = filterKey && filterKey === activeCategory;
+
+          return (
+            <button
+              key={category.id}
+              onClick={() => handleCategoryClick(category.name)}
+              className={`px-3 py-2 lg:px-4 lg:py-2 rounded-xl bg-white shadow-sm border transition-all duration-200 ease-in-out cursor-pointer focus:outline-none focus:ring-2 focus:ring-opacity-50 text-sm lg:text-base ${
+                isActive
+                  ? "border-green-500 text-green-600 bg-green-50 focus:ring-green-500"
+                  : "border-gray-100 text-green-500 hover:bg-green-50 hover:shadow-md hover:border-green-200 focus:ring-green-500"
+              }`}
+              title={category.description}
+            >
+              <i
+                className={`${category.icon} mr-1 lg:mr-2 text-xs lg:text-sm`}
+              ></i>
+              <span className="font-medium">{category.name}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

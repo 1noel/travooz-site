@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  homestayServices,
-  transformHomestayData,
-  transformRoomData,
-} from "../../api/homestays";
+import { homestayServices, transformHomestayData } from "../../api/homestays";
 
 const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [hotel, setHotel] = useState(null);
-  const [rooms, setRooms] = useState([]);
-  const [roomsLoading, setRoomsLoading] = useState(false);
-  const [roomsError, setRoomsError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
@@ -277,36 +270,6 @@ const HotelDetails = () => {
     fetchHotelDetails();
   }, [id]);
 
-  // Fetch rooms data separately
-  useEffect(() => {
-    const fetchRoomsData = async () => {
-      if (!hotel || !id) return;
-
-      try {
-        setRoomsLoading(true);
-        setRoomsError(null);
-
-        const response = await homestayServices.fetchRoomsByHomestayId(id);
-
-        if (response.success && response.data) {
-          const transformedRooms = response.data.map((room) =>
-            transformRoomData(room)
-          );
-          setRooms(transformedRooms);
-        } else {
-          setRoomsError("No rooms available");
-        }
-      } catch (error) {
-        console.error("Error fetching rooms:", error);
-        setRoomsError("Failed to load rooms");
-      } finally {
-        setRoomsLoading(false);
-      }
-    };
-
-    fetchRoomsData();
-  }, [hotel, id]);
-
   // Only show amenities/features that exist in the API response
   const getAvailableAmenities = (hotel) => {
     if (!hotel || !hotel.features) return [];
@@ -567,275 +530,156 @@ const HotelDetails = () => {
         </div>
       )}
 
-      {/* Available Rooms and Booking Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
-        {/* Available Rooms Section */}
-        <div className="lg:col-span-3">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">
-            Available Rooms
-          </h3>
-
-          {roomsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[...Array(2)].map((_, index) => (
+      {/* Amenities and Booking Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Amenities - Only show if hotel has features */}
+        {hotel && hotel.features && (
+          <div className="lg:col-span-2">
+            <h3 className="text-xl font-semibold mb-4">Hotel Amenities</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {getAvailableAmenities(hotel).map((amenity, index) => (
                 <div
                   key={index}
-                  className="animate-pulse bg-white rounded-xl shadow-md overflow-hidden"
+                  className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
                 >
-                  <div className="h-48 bg-gray-200"></div>
-                  <div className="p-6">
-                    <div className="h-6 bg-gray-200 rounded mb-3"></div>
-                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                    <div className="flex justify-between items-center">
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
-                      <div className="h-10 bg-gray-200 rounded w-24"></div>
-                    </div>
-                  </div>
+                  <span className="text-green-500">✓</span>
+                  <span>{amenity}</span>
                 </div>
               ))}
             </div>
-          ) : roomsError ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600">{roomsError}</p>
-            </div>
-          ) : rooms.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {rooms.map((room) => (
-                <div
-                  key={room.id}
-                  className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200"
-                >
-                  <div className="relative h-48">
-                    <img
-                      src={room.mainImage}
-                      alt={room.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = "/images/default-room.jpg";
-                      }}
-                    />
-                    {room.discount > 0 && (
-                      <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-semibold">
-                        -{room.discount}%
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 bg-black bg-opacity-50 text-white px-2 py-1 rounded-md text-sm">
-                      {room.images.length} photos
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <h4 className="text-xl font-semibold text-gray-800 mb-2">
-                      {room.name}
-                    </h4>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {room.description}
-                    </p>
-
-                    {/* Room Details */}
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="flex items-center gap-2 text-sm text-gray-500">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                          ></path>
-                        </svg>
-                        {room.maxPeople} guests
-                      </span>
-                      <span className="text-green-600 font-medium text-sm">
-                        {room.status === "available"
-                          ? "Available"
-                          : "Unavailable"}
-                      </span>
-                    </div>
-
-                    {/* Included Services */}
-                    {room.included.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">
-                          Included:
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {room.included.join(", ")}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Price and Book Button */}
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                      <div>
-                        <div className="text-2xl font-bold text-green-600">
-                          RWF {room.price.toLocaleString()}
-                        </div>
-                        <div className="text-gray-500 text-sm">
-                          /night
-                        </div>
-                      </div>
-                      <button
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
-                        disabled={room.status !== "available"}
-                      >
-                        {room.status === "available"
-                          ? "Select Room"
-                          : "Unavailable"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-600">
-                No rooms available for this accommodation
-              </p>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Booking Card */}
-        <div className="lg:col-span-2">
-          <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg sticky top-4">
-            <h3 className="text-xl font-semibold mb-6">Quick Booking</h3>
-            <div className="space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg h-fit">
+          <h3 className="text-xl font-semibold mb-6">Quick Booking</h3>
+          <div className="space-y-6">
+            <div className="relative">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Check-in
+              </label>
               <div className="relative">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Check-in
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={selectedCheckIn}
-                    placeholder="Select check-in date"
-                    readOnly
-                    onClick={() => setShowCheckInCalendar(!showCheckInCalendar)}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
-                {showCheckInCalendar && (
-                  <CustomCalendar
-                    onDateSelect={setSelectedCheckIn}
-                    onClose={() => setShowCheckInCalendar(false)}
-                  />
-                )}
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Check-out
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={selectedCheckOut}
-                    placeholder="Select check-out date"
-                    readOnly
-                    onClick={() =>
-                      setShowCheckOutCalendar(!showCheckOutCalendar)
-                    }
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
-                {showCheckOutCalendar && (
-                  <CustomCalendar
-                    onDateSelect={setSelectedCheckOut}
-                    onClose={() => setShowCheckOutCalendar(false)}
-                  />
-                )}
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Guests
-                </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowGuestsDropdown(!showGuestsDropdown)}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
+                <input
+                  type="text"
+                  value={
+                    selectedCheckIn
+                      ? new Date(selectedCheckIn).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : ""
+                  }
+                  placeholder="Select check-in date"
+                  readOnly
+                  onClick={() => setShowCheckInCalendar(!showCheckInCalendar)}
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <span className="font-medium">{selectedGuests}</span>
-                    <svg
-                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                        showGuestsDropdown ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      ></path>
-                    </svg>
-                  </button>
-                  {showGuestsDropdown && <CustomGuestsDropdown />}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    ></path>
+                  </svg>
                 </div>
               </div>
-              <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                Check Availability
-              </button>
+              {showCheckInCalendar && (
+                <CustomCalendar
+                  onDateSelect={setSelectedCheckIn}
+                  onClose={() => setShowCheckInCalendar(false)}
+                />
+              )}
             </div>
+            <div className="relative">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Check-out
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={
+                    selectedCheckOut
+                      ? new Date(selectedCheckOut).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : ""
+                  }
+                  placeholder="Select check-out date"
+                  readOnly
+                  onClick={() => setShowCheckOutCalendar(!showCheckOutCalendar)}
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
+              {showCheckOutCalendar && (
+                <CustomCalendar
+                  onDateSelect={setSelectedCheckOut}
+                  onClose={() => setShowCheckOutCalendar(false)}
+                />
+              )}
+            </div>
+            <div className="relative">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Guests
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowGuestsDropdown(!showGuestsDropdown)}
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
+                >
+                  <span className="font-medium">{selectedGuests}</span>
+                  <svg
+                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                      showGuestsDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </button>
+                {showGuestsDropdown && <CustomGuestsDropdown />}
+              </div>
+            </div>
+            <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+              Check Availability
+            </button>
           </div>
         </div>
       </div>
-
-      {/* Hotel Amenities Section */}
-      {hotel && hotel.features && (
-        <div className="mb-12">
-          <h3 className="text-xl font-semibold mb-4">Hotel Amenities</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {getAvailableAmenities(hotel).map((amenity, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
-              >
-                <span className="text-green-500">✓</span>
-                <span>{amenity}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

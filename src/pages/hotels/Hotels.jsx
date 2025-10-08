@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { subcategoryServices } from "../../api/subcategories";
 import { homestayServices, transformHomestayData } from "../../api/homestays";
-import Filter from "../../components/Filter";
 
 const Hotels = () => {
   const navigate = useNavigate();
@@ -156,9 +155,6 @@ const Hotels = () => {
           Home Stays
         </h1>
       </div>
-
-      {/* Search Filter */}
-      <Filter />
 
       {/* Category Filter */}
       <div className="mb-10">

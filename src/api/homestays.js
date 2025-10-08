@@ -37,21 +37,6 @@ export const homestayServices = {
       return { data: null, success: false, error: error.message };
     }
   },
-
-  // Fetch rooms for a specific homestay
-  fetchRoomsByHomestayId: async (homestayId) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/rooms?homestay_id=${homestayId}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const rooms = await response.json();
-      return { data: rooms, success: true };
-    } catch (error) {
-      console.error("Error fetching rooms:", error);
-      return { data: [], success: false, error: error.message };
-    }
-  },
 };
 
 // Transform homestay data for frontend use
@@ -135,80 +120,6 @@ export const transformHomestayData = (homestay) => {
   }
 
   return transformedData;
-};
-
-// Transform room data for frontend use
-export const transformRoomData = (room) => {
-  if (!room) return null;
-
-  // Transform room images
-  const images = room.images
-    ? room.images
-        .sort((a, b) => a.image_order - b.image_order)
-        .map((img) => ({
-          id: img.image_id,
-          url: `${API_BASE_URL}/${img.image_path}`,
-          order: img.image_order,
-        }))
-    : [];
-
-  // Get main image (first image)
-  const mainImage = images.length > 0 ? images[0].url : "/images/default-room.jpg";
-
-  // Transform amenities (filter only available ones)
-  const amenities = [];
-  const amenityLabels = {
-    minibar: "Minibar",
-    tea_coffee_facilities: "Tea & Coffee",
-    wardrobe_hangers: "Wardrobe",
-    luggage_rack: "Luggage Rack",
-    safe: "Safe",
-    air_conditioner: "AC",
-    heater: "Heater",
-    fan: "Fan",
-    wifi: "WiFi",
-    tv: "TV",
-    speaker: "Speaker",
-    phone: "Phone",
-    usb_charging_points: "USB Charging",
-    power_adapters: "Power Adapters",
-    desk_workspace: "Desk",
-    iron_ironing_board: "Iron & Board",
-    hairdryer: "Hair Dryer",
-    towels: "Towels",
-    bathrobes: "Bathrobes",
-    slippers: "Slippers",
-    toiletries: "Toiletries",
-    teeth_shaving_kits: "Shaving Kits",
-    table_lamps: "Table Lamps",
-    bedside_lamps: "Bedside Lamps",
-    alarm_clock: "Alarm Clock",
-    laundry_bag: "Laundry Bag"
-  };
-
-  // Add available amenities
-  Object.keys(amenityLabels).forEach(key => {
-    if (room[key] === 1 || (room.amenities && room.amenities[key] === 1)) {
-      amenities.push(amenityLabels[key]);
-    }
-  });
-
-  return {
-    id: room.room_id,
-    homestayId: room.homestay_id,
-    name: room.name,
-    description: room.description,
-    price: parseFloat(room.price),
-    maxPeople: room.max_people,
-    discount: parseFloat(room.discount || 0),
-    included: room.included ? room.included.split(', ') : [],
-    status: room.status,
-    mainImage,
-    images: images.map(img => img.url),
-    amenities,
-    createdAt: room.created_at,
-    updatedAt: room.updated_at
-  };
 };
 
 export default homestayServices;

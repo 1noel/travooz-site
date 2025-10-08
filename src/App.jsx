@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Hotels from "./pages/hotels/Hotels";
 import Header from "./components/Header";
@@ -14,11 +14,22 @@ import Blogs from "./pages/Blogs/Blogs";
 import BlogDetails from "./pages/Blogs/BlogDetails";
 import Cars from "./pages/Cars/Cars";
 import CarDetails from "./pages/Cars/CarDetails";
+import Filter from "./components/Filter";
+import { FilterProvider } from "./context/FilterProvider";
+import { getFilterSettingsForPath } from "./context/filterSettings";
 
-const App = () => {
+const AppContent = () => {
+  const location = useLocation();
+  const { show } = getFilterSettingsForPath(location.pathname);
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <>
       <Header />
+      {show && (
+        <section className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 mt-6">
+          <Filter />
+        </section>
+      )}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/hotels" element={<Hotels />} />
@@ -34,7 +45,17 @@ const App = () => {
         <Route path="/cars" element={<Cars />} />
         <Route path="/car/:id" element={<CarDetails />} />
       </Routes>
-    </div>
+    </>
+  );
+};
+
+const App = () => {
+  return (
+    <FilterProvider>
+      <div className="min-h-screen bg-gray-100">
+        <AppContent />
+      </div>
+    </FilterProvider>
   );
 };
 

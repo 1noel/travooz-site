@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useFilterContext } from "../context/useFilterContext";
 
 const FILTER_CONFIGS = {
@@ -111,68 +111,303 @@ const FILTER_CONFIGS = {
 
 FILTER_CONFIGS.default = FILTER_CONFIGS.restStay;
 
-const formatDateForDisplay = (value) => {
-  if (!value) return "";
+const DISPLAY_DATE_OPTIONS = { weekday: "short", month: "short", day: "numeric" };
+
+const normalizeToStartOfDay = (value) => {
+  if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return null;
   }
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const parseInputDate = (value) => {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    return normalizeToStartOfDay(value);
+  }
+
+  if (typeof value === "string") {
+    const isoSegments = value.split("-");
+    if (isoSegments.length === 3) {
+      const [yearPart, monthPart, dayPart] = isoSegments;
+      const year = Number(yearPart);
+      const month = Number(monthPart) - 1;
+      const day = Number(dayPart);
+      const parsed = new Date(year, month, day);
+
+      if (
+        !Number.isNaN(parsed.getTime()) &&
+        parsed.getFullYear() === year &&
+        parsed.getMonth() === month &&
+        parsed.getDate() === day
+      ) {
+        return normalizeToStartOfDay(parsed);
+      }
+    }
+
+    const fallback = new Date(value);
+    if (!Number.isNaN(fallback.getTime())) {
+      return normalizeToStartOfDay(fallback);
+    }
+  }
+
+  return null;
+};
+
+const formatDateForStorage = (value) => {
+  const date = parseInputDate(value);
+  if (!date) return "";
+
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateForDisplay = (value) => {
+  const date = parseInputDate(value);
+  if (!date) return "";
+
+  return date.toLocaleDateString(undefined, DISPLAY_DATE_OPTIONS);
+};
+
+const isSameDay = (left, right) => {
+  if (!left || !right) return false;
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate()
+  );
+};
+
+const isDateBefore = (left, right) => {
+  if (!left || !right) return false;
+  return left.getTime() < right.getTime();
+};
+
+const getInitialCalendarState = (dateLike) => {
+  const base = parseInputDate(dateLike) ?? new Date();
+  return {
+    month: base.getMonth(),
+    year: base.getFullYear(),
+  };
 };
 
 const Filter = () => {
   const { activeCategory } = useFilterContext();
+
   const config = useMemo(
     () => FILTER_CONFIGS[activeCategory] ?? FILTER_CONFIGS.default,
     [activeCategory]
   );
 
-  const [showCheckInCalendar, setShowCheckInCalendar] = useState(false);
-  const [showCheckOutCalendar, setShowCheckOutCalendar] = useState(false);
+  const dropdownOptions = useMemo(
+    () => config.dropdownOptions?.map((label) => ({ value: label, label })) ?? [],
+    [config.dropdownOptions]
+  );
+
+  const [selectedAdults, setSelectedAdults] = useState(
+    config.dropdownDefault ?? config.dropdownOptions?.[0] ?? ""
+  );
   const [showAdultsDropdown, setShowAdultsDropdown] = useState(false);
   const [checkInValue, setCheckInValue] = useState("");
   const [checkOutValue, setCheckOutValue] = useState("");
-  const [selectedAdults, setSelectedAdults] = useState(
-    config.dropdownDefault
-  );
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [calendarState, setCalendarState] = useState(() => getInitialCalendarState());
+  const [tempRange, setTempRange] = useState({ start: null, end: null });
+  const [hoveredDate, setHoveredDate] = useState(null);
+  const [activeDateField, setActiveDateField] = useState(null);
+  const filterRef = useRef(null);
+
+  const isCheckInDateField = config.checkInFieldType === "date";
+  const isCheckOutDateField = config.checkOutFieldType === "date";
+  const isRangeMode = isCheckInDateField && isCheckOutDateField;
+
+  useEffect(() => {
+    const fallback = config.dropdownOptions?.[0] ?? "";
+    setSelectedAdults(config.dropdownDefault ?? fallback);
+  }, [config.dropdownDefault, config.dropdownOptions]);
+
+  useEffect(() => {
+    setShowAdultsDropdown(false);
+    setShowDatePicker(false);
+    setCheckInValue("");
+    setCheckOutValue("");
+    setTempRange({ start: null, end: null });
+    setHoveredDate(null);
+    setActiveDateField(null);
+    setCalendarState(getInitialCalendarState());
+  }, [config.key]);
+
+  useEffect(() => {
+    if (!showDatePicker) {
+      setTempRange({
+        start: parseInputDate(checkInValue),
+        end: parseInputDate(checkOutValue),
+      });
+      setHoveredDate(null);
+    }
+  }, [showDatePicker, checkInValue, checkOutValue]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest(".filter-field")) {
-        setShowCheckInCalendar(false);
-        setShowCheckOutCalendar(false);
+      if (!filterRef.current) return;
+      if (!filterRef.current.contains(event.target)) {
         setShowAdultsDropdown(false);
+        setShowDatePicker(false);
+        setActiveDateField(null);
+        setHoveredDate(null);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    setCheckInValue("");
-    setCheckOutValue("");
-    setSelectedAdults(config.dropdownDefault);
-    setShowCheckInCalendar(false);
-    setShowCheckOutCalendar(false);
+  const openDatePicker = (field) => {
+    if (!isCheckInDateField) return;
+
+    const startDate = parseInputDate(checkInValue);
+    const endDate = parseInputDate(checkOutValue);
+    const baseDate =
+      field === "checkout" && endDate
+        ? endDate
+        : startDate || endDate || new Date();
+
+    const normalizedBase = normalizeToStartOfDay(baseDate) ?? new Date();
+
+    setCalendarState({
+      month: normalizedBase.getMonth(),
+      year: normalizedBase.getFullYear(),
+    });
+    setTempRange({ start: startDate, end: endDate });
+    setActiveDateField(field);
     setShowAdultsDropdown(false);
-  }, [activeCategory, config.dropdownDefault]);
+    setShowDatePicker(true);
+  };
 
-  const isCheckInDateField = config.checkInFieldType === "date";
-  const isCheckOutDateField = config.checkOutFieldType === "date";
+  const closeDatePicker = () => {
+    setShowDatePicker(false);
+    setHoveredDate(null);
+    setActiveDateField(null);
+  };
 
-  const CustomCalendar = ({ onDateSelect, onClose }) => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const [displayMonth, setDisplayMonth] = useState(currentMonth);
-    const [displayYear, setDisplayYear] = useState(currentYear);
+  const handleDateSelection = (date) => {
+    if (!date) return;
 
+    const normalizedDate = normalizeToStartOfDay(date);
+    if (!normalizedDate) return;
+
+    if (!isRangeMode) {
+      setCheckInValue(formatDateForStorage(normalizedDate));
+      closeDatePicker();
+      return;
+    }
+
+    if (!tempRange.start || (tempRange.start && tempRange.end)) {
+      setTempRange({ start: normalizedDate, end: null });
+      setHoveredDate(null);
+      if (activeDateField === "checkout") {
+        setActiveDateField("checkout");
+      }
+      return;
+    }
+
+    let rangeStart = tempRange.start;
+    let rangeEnd = normalizedDate;
+
+    if (isDateBefore(rangeEnd, rangeStart)) {
+      [rangeStart, rangeEnd] = [rangeEnd, rangeStart];
+    }
+
+    setTempRange({ start: rangeStart, end: rangeEnd });
+    setCheckInValue(formatDateForStorage(rangeStart));
+    setCheckOutValue(formatDateForStorage(rangeEnd));
+    closeDatePicker();
+  };
+
+  const handleClearDates = () => {
+    setTempRange({ start: null, end: null });
+    setCheckInValue("");
+    if (isRangeMode) {
+      setCheckOutValue("");
+    }
+    setHoveredDate(null);
+  };
+
+  const handleMonthChange = (direction) => {
+    setCalendarState((prev) => {
+      let newMonth = prev.month + direction;
+      let newYear = prev.year;
+
+      if (newMonth > 11) {
+        newMonth = 0;
+        newYear += 1;
+      } else if (newMonth < 0) {
+        newMonth = 11;
+        newYear -= 1;
+      }
+
+      return { month: newMonth, year: newYear };
+    });
+  };
+
+  const startOfCurrentMonth = () => {
+    const date = new Date();
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  };
+
+  const isPrevDisabled = () => {
+    const prevMonthDate = new Date(calendarState.year, calendarState.month - 1, 1);
+    return prevMonthDate < startOfCurrentMonth();
+  };
+
+  const getDayClassNames = (options) => {
+    const {
+      isDisabled,
+      isSelectedStart,
+      isSelectedEnd,
+      isInRange,
+      isPreview,
+    } = options;
+
+    let baseClasses =
+      "h-12 w-full flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-150";
+
+    if (isDisabled) {
+      baseClasses += " text-gray-300 cursor-not-allowed";
+      return baseClasses;
+    }
+
+    if (isSelectedStart || isSelectedEnd) {
+      baseClasses += " bg-green-600 text-white shadow-sm";
+      if (isSelectedStart && !isSelectedEnd) {
+        baseClasses += " rounded-r-none";
+      }
+      if (isSelectedEnd && !isSelectedStart) {
+        baseClasses += " rounded-l-none";
+      }
+      return baseClasses;
+    }
+
+    if (isInRange) {
+      return `${baseClasses} bg-green-200/80 text-green-900 ring-2 ring-green-400`; 
+    }
+
+    if (isPreview) {
+      return `${baseClasses} bg-green-100 text-green-700`;
+    }
+
+    return `${baseClasses} text-gray-700 hover:bg-green-100 hover:text-green-700`;
+  };
+
+  const DateRangePicker = () => {
     const monthNames = [
       "January",
       "February",
@@ -188,154 +423,197 @@ const Filter = () => {
       "December",
     ];
 
-    const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
-    const getFirstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
+    const weekDayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-    const handleDateSelect = (day) => {
-      const date = new Date(displayYear, displayMonth, day);
-      const formattedDate = date.toLocaleDateString("en-CA");
-      onDateSelect(formattedDate);
-      onClose();
-    };
+    const renderMonth = (monthOffset) => {
+      let monthIndex = calendarState.month + monthOffset;
+      let yearIndex = calendarState.year;
 
-    const handlePrevMonth = () => {
-      if (displayMonth === 0) {
-        setDisplayMonth(11);
-        setDisplayYear((year) => year - 1);
-      } else {
-        setDisplayMonth((month) => month - 1);
+      if (monthIndex > 11) {
+        monthIndex -= 12;
+        yearIndex += 1;
+      } else if (monthIndex < 0) {
+        monthIndex += 12;
+        yearIndex -= 1;
       }
-    };
 
-    const handleNextMonth = () => {
-      if (displayMonth === 11) {
-        setDisplayMonth(0);
-        setDisplayYear((year) => year + 1);
-      } else {
-        setDisplayMonth((month) => month + 1);
+      const firstDayDate = new Date(yearIndex, monthIndex, 1);
+      const firstDay = firstDayDate.getDay();
+      const daysInMonth = new Date(yearIndex, monthIndex + 1, 0).getDate();
+
+      const today = normalizeToStartOfDay(new Date());
+
+      const cells = [];
+
+      for (let index = 0; index < firstDay; index += 1) {
+        cells.push(null);
       }
-    };
 
-    const daysInMonth = getDaysInMonth(displayMonth, displayYear);
-    const firstDay = getFirstDayOfMonth(displayMonth, displayYear);
-    const dayCells = [];
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        cells.push(new Date(yearIndex, monthIndex, day));
+      }
 
-    for (let i = 0; i < firstDay; i += 1) {
-      dayCells.push(<div key={`empty-${i}`} className="h-12 w-12" />);
-    }
+      const selectedStart = tempRange.start;
+      const selectedEnd = tempRange.end;
 
-    for (let day = 1; day <= daysInMonth; day += 1) {
-      const isToday =
-        day === today.getDate() &&
-        displayMonth === currentMonth &&
-        displayYear === currentYear;
-      const isPast =
-        new Date(displayYear, displayMonth, day) <
-        new Date(currentYear, currentMonth, today.getDate());
+      let previewStart = null;
+      let previewEnd = null;
 
-      dayCells.push(
-        <button
-          key={day}
-          type="button"
-          onClick={() => !isPast && handleDateSelect(day)}
-          disabled={isPast}
-          className={`h-12 w-12 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200 mx-auto ${
-            isToday
-              ? "bg-green-600 text-white shadow-lg"
-              : isPast
-              ? "text-gray-300 cursor-not-allowed"
-              : "text-gray-700 hover:bg-green-100 hover:text-green-600"
-          }`}
-        >
-          {day}
-        </button>
+      if (selectedStart && !selectedEnd && hoveredDate) {
+        if (isDateBefore(hoveredDate, selectedStart)) {
+          previewStart = hoveredDate;
+          previewEnd = selectedStart;
+        } else {
+          previewStart = selectedStart;
+          previewEnd = hoveredDate;
+        }
+      }
+
+      return (
+        <div className="flex-1" key={`${yearIndex}-${monthIndex}`}>
+          <div className="flex items-center justify-between mb-4">
+            <p className="font-semibold text-gray-800">
+              {monthNames[monthIndex]} {yearIndex}
+            </p>
+          </div>
+          <div className="grid grid-cols-7 gap-2 mb-2">
+            {weekDayNames.map((day) => (
+              <div
+                key={`${monthIndex}-${day}`}
+                className="text-xs font-medium text-gray-500 text-center"
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-2">
+            {cells.map((cell, cellIndex) => {
+              if (!cell) {
+                return <div key={`empty-${monthIndex}-${cellIndex}`} />;
+              }
+
+              const normalizedCell = normalizeToStartOfDay(cell);
+              const isDisabled = isDateBefore(normalizedCell, today);
+              const isSelectedStart =
+                selectedStart && isSameDay(normalizedCell, selectedStart);
+              const isSelectedEnd = selectedEnd && isSameDay(normalizedCell, selectedEnd);
+              const isWithinRange =
+                selectedStart &&
+                selectedEnd &&
+                isDateBefore(selectedStart, normalizedCell) &&
+                isDateBefore(normalizedCell, selectedEnd);
+
+              const isPreview =
+                previewStart &&
+                previewEnd &&
+                !isWithinRange &&
+                !isSelectedStart &&
+                !isSelectedEnd &&
+                isDateBefore(previewStart, normalizedCell) &&
+                isDateBefore(normalizedCell, previewEnd);
+
+              return (
+                <button
+                  type="button"
+                  key={`day-${monthIndex}-${normalizedCell.getDate()}`}
+                  onClick={() => !isDisabled && handleDateSelection(normalizedCell)}
+                  onMouseEnter={() => !isDisabled && setHoveredDate(normalizedCell)}
+                  onMouseLeave={() => setHoveredDate(null)}
+                  className={getDayClassNames({
+                    isDisabled,
+                    isSelectedStart,
+                    isSelectedEnd,
+                    isInRange: isWithinRange,
+                    isPreview,
+                  })}
+                  disabled={isDisabled}
+                >
+                  {normalizedCell.getDate()}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       );
-    }
+    };
 
     return (
-      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4 min-w-80">
-        <div className="flex items-center justify-between mb-3">
+      <div className="absolute top-full left-0 right-0 md:left-1/2 md:-translate-x-1/2 mt-3 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 p-6 w-full md:w-[620px]">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (!isPrevDisabled()) {
+                  handleMonthChange(-1);
+                }
+              }}
+              className={`p-2 rounded-full border transition-colors ${
+                isPrevDisabled()
+                  ? "border-gray-200 text-gray-300 cursor-not-allowed"
+                  : "border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-600"
+              }`}
+              disabled={isPrevDisabled()}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleMonthChange(1)}
+              className="p-2 rounded-full border border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-600 transition-colors"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+          <div className="text-sm font-semibold text-gray-700">
+            {monthNames[calendarState.month]} {calendarState.year}
+          </div>
           <button
             type="button"
-            onClick={handlePrevMonth}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            onClick={handleClearDates}
+            className="text-sm font-semibold text-green-600 hover:text-green-700"
           >
-            <svg
-              className="w-4 h-4 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <h3 className="text-base font-semibold text-gray-800">
-            {monthNames[displayMonth]} {displayYear}
-          </h3>
-          <button
-            type="button"
-            onClick={handleNextMonth}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-          >
-            <svg
-              className="w-4 h-4 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            Clear dates
           </button>
         </div>
 
-        <div className="grid grid-cols-7 gap-2 mb-3">
-          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-            <div
-              key={day}
-              className="h-8 flex items-center justify-center text-xs font-medium text-gray-500"
-            >
-              {day}
-            </div>
-          ))}
+        <div className="flex flex-col gap-6 md:flex-row">
+          {renderMonth(0)}
+          {renderMonth(1)}
         </div>
 
-        <div className="grid grid-cols-7 gap-2 mb-3">{dayCells}</div>
-
-        <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-sm font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              onDateSelect("");
-              onClose();
-            }}
-            className="text-green-600 hover:text-green-700 text-sm font-medium"
-          >
-            Clear
-          </button>
-        </div>
+        {isRangeMode && (!tempRange.start || !tempRange.end) && (
+          <p className="mt-4 text-xs text-gray-500">
+            Select a check-in date, then choose your check-out date.
+          </p>
+        )}
       </div>
     );
   };
-
-  const dropdownOptions =
-    config.dropdownOptions?.map((label) => ({ value: label, label })) ?? [];
 
   const CustomAdultsDropdown = () => (
     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-2">
@@ -379,7 +657,7 @@ const Filter = () => {
   );
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-8">
+    <div ref={filterRef} className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-8">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="relative filter-field">
           <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600">
@@ -400,13 +678,13 @@ const Filter = () => {
             type="text"
             placeholder={config.checkInPlaceholder}
             value={
-              isCheckInDateField ? formatDateForDisplay(checkInValue) : checkInValue
+              isCheckInDateField
+                ? formatDateForDisplay(checkInValue)
+                : checkInValue
             }
             readOnly={isCheckInDateField}
             onClick={
-              isCheckInDateField
-                ? () => setShowCheckInCalendar((open) => !open)
-                : undefined
+              isCheckInDateField ? () => openDatePicker("checkin") : undefined
             }
             onChange={
               !isCheckInDateField
@@ -417,15 +695,7 @@ const Filter = () => {
               isCheckInDateField ? "cursor-pointer" : ""
             }`}
           />
-          {isCheckInDateField && showCheckInCalendar && (
-            <CustomCalendar
-              onDateSelect={(value) => {
-                setCheckInValue(value);
-                setShowCheckInCalendar(false);
-              }}
-              onClose={() => setShowCheckInCalendar(false)}
-            />
-          )}
+          {isCheckInDateField && showDatePicker && <DateRangePicker />}
         </div>
 
         <div className="relative filter-field">
@@ -442,9 +712,7 @@ const Filter = () => {
             }
             readOnly={isCheckOutDateField}
             onClick={
-              isCheckOutDateField
-                ? () => setShowCheckOutCalendar((open) => !open)
-                : undefined
+              isCheckOutDateField ? () => openDatePicker("checkout") : undefined
             }
             onChange={
               !isCheckOutDateField
@@ -455,15 +723,6 @@ const Filter = () => {
               isCheckOutDateField ? "cursor-pointer" : ""
             }`}
           />
-          {isCheckOutDateField && showCheckOutCalendar && (
-            <CustomCalendar
-              onDateSelect={(value) => {
-                setCheckOutValue(value);
-                setShowCheckOutCalendar(false);
-              }}
-              onClose={() => setShowCheckOutCalendar(false)}
-            />
-          )}
         </div>
 
         <div className="relative filter-field">

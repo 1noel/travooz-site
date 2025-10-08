@@ -9,80 +9,77 @@ const Hotels = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("All");
-  const [subcategories, setSubcategories] = useState([]);
   const [categories, setCategories] = useState(["All"]);
 
-  // Helper function to get subcategory name by ID
-  const getSubcategoryName = React.useCallback(
-    (subcategoryId) => {
-      const subcategory = subcategories.find(
-        (sub) => sub.subcategory_id === subcategoryId
-      );
-      return subcategory ? subcategory.name : "Other";
-    },
-    [subcategories]
-  );
-
-  // Fetch subcategories for Home Stays (category_id: 4)
   useEffect(() => {
-    const fetchSubcategories = async () => {
-      try {
-        const response = await subcategoryServices.fetchSubcategoriesByCategory(
-          4
-        );
-        if (response.success && response.data) {
-          setSubcategories(response.data);
-          // Create dynamic categories based on subcategories
-          const subcategoryNames = response.data.map((sub) => sub.name);
-          setCategories(["All", ...subcategoryNames]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch subcategories:", error);
-      }
-    };
+    let isMounted = true;
 
-    fetchSubcategories();
-  }, []);
-
-  // Fetch homestays from API
-  useEffect(() => {
-    const fetchHomestays = async () => {
+    const loadHotels = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const response = await homestayServices.fetchHomestays();
+        const [subcategoriesResponse, homestaysResponse] = await Promise.all([
+          subcategoryServices.fetchSubcategoriesByCategory(4),
+          homestayServices.fetchHomestays(),
+        ]);
 
-        if (response.success && response.data) {
-          const transformedHomestays = response.data
-            .map((homestay) => {
-              const transformed = transformHomestayData(homestay);
-              // Override category with actual subcategory name if available
-              if (homestay.subcategory_id && subcategories.length > 0) {
-                transformed.category = getSubcategoryName(
-                  homestay.subcategory_id
-                );
+        const fetchedSubcategories =
+          subcategoriesResponse?.success && Array.isArray(subcategoriesResponse.data)
+            ? subcategoriesResponse.data
+            : [];
+
+        if (isMounted) {
+          const subcategoryNames = fetchedSubcategories.map((sub) => sub.name);
+          setCategories(["All", ...subcategoryNames]);
+        }
+
+        if (!homestaysResponse?.success || !Array.isArray(homestaysResponse.data)) {
+          if (isMounted) {
+            setError("Failed to load homestays");
+          }
+          return;
+        }
+
+        const transformedHomestays = homestaysResponse.data
+          .map((homestay) => {
+            const transformed = transformHomestayData(homestay);
+            if (!transformed) return null;
+
+            if (homestay.subcategory_id && fetchedSubcategories.length > 0) {
+              const matchedSubcategory = fetchedSubcategories.find(
+                (sub) => sub.subcategory_id === homestay.subcategory_id
+              );
+              if (matchedSubcategory) {
+                transformed.category = matchedSubcategory.name;
               }
-              return transformed;
-            })
-            .filter(Boolean);
+            }
+
+            return transformed;
+          })
+          .filter(Boolean);
+
+        if (isMounted) {
           setHotels(transformedHomestays);
-        } else {
-          setError("Failed to load homestays");
         }
       } catch (err) {
-        console.error("Error fetching homestays:", err);
-        setError("Failed to load homestays");
+        console.error("Error loading homestays:", err);
+        if (isMounted) {
+          setError("Failed to load homestays");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    // Only fetch homestays after subcategories are loaded
-    if (subcategories.length > 0) {
-      fetchHomestays();
-    }
-  }, [subcategories, getSubcategoryName]);
+    loadHotels();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleHotelClick = (hotel) => {
     navigate(`/hotel/${hotel.id}`);
@@ -213,6 +210,13 @@ const Hotels = () => {
                   {hotel.location}
                 </p>
               )}
+
+              {/* Description */}
+              {((hotel.shortDescription || hotel.description) && (
+                <p className="text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed">
+                  {hotel.shortDescription || hotel.description}
+                </p>
+              ))}
 
               {/* Bottom Section */}
               <div className="flex items-center justify-between pt-2">

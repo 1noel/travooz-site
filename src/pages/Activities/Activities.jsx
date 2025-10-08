@@ -279,44 +279,47 @@ const Activities = () => {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
-        {/* Header skeleton */}
-        <div className="text-center mb-8 animate-pulse">
-          <div className="h-8 bg-gray-300 rounded w-1/3 mx-auto mb-2"></div>
-          <div className="h-4 bg-gray-300 rounded w-1/4 mx-auto"></div>
-        </div>
+        <div className="animate-pulse space-y-8">
+          <div className="text-center space-y-3">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4 mx-auto"></div>
+          </div>
 
-        {/* Filters skeleton */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8 animate-pulse">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }, (_, index) => (
-              <div key={index}>
-                <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
-                <div className="h-10 bg-gray-300 rounded"></div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="space-y-3">
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-11 bg-gray-200 rounded-lg"></div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-4">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-9 bg-gray-200 rounded-full w-20"
+                ></div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm"
+              >
+                <div className="h-48 bg-gray-200"></div>
+                <div className="p-4 space-y-3">
+                  <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                  <div className="h-10 bg-gray-200 rounded mt-4"></div>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Activities grid skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }, (_, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse"
-            >
-              <div className="w-full h-48 bg-gray-300"></div>
-              <div className="p-4 space-y-3">
-                <div className="h-5 bg-gray-300 rounded"></div>
-                <div className="h-3 bg-gray-300 rounded"></div>
-                <div className="h-3 bg-gray-300 rounded w-3/4"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-300 rounded w-2/3"></div>
-                  <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-                </div>
-                <div className="h-8 bg-gray-300 rounded mt-4"></div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     );

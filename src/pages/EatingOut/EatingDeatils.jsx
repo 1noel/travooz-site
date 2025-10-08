@@ -4,6 +4,7 @@ import {
   eatingPlaceServices,
   transformApiDataToFrontend,
 } from "../../api/eating";
+import { useCart } from "../../context/useCart";
 
 const EatingDetails = () => {
   const { id } = useParams();
@@ -17,6 +18,224 @@ const EatingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
+
+  const { addItem } = useCart();
+
+  const [bookingForm, setBookingForm] = useState({
+    bookingDate: "",
+    arrivalDate: "",
+    durationMinutes: "120",
+    guests: "2",
+    tableId: "",
+  });
+  const [bookingStatus, setBookingStatus] = useState(null);
+  const [bookingMessage, setBookingMessage] = useState("");
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [availabilityStatus, setAvailabilityStatus] = useState(null);
+  const [availabilityMessage, setAvailabilityMessage] = useState("");
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+
+  const handleBookingInputChange = (event) => {
+    const { name, value } = event.target;
+    setBookingForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+    if (bookingStatus) {
+      setBookingStatus(null);
+      setBookingMessage("");
+    }
+    if (availabilityStatus) {
+      setAvailabilityStatus(null);
+      setAvailabilityMessage("");
+    }
+  };
+
+  const coerceDateTimePayload = (value) => {
+    if (!value) return undefined;
+    if (value.length === 16) {
+      return `${value}:00`;
+    }
+    return value;
+  };
+
+  const formatDateTimeForMetadata = (value) => {
+    if (!value) return "";
+    try {
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toLocaleString();
+      }
+    } catch (error) {
+      console.warn("Failed to format date", error);
+    }
+    return value.replace("T", " ");
+  };
+
+  const handleCheckAvailability = async () => {
+    if (!restaurant) return;
+
+    if (!bookingForm.bookingDate) {
+      setAvailabilityStatus("error");
+      setAvailabilityMessage(
+        "Select a booking date and time before checking availability."
+      );
+      return;
+    }
+
+    const guestsCount = Number(bookingForm.guests);
+    if (!Number.isInteger(guestsCount) || guestsCount <= 0) {
+      setAvailabilityStatus("error");
+      setAvailabilityMessage("Guests must be a positive number.");
+      return;
+    }
+
+    setAvailabilityLoading(true);
+    setAvailabilityStatus(null);
+    setAvailabilityMessage("");
+
+    try {
+      const payload = {
+        restaurantId: restaurant.id,
+        bookingDate: coerceDateTimePayload(bookingForm.bookingDate),
+        guests: guestsCount,
+      };
+
+      const minutesValue = Number(bookingForm.durationMinutes);
+      if (!Number.isNaN(minutesValue) && minutesValue > 0) {
+        payload.durationMinutes = minutesValue;
+      }
+
+      const response = await eatingPlaceServices.checkRestaurantAvailability(
+        payload
+      );
+
+      if (!response.success) {
+        throw new Error(response.error || "Failed to check availability.");
+      }
+
+      const availabilityData = response.data || {};
+      const isUnavailable = availabilityData.available === false;
+
+      if (isUnavailable) {
+        setAvailabilityStatus("error");
+        setAvailabilityMessage(
+          availabilityData.reason ||
+            availabilityData.message ||
+            "No tables are available for the selected slot."
+        );
+      } else {
+        setAvailabilityStatus("success");
+        setAvailabilityMessage(
+          availabilityData.message ||
+            "A table is available for the selected slot."
+        );
+      }
+    } catch (availabilityError) {
+      console.error(
+        "Error checking restaurant availability:",
+        availabilityError
+      );
+      setAvailabilityStatus("error");
+      setAvailabilityMessage(
+        availabilityError.message || "Failed to check availability."
+      );
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  };
+
+  const handleRestaurantBooking = async (event) => {
+    event.preventDefault();
+    if (!restaurant) return;
+
+    if (!bookingForm.bookingDate) {
+      setBookingStatus("error");
+      setBookingMessage("Select a booking date and time before submitting.");
+      return;
+    }
+
+    const guestsCount = Number(bookingForm.guests);
+    if (!Number.isInteger(guestsCount) || guestsCount <= 0) {
+      setBookingStatus("error");
+      setBookingMessage("Guests must be a positive number.");
+      return;
+    }
+
+    setBookingLoading(true);
+    setBookingStatus(null);
+    setBookingMessage("");
+
+    try {
+      const payload = {
+        restaurantId: restaurant.id,
+        bookingDate: coerceDateTimePayload(bookingForm.bookingDate),
+        guests: guestsCount,
+      };
+
+      const arrivalPayload = coerceDateTimePayload(bookingForm.arrivalDate);
+      if (arrivalPayload) {
+        payload.arrivalDate = arrivalPayload;
+      }
+
+      const minutesValue = Number(bookingForm.durationMinutes);
+      if (!Number.isNaN(minutesValue) && minutesValue > 0) {
+        payload.durationMinutes = minutesValue;
+      }
+
+      if (bookingForm.tableId) {
+        payload.tableId = bookingForm.tableId;
+      }
+
+      const response = await eatingPlaceServices.bookRestaurantTable(payload);
+
+      if (!response.success) {
+        throw new Error(response.error || "Failed to book table.");
+      }
+
+      const bookingReference =
+        response.data?.booking_reference ||
+        response.data?.booking_id ||
+        response.data?.reference ||
+        response.data?.code ||
+        response.data?.id;
+
+      const metadata = {
+        bookingDate: formatDateTimeForMetadata(bookingForm.bookingDate),
+        guests: guestsCount,
+        table: bookingForm.tableId || "Any table",
+        reference: bookingReference,
+      };
+
+      if (bookingForm.arrivalDate) {
+        metadata.arrivalDate = formatDateTimeForMetadata(
+          bookingForm.arrivalDate
+        );
+      }
+
+      if (minutesValue && !Number.isNaN(minutesValue)) {
+        metadata.durationMinutes = minutesValue;
+      }
+
+      addItem({
+        id: bookingReference || `restaurant-${restaurant.id}-${Date.now()}`,
+        type: "restaurant",
+        name: `${restaurant.name} • Table reservation`,
+        metadata,
+      });
+
+      setBookingStatus("success");
+      setBookingMessage(
+        response.data?.message || "Reservation added to your cart."
+      );
+    } catch (bookingError) {
+      console.error("Error booking restaurant table:", bookingError);
+      setBookingStatus("error");
+      setBookingMessage(bookingError.message || "Failed to book table.");
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   // Fetch restaurant details from API
   useEffect(() => {
@@ -319,9 +538,137 @@ const EatingDetails = () => {
 
         {/* Right Side - Menu Section (40%) */}
         <div className="lg:col-span-2">
-          <div className="sticky top-4">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Menu</h3>
+          <div className="sticky top-4 space-y-6">
+            <div className="bg-white rounded-lg shadow-sm p-5">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">
+                Reserve a Table
+              </h3>
+              <form className="space-y-4" onSubmit={handleRestaurantBooking}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Booking date & time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="bookingDate"
+                    value={bookingForm.bookingDate}
+                    onChange={handleBookingInputChange}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Arrival time (optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="arrivalDate"
+                    value={bookingForm.arrivalDate}
+                    onChange={handleBookingInputChange}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Guests
+                    </label>
+                    <input
+                      type="number"
+                      name="guests"
+                      min="1"
+                      value={bookingForm.guests}
+                      onChange={handleBookingInputChange}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Duration (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      name="durationMinutes"
+                      min="30"
+                      step="15"
+                      value={bookingForm.durationMinutes}
+                      onChange={handleBookingInputChange}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Table number (optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="tableId"
+                    value={bookingForm.tableId}
+                    onChange={handleBookingInputChange}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="e.g. 12"
+                  />
+                </div>
+
+                {availabilityMessage && (
+                  <p
+                    className={`text-sm ${
+                      availabilityStatus === "success"
+                        ? "text-green-600"
+                        : "text-rose-500"
+                    }`}
+                  >
+                    {availabilityMessage}
+                  </p>
+                )}
+
+                {bookingMessage && (
+                  <p
+                    className={`text-sm ${
+                      bookingStatus === "success"
+                        ? "text-green-600"
+                        : "text-rose-500"
+                    }`}
+                  >
+                    {bookingMessage}
+                  </p>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCheckAvailability}
+                    disabled={availabilityLoading || bookingLoading}
+                    className={`w-full sm:w-1/2 py-3 px-4 rounded-lg font-semibold border transition-colors ${
+                      availabilityLoading || bookingLoading
+                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                        : "bg-white text-green-600 border-green-500 hover:bg-green-50"
+                    }`}
+                  >
+                    {availabilityLoading ? "Checking..." : "Check availability"}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={bookingLoading}
+                    className={`w-full sm:w-1/2 py-3 px-4 rounded-lg font-semibold transition-colors ${
+                      bookingLoading
+                        ? "bg-green-200 text-white cursor-wait"
+                        : "bg-green-500 hover:bg-green-600 text-white"
+                    }`}
+                  >
+                    {bookingLoading ? "Booking..." : "Book & add to cart"}
+                  </button>
+                </div>
+              </form>
+            </div>
+
             <div className="bg-white rounded-lg shadow-sm p-4 max-h-96 overflow-y-auto">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Menu</h3>
               {menuLoading ? (
                 <div className="space-y-4">
                   {[...Array(3)].map((_, index) => (

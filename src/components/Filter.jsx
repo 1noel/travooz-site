@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useFilterContext } from "../context/useFilterContext";
+import { useLocationSuggestions } from "../hooks/useLocationSuggestions";
 
 const FILTER_CONFIGS = {
   restStay: {
@@ -111,7 +112,11 @@ const FILTER_CONFIGS = {
 
 FILTER_CONFIGS.default = FILTER_CONFIGS.restStay;
 
-const DISPLAY_DATE_OPTIONS = { weekday: "short", month: "short", day: "numeric" };
+const DISPLAY_DATE_OPTIONS = {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+};
 
 const normalizeToStartOfDay = (value) => {
   if (!value) return null;
@@ -208,7 +213,8 @@ const Filter = () => {
   );
 
   const dropdownOptions = useMemo(
-    () => config.dropdownOptions?.map((label) => ({ value: label, label })) ?? [],
+    () =>
+      config.dropdownOptions?.map((label) => ({ value: label, label })) ?? [],
     [config.dropdownOptions]
   );
 
@@ -216,10 +222,19 @@ const Filter = () => {
     config.dropdownDefault ?? config.dropdownOptions?.[0] ?? ""
   );
   const [showAdultsDropdown, setShowAdultsDropdown] = useState(false);
+  const [locationInputValue, setLocationInputValue] = useState("");
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const {
+    suggestions: locationSuggestions,
+    isLoading: isLoadingLocations,
+    isEnabled: isLocationSuggestionsEnabled,
+  } = useLocationSuggestions(activeCategory);
   const [checkInValue, setCheckInValue] = useState("");
   const [checkOutValue, setCheckOutValue] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [calendarState, setCalendarState] = useState(() => getInitialCalendarState());
+  const [calendarState, setCalendarState] = useState(() =>
+    getInitialCalendarState()
+  );
   const [tempRange, setTempRange] = useState({ start: null, end: null });
   const [hoveredDate, setHoveredDate] = useState(null);
   const [activeDateField, setActiveDateField] = useState(null);
@@ -229,6 +244,21 @@ const Filter = () => {
   const isCheckOutDateField = config.checkOutFieldType === "date";
   const isRangeMode = isCheckInDateField && isCheckOutDateField;
 
+  const filteredLocationSuggestions = useMemo(() => {
+    if (!isLocationSuggestionsEnabled) {
+      return [];
+    }
+
+    if (!locationInputValue.trim()) {
+      return locationSuggestions;
+    }
+
+    const normalizedQuery = locationInputValue.toLowerCase();
+    return locationSuggestions.filter((name) =>
+      name.toLowerCase().includes(normalizedQuery)
+    );
+  }, [isLocationSuggestionsEnabled, locationInputValue, locationSuggestions]);
+
   useEffect(() => {
     const fallback = config.dropdownOptions?.[0] ?? "";
     setSelectedAdults(config.dropdownDefault ?? fallback);
@@ -237,8 +267,10 @@ const Filter = () => {
   useEffect(() => {
     setShowAdultsDropdown(false);
     setShowDatePicker(false);
+    setShowLocationDropdown(false);
     setCheckInValue("");
     setCheckOutValue("");
+    setLocationInputValue("");
     setTempRange({ start: null, end: null });
     setHoveredDate(null);
     setActiveDateField(null);
@@ -261,6 +293,7 @@ const Filter = () => {
       if (!filterRef.current.contains(event.target)) {
         setShowAdultsDropdown(false);
         setShowDatePicker(false);
+        setShowLocationDropdown(false);
         setActiveDateField(null);
         setHoveredDate(null);
       }
@@ -288,6 +321,7 @@ const Filter = () => {
     });
     setTempRange({ start: startDate, end: endDate });
     setActiveDateField(field);
+    setShowLocationDropdown(false);
     setShowAdultsDropdown(false);
     setShowDatePicker(true);
   };
@@ -296,6 +330,29 @@ const Filter = () => {
     setShowDatePicker(false);
     setHoveredDate(null);
     setActiveDateField(null);
+  };
+
+  const handleDestinationInputChange = (event) => {
+    const { value } = event.target;
+    setLocationInputValue(value);
+    if (isLocationSuggestionsEnabled) {
+      setShowLocationDropdown(true);
+      setShowAdultsDropdown(false);
+      setShowDatePicker(false);
+    }
+  };
+
+  const handleDestinationFocus = () => {
+    if (isLocationSuggestionsEnabled) {
+      setShowLocationDropdown(true);
+      setShowAdultsDropdown(false);
+      setShowDatePicker(false);
+    }
+  };
+
+  const handleLocationSelect = (locationName) => {
+    setLocationInputValue(locationName);
+    setShowLocationDropdown(false);
   };
 
   const handleDateSelection = (date) => {
@@ -364,18 +421,17 @@ const Filter = () => {
   };
 
   const isPrevDisabled = () => {
-    const prevMonthDate = new Date(calendarState.year, calendarState.month - 1, 1);
+    const prevMonthDate = new Date(
+      calendarState.year,
+      calendarState.month - 1,
+      1
+    );
     return prevMonthDate < startOfCurrentMonth();
   };
 
   const getDayClassNames = (options) => {
-    const {
-      isDisabled,
-      isSelectedStart,
-      isSelectedEnd,
-      isInRange,
-      isPreview,
-    } = options;
+    const { isDisabled, isSelectedStart, isSelectedEnd, isInRange, isPreview } =
+      options;
 
     let baseClasses =
       "h-12 w-full flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-150";
@@ -397,7 +453,7 @@ const Filter = () => {
     }
 
     if (isInRange) {
-      return `${baseClasses} bg-green-200/80 text-green-900 ring-2 ring-green-400`; 
+      return `${baseClasses} bg-green-200/80 text-green-900 ring-2 ring-green-400`;
     }
 
     if (isPreview) {
@@ -496,7 +552,8 @@ const Filter = () => {
               const isDisabled = isDateBefore(normalizedCell, today);
               const isSelectedStart =
                 selectedStart && isSameDay(normalizedCell, selectedStart);
-              const isSelectedEnd = selectedEnd && isSameDay(normalizedCell, selectedEnd);
+              const isSelectedEnd =
+                selectedEnd && isSameDay(normalizedCell, selectedEnd);
               const isWithinRange =
                 selectedStart &&
                 selectedEnd &&
@@ -516,8 +573,12 @@ const Filter = () => {
                 <button
                   type="button"
                   key={`day-${monthIndex}-${normalizedCell.getDate()}`}
-                  onClick={() => !isDisabled && handleDateSelection(normalizedCell)}
-                  onMouseEnter={() => !isDisabled && setHoveredDate(normalizedCell)}
+                  onClick={() =>
+                    !isDisabled && handleDateSelection(normalizedCell)
+                  }
+                  onMouseEnter={() =>
+                    !isDisabled && setHoveredDate(normalizedCell)
+                  }
                   onMouseLeave={() => setHoveredDate(null)}
                   className={getDayClassNames({
                     isDisabled,
@@ -615,6 +676,70 @@ const Filter = () => {
     );
   };
 
+  const LocationSuggestionsDropdown = () => {
+    if (!isLocationSuggestionsEnabled || !showLocationDropdown) {
+      return null;
+    }
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+        {isLoadingLocations ? (
+          <div className="px-4 py-3 text-sm text-gray-500">
+            Loading locations…
+          </div>
+        ) : filteredLocationSuggestions.length > 0 ? (
+          filteredLocationSuggestions.map((locationName, index) => (
+            <button
+              key={`location-${locationName}`}
+              type="button"
+              onClick={() => handleLocationSelect(locationName)}
+              className={`w-full px-4 py-3 text-left hover:bg-green-50 hover:text-green-600 transition-all duration-200 ${
+                locationInputValue === locationName
+                  ? "bg-green-50 text-green-600 font-medium"
+                  : "text-gray-700"
+              } ${index === 0 ? "rounded-t-xl" : ""} ${
+                index === filteredLocationSuggestions.length - 1
+                  ? "rounded-b-xl"
+                  : ""
+              }`}
+              style={{
+                borderRadius:
+                  index === 0
+                    ? "0.75rem 0.75rem 0 0"
+                    : index === filteredLocationSuggestions.length - 1
+                    ? "0 0 0.75rem 0.75rem"
+                    : "0",
+              }}
+            >
+              <span className="font-medium">{locationName}</span>
+              {locationInputValue === locationName && (
+                <span className="float-right">
+                  <svg
+                    className="w-4 h-4 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </span>
+              )}
+            </button>
+          ))
+        ) : (
+          <div className="px-4 py-3 text-sm text-gray-500">
+            No matching locations found.
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const CustomAdultsDropdown = () => (
     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-2">
       {dropdownOptions.map((option, index) => (
@@ -657,7 +782,10 @@ const Filter = () => {
   );
 
   return (
-    <div ref={filterRef} className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-8">
+    <div
+      ref={filterRef}
+      className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-8"
+    >
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="relative filter-field">
           <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600">
@@ -666,8 +794,13 @@ const Filter = () => {
           <input
             type="text"
             placeholder={config.destinationPlaceholder}
+            value={locationInputValue}
+            onChange={handleDestinationInputChange}
+            onFocus={handleDestinationFocus}
+            autoComplete="off"
             className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-700"
           />
+          <LocationSuggestionsDropdown />
         </div>
 
         <div className="relative filter-field">
@@ -731,7 +864,11 @@ const Filter = () => {
           </label>
           <button
             type="button"
-            onClick={() => setShowAdultsDropdown((open) => !open)}
+            onClick={() => {
+              setShowLocationDropdown(false);
+              setShowDatePicker(false);
+              setShowAdultsDropdown((open) => !open);
+            }}
             className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-left flex items-center justify-between text-sm text-gray-700"
           >
             <span>{selectedAdults}</span>

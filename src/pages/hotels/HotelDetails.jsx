@@ -5,6 +5,7 @@ import {
   transformHomestayData,
   transformRoomData,
 } from "../../api/homestays";
+import { useCart } from "../../context/useCart";
 
 const HotelDetails = () => {
   const { id } = useParams();
@@ -20,6 +21,9 @@ const HotelDetails = () => {
   const [showCheckOutCalendar, setShowCheckOutCalendar] = useState(false);
   const [selectedGuests, setSelectedGuests] = useState("1 Guest");
   const [showGuestsDropdown, setShowGuestsDropdown] = useState(false);
+  const [roomActionState, setRoomActionState] = useState({});
+
+  const { addItem } = useCart();
 
   // Calendar component for check-in/check-out
   const CustomCalendar = ({ onDateSelect, onClose }) => {
@@ -248,6 +252,212 @@ const HotelDetails = () => {
     );
   };
 
+  const updateRoomState = (roomId, updates) => {
+    setRoomActionState((previous) => ({
+      ...previous,
+      [roomId]: {
+        ...(previous[roomId] ?? {}),
+        ...updates,
+      },
+    }));
+  };
+
+  const parseGuestsCount = () => {
+    const numeric = parseInt(selectedGuests, 10);
+    if (Number.isNaN(numeric) || numeric <= 0) {
+      return 1;
+    }
+    return numeric;
+  };
+
+  const formatDateForMetadata = (date) => {
+    if (!date) return "";
+    try {
+      return new Date(date).toLocaleDateString();
+    } catch {
+      return date;
+    }
+  };
+
+  const formatCurrency = (amount, currency = "RWF") => {
+    if (amount === undefined || amount === null) return null;
+    try {
+      return new Intl.NumberFormat("en-RW", {
+        style: "currency",
+        currency,
+        currencyDisplay: "code",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    } catch (error) {
+      console.warn("Failed to format currency", error);
+      return `${currency} ${amount}`;
+    }
+  };
+
+  const buildAvailabilityMessage = (room, data) => {
+    if (!data) {
+      return "Room is available for the selected dates.";
+    }
+
+    const checkInValue = data.check_in_date || selectedCheckIn;
+    const checkOutValue = data.check_out_date || selectedCheckOut;
+    const guestsValue = data.guests || parseGuestsCount();
+    const priceValue = data.room_price_per_night ?? room.price;
+
+    const segments = [];
+
+    if (checkInValue && checkOutValue) {
+      segments.push(
+        `Available ${formatDateForMetadata(
+          checkInValue
+        )} – ${formatDateForMetadata(checkOutValue)}`
+      );
+    }
+
+    if (guestsValue) {
+      segments.push(`Up to ${guestsValue} guest${guestsValue > 1 ? "s" : ""}`);
+    }
+
+    if (priceValue !== undefined && priceValue !== null) {
+      const formatted = formatCurrency(priceValue, room.currency || "RWF");
+      if (formatted) {
+        segments.push(`${formatted} per night`);
+      }
+    }
+
+    return segments.length > 0
+      ? segments.join(" • ")
+      : "Room is available for the selected dates.";
+  };
+
+  const extractBookingReference = (data) => {
+    if (!data) return undefined;
+    return (
+      data.booking_reference ||
+      data.booking_id ||
+      data.reference ||
+      data.code ||
+      data.id
+    );
+  };
+
+  const ensureDatesSelected = (roomId) => {
+    if (!selectedCheckIn || !selectedCheckOut) {
+      updateRoomState(roomId, {
+        availabilityStatus: "error",
+        availabilityMessage: "Select check-in and check-out dates first.",
+        bookingStatus: "error",
+        bookingMessage: "Select check-in and check-out dates first.",
+        availabilityLoading: false,
+        bookingLoading: false,
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleCheckAvailability = async (room) => {
+    if (!ensureDatesSelected(room.id)) {
+      return;
+    }
+
+    updateRoomState(room.id, {
+      availabilityLoading: true,
+      availabilityStatus: null,
+      availabilityMessage: null,
+    });
+
+    try {
+      const response = await homestayServices.checkRoomAvailability({
+        roomId: room.id,
+        checkIn: selectedCheckIn,
+        checkOut: selectedCheckOut,
+        guests: parseGuestsCount(),
+      });
+
+      if (response.success) {
+        const message =
+          response.data?.message ||
+          buildAvailabilityMessage(room, response.data);
+        updateRoomState(room.id, {
+          availabilityLoading: false,
+          availabilityStatus: "success",
+          availabilityMessage: message,
+        });
+      } else {
+        updateRoomState(room.id, {
+          availabilityLoading: false,
+          availabilityStatus: "error",
+          availabilityMessage:
+            response.error || "Unable to confirm availability.",
+        });
+      }
+    } catch (error) {
+      updateRoomState(room.id, {
+        availabilityLoading: false,
+        availabilityStatus: "error",
+        availabilityMessage: error.message || "Unable to confirm availability.",
+      });
+    }
+  };
+
+  const handleBookRoom = async (room) => {
+    if (!ensureDatesSelected(room.id)) {
+      return;
+    }
+
+    updateRoomState(room.id, {
+      bookingLoading: true,
+      bookingStatus: null,
+      bookingMessage: null,
+    });
+
+    try {
+      const response = await homestayServices.bookRoom({
+        roomId: room.id,
+        checkIn: selectedCheckIn,
+        checkOut: selectedCheckOut,
+        guests: parseGuestsCount(),
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || "Booking failed.");
+      }
+
+      const bookingReference = extractBookingReference(response.data);
+      const generatedId = bookingReference || `${room.id}-${Date.now()}`;
+
+      addItem({
+        id: generatedId,
+        type: "room",
+        name: `${hotel.name} • ${room.name}`,
+        metadata: {
+          checkIn:
+            formatDateForMetadata(response.data?.check_in_date) ||
+            formatDateForMetadata(selectedCheckIn),
+          checkOut:
+            formatDateForMetadata(response.data?.check_out_date) ||
+            formatDateForMetadata(selectedCheckOut),
+          guests: parseGuestsCount(),
+          reference: bookingReference,
+        },
+      });
+
+      updateRoomState(room.id, {
+        bookingLoading: false,
+        bookingStatus: "success",
+        bookingMessage: response.data?.message || "Room added to your cart.",
+      });
+    } catch (error) {
+      updateRoomState(room.id, {
+        bookingLoading: false,
+        bookingStatus: "error",
+        bookingMessage: error.message || "Booking failed.",
+      });
+    }
+  };
+
   useEffect(() => {
     const fetchHotelDetails = async () => {
       try {
@@ -347,11 +557,19 @@ const HotelDetails = () => {
       return "bg-green-50 text-green-700 border border-green-200";
     }
 
-    if (["unavailable", "closed", "inactive", "booked", "occupied"].includes(normalized)) {
+    if (
+      ["unavailable", "closed", "inactive", "booked", "occupied"].includes(
+        normalized
+      )
+    ) {
       return "bg-red-50 text-red-600 border border-red-200";
     }
 
-    if (["limited", "pending", "partial", "reserved", "onhold"].includes(normalized)) {
+    if (
+      ["limited", "pending", "partial", "reserved", "onhold"].includes(
+        normalized
+      )
+    ) {
       return "bg-amber-50 text-amber-600 border border-amber-200";
     }
 
@@ -532,7 +750,10 @@ const HotelDetails = () => {
                       className="w-full h-20 md:h-24 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     {selectedImage === img && (
-                      <span className="absolute inset-0 bg-black/10" aria-hidden="true"></span>
+                      <span
+                        className="absolute inset-0 bg-black/10"
+                        aria-hidden="true"
+                      ></span>
                     )}
                   </button>
                 ))}
@@ -555,17 +776,22 @@ const HotelDetails = () => {
                       type="text"
                       value={
                         selectedCheckIn
-                          ? new Date(selectedCheckIn).toLocaleDateString("en-US", {
-                              weekday: "short",
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })
+                          ? new Date(selectedCheckIn).toLocaleDateString(
+                              "en-US",
+                              {
+                                weekday: "short",
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )
                           : ""
                       }
                       placeholder="Select check-in date"
                       readOnly
-                      onClick={() => setShowCheckInCalendar(!showCheckInCalendar)}
+                      onClick={() =>
+                        setShowCheckInCalendar(!showCheckInCalendar)
+                      }
                       className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
@@ -600,17 +826,22 @@ const HotelDetails = () => {
                       type="text"
                       value={
                         selectedCheckOut
-                          ? new Date(selectedCheckOut).toLocaleDateString("en-US", {
-                              weekday: "short",
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })
+                          ? new Date(selectedCheckOut).toLocaleDateString(
+                              "en-US",
+                              {
+                                weekday: "short",
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )
                           : ""
                       }
                       placeholder="Select check-out date"
                       readOnly
-                      onClick={() => setShowCheckOutCalendar(!showCheckOutCalendar)}
+                      onClick={() =>
+                        setShowCheckOutCalendar(!showCheckOutCalendar)
+                      }
                       className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
@@ -717,9 +948,7 @@ const HotelDetails = () => {
       {/* Rooms Section */}
       <div className="mb-8">
         <div className="flex items-center justify-between gap-3 mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Available Rooms
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800">Available Rooms</h2>
           {roomsMessage && (
             <span className="text-sm font-medium text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
               {roomsMessage}
@@ -730,6 +959,15 @@ const HotelDetails = () => {
         {hotel.rooms && hotel.rooms.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {hotel.rooms.map((room) => {
+              const roomState = roomActionState[room.id] ?? {};
+              const {
+                availabilityLoading,
+                availabilityMessage,
+                availabilityStatus,
+                bookingLoading,
+                bookingMessage,
+                bookingStatus,
+              } = roomState;
               const stats = [];
 
               if (room.size) {
@@ -742,7 +980,10 @@ const HotelDetails = () => {
               }
 
               if (room.capacity) {
-                stats.push({ icon: "fa-user-group", label: `Sleeps ${room.capacity}` });
+                stats.push({
+                  icon: "fa-user-group",
+                  label: `Sleeps ${room.capacity}`,
+                });
               }
 
               const amenities = Array.isArray(room.amenities)
@@ -820,7 +1061,7 @@ const HotelDetails = () => {
                       </div>
                     )}
 
-                    <div className="mt-auto pt-4 border-t border-gray-100">
+                    <div className="mt-auto pt-4 border-t border-gray-100 space-y-3">
                       {room.price && (
                         <p className="text-base font-semibold text-green-600 mb-4">
                           {new Intl.NumberFormat("en-RW", {
@@ -835,9 +1076,58 @@ const HotelDetails = () => {
                           </span>
                         </p>
                       )}
-                      <button className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition-colors">
-                        Book Now
-                      </button>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleCheckAvailability(room)}
+                          disabled={availabilityLoading || bookingLoading}
+                          className={`w-full sm:w-1/2 px-4 py-3 rounded-lg font-semibold border transition-colors ${
+                            availabilityLoading || bookingLoading
+                              ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                              : "bg-white text-green-600 border-green-500 hover:bg-green-50"
+                          }`}
+                        >
+                          {availabilityLoading
+                            ? "Checking..."
+                            : "Check availability"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleBookRoom(room)}
+                          disabled={bookingLoading}
+                          className={`w-full sm:w-1/2 px-4 py-3 rounded-lg font-semibold transition-colors ${
+                            bookingLoading
+                              ? "bg-green-200 text-white cursor-wait"
+                              : "bg-green-500 hover:bg-green-600 text-white"
+                          }`}
+                        >
+                          {bookingLoading ? "Booking..." : "Book & add to cart"}
+                        </button>
+                      </div>
+
+                      {availabilityMessage && (
+                        <p
+                          className={`text-sm ${
+                            availabilityStatus === "success"
+                              ? "text-green-600"
+                              : "text-rose-500"
+                          }`}
+                        >
+                          {availabilityMessage}
+                        </p>
+                      )}
+
+                      {bookingMessage && (
+                        <p
+                          className={`text-sm ${
+                            bookingStatus === "success"
+                              ? "text-green-600"
+                              : "text-rose-500"
+                          }`}
+                        >
+                          {bookingMessage}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

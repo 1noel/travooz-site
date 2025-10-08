@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../config";
+import { API_AUTH_TOKEN, API_BASE_URL } from "../config";
 
 // Eating places API services
 export const eatingPlaceServices = {
@@ -46,6 +46,138 @@ export const eatingPlaceServices = {
     } catch (error) {
       console.error("Error fetching menu:", error);
       throw error;
+    }
+  },
+
+  checkRestaurantAvailability: async ({
+    restaurantId,
+    bookingDate,
+    guests,
+    durationMinutes,
+    token,
+  }) => {
+    if (!restaurantId) {
+      throw new Error("restaurantId is required to check availability");
+    }
+
+    const query = new URLSearchParams();
+
+    if (bookingDate) {
+      query.append("booking_date", bookingDate);
+    }
+
+    if (guests !== undefined && guests !== null) {
+      query.append("guests", guests);
+    }
+
+    if (durationMinutes !== undefined && durationMinutes !== null) {
+      query.append("duration_minutes", durationMinutes);
+    }
+
+    const headers = {
+      Accept: "application/json",
+    };
+
+    const resolvedToken = token || API_AUTH_TOKEN;
+    if (resolvedToken) {
+      headers.Authorization = `Bearer ${resolvedToken}`;
+    }
+
+    try {
+      const queryString = query.toString();
+      const endpoint = `${API_BASE_URL}/api/v1/eating-out/${restaurantId}/availability${
+        queryString ? `?${queryString}` : ""
+      }`;
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers,
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message =
+          data?.message || data?.reason || "Failed to check availability";
+        throw new Error(message);
+      }
+
+      return {
+        success: true,
+        data,
+      };
+    } catch (error) {
+      console.error("Error checking restaurant availability:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  },
+  bookRestaurantTable: async ({
+    restaurantId,
+    tableId,
+    bookingDate,
+    arrivalDate,
+    durationMinutes,
+    guests,
+    token,
+  }) => {
+    if (!restaurantId) {
+      throw new Error("restaurantId is required to book a table");
+    }
+
+    const payload = {
+      guests,
+    };
+
+    if (bookingDate) {
+      payload.booking_date = bookingDate;
+    }
+
+    if (arrivalDate) {
+      payload.arrival_date = arrivalDate;
+    }
+
+    if (durationMinutes !== undefined && durationMinutes !== null) {
+      payload.duration_minutes = durationMinutes;
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    const resolvedToken = token || API_AUTH_TOKEN;
+    if (resolvedToken) {
+      headers.Authorization = `Bearer ${resolvedToken}`;
+    }
+
+    try {
+      const endpoint = tableId
+        ? `${API_BASE_URL}/api/v1/restaurant-tables/restaurant/${restaurantId}/table/${tableId}/book`
+        : `${API_BASE_URL}/api/v1/restaurant-tables/restaurant/${restaurantId}/book`;
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message = data?.message || "Failed to book table";
+        throw new Error(message);
+      }
+
+      return {
+        success: true,
+        data,
+      };
+    } catch (error) {
+      console.error("Error booking restaurant table:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
   },
 };

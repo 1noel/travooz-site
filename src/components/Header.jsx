@@ -1,14 +1,27 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../context/useCart";
+import { useAuth } from "../context/useAuth";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { cartCount } = useCart();
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    setIsMobileMenuOpen(false);
+    navigate("/", { replace: true });
+  };
 
   return (
     <header className="bg-green-500 text-white p-4 px-10">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Logo */}
-        <h1 className="text-xl md:text-2xl font-bold">Travooz</h1>
+        <Link to="/" className="text-xl md:text-2xl font-bold">
+          Travooz
+        </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex justify-between items-center gap-3 lg:gap-5">
@@ -17,14 +30,46 @@ const Header = () => {
           <Link to="/blogs" className="text-sm lg:text-base">
             Travel Blogs
           </Link>
-          <div className="space-x-2 lg:space-x-4">
-            <button className="border border-white px-3 lg:px-5 py-1 rounded-md text-sm lg:text-base">
-              Register
-            </button>
-            <button className="bg-white text-green-500 px-3 lg:px-5 py-1.5 rounded-md text-sm lg:text-base">
-              Sign in
-            </button>
-          </div>
+          <Link
+            to="/cart"
+            className="relative text-sm lg:text-base flex items-center gap-2"
+          >
+            <span>Cart</span>
+            <span className="inline-flex items-center justify-center min-w-[24px] px-1.5 py-0.5 text-xs font-semibold bg-white text-green-600 rounded-full">
+              {cartCount}
+            </span>
+          </Link>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-3 lg:gap-4">
+              <div className="hidden lg:flex flex-col text-xs text-white/80 leading-tight">
+                <span className="text-sm text-white font-semibold">
+                  {user?.name || user?.email || "Client"}
+                </span>
+                <span>Client account</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="border border-white px-3 lg:px-5 py-1.5 rounded-md text-sm lg:text-base"
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <div className="space-x-2 lg:space-x-4">
+              <Link
+                to="/register"
+                className="border border-white px-3 lg:px-5 py-1 rounded-md text-sm lg:text-base"
+              >
+                Register
+              </Link>
+              <Link
+                to="/sign-in"
+                className="bg-white text-green-500 px-3 lg:px-5 py-1.5 rounded-md text-sm lg:text-base"
+              >
+                Sign in
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -61,14 +106,51 @@ const Header = () => {
             <Link to="/blogs" className="text-sm">
               Travel Blogs
             </Link>
-            <div className="flex space-x-3">
-              <button className="border border-white px-4 py-2 rounded-md text-sm flex-1">
-                Register
-              </button>
-              <button className="bg-white text-green-500 px-4 py-2 rounded-md text-sm flex-1">
-                Sign in
-              </button>
-            </div>
+            <Link
+              to="/cart"
+              className="text-sm flex items-center justify-between border border-white/20 rounded-md px-4 py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <span>Cart</span>
+              <span className="ml-3 inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 text-xs font-semibold bg-white text-green-600 rounded-full">
+                {cartCount}
+              </span>
+            </Link>
+            {isAuthenticated ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between border border-white/20 rounded-md px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {user?.name || user?.email || "Client"}
+                    </p>
+                    <p className="text-xs text-white/80">Client account</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="bg-white text-green-500 px-4 py-2 rounded-md text-sm font-semibold"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <div className="flex space-x-3">
+                <Link
+                  to="/register"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="border border-white px-4 py-2 rounded-md text-sm flex-1 text-center"
+                >
+                  Register
+                </Link>
+                <Link
+                  to="/sign-in"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="bg-white text-green-500 px-4 py-2 rounded-md text-sm flex-1 text-center"
+                >
+                  Sign in
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

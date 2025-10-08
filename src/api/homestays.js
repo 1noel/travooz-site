@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../config";
+import { API_AUTH_TOKEN, API_BASE_URL } from "../config";
 
 // Homestays API Services
 export const homestayServices = {
@@ -62,6 +62,128 @@ export const homestayServices = {
     } catch (error) {
       console.error("Error fetching rooms:", error);
       return { data: [], success: false, error: error.message };
+    }
+  },
+
+  checkRoomAvailability: async ({
+    roomId,
+    checkIn,
+    checkOut,
+    guests,
+    token,
+  }) => {
+    if (!roomId) {
+      throw new Error("roomId is required to check availability");
+    }
+
+    const query = new URLSearchParams();
+    if (checkIn) {
+      query.append("check_in_date", checkIn);
+    }
+    if (checkOut) {
+      query.append("check_out_date", checkOut);
+    }
+    if (guests) {
+      query.append("guests", guests);
+    }
+
+    const headers = {
+      Accept: "application/json",
+    };
+
+    const resolvedToken = token || API_AUTH_TOKEN;
+    if (resolvedToken) {
+      headers.Authorization = `Bearer ${resolvedToken}`;
+    }
+
+    try {
+      const urlQuery = query.toString();
+      const endpoint = `${API_BASE_URL}/api/v1/rooms/${roomId}/availability${
+        urlQuery ? `?${urlQuery}` : ""
+      }`;
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers,
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message = data?.message || "Failed to check availability";
+        throw new Error(message);
+      }
+
+      return {
+        success: true,
+        data,
+      };
+    } catch (error) {
+      console.error("Error checking room availability:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  },
+
+  bookRoom: async ({
+    roomId,
+    checkIn,
+    checkOut,
+    guests,
+    arrivalDate,
+    token,
+  }) => {
+    if (!roomId) {
+      throw new Error("roomId is required to book a room");
+    }
+
+    const payload = {
+      check_in_date: checkIn,
+      check_out_date: checkOut,
+      guests,
+    };
+
+    if (arrivalDate) {
+      payload.arrival_date = arrivalDate;
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    const resolvedToken = token || API_AUTH_TOKEN;
+    if (resolvedToken) {
+      headers.Authorization = `Bearer ${resolvedToken}`;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/rooms/${roomId}/book`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message = data?.message || "Failed to complete booking";
+        throw new Error(message);
+      }
+
+      return {
+        success: true,
+        data,
+      };
+    } catch (error) {
+      console.error("Error booking room:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
   },
 };
@@ -252,7 +374,9 @@ export const transformRoomData = (room) => {
   const priceValue = room.price ?? room.price_per_night ?? room.base_price;
 
   const normalizedAmenities = normalizeAmenities(room.amenities);
-  const normalizedStatus = normalizeStatusLabel(room.status ?? room.status_label);
+  const normalizedStatus = normalizeStatusLabel(
+    room.status ?? room.status_label
+  );
 
   const transformedRoom = {
     id: room.room_id ?? room.id,
@@ -260,7 +384,7 @@ export const transformRoomData = (room) => {
     description: room.description ?? "",
     shortDescription: createShortDescription(room.description ?? ""),
     price: priceValue !== undefined ? parseFloat(priceValue) : null,
-  currency: normalizeCurrencyCode(room.currency),
+    currency: normalizeCurrencyCode(room.currency),
     capacity: room.capacity ?? room.max_guests ?? null,
     amenities: normalizedAmenities,
     mainImage,

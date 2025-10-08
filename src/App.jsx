@@ -17,6 +17,11 @@ import CarDetails from "./pages/Cars/CarDetails";
 import Filter from "./components/Filter";
 import { FilterProvider } from "./context/FilterProvider";
 import { getFilterSettingsForPath } from "./context/filterSettings";
+import { CartProvider } from "./context/CartContext.jsx";
+import Cart from "./pages/Cart/Cart.jsx";
+import Register from "./pages/Auth/Register.jsx";
+import Login from "./pages/Auth/Login.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx";
 
 const AppContent = () => {
   const location = useLocation();
@@ -44,6 +49,9 @@ const AppContent = () => {
         <Route path="/blog/:id" element={<BlogDetails />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/car/:id" element={<CarDetails />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/sign-in" element={<Login />} />
       </Routes>
     </>
   );
@@ -51,11 +59,15 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <FilterProvider>
-      <div className="min-h-screen bg-gray-100">
-        <AppContent />
-      </div>
-    </FilterProvider>
+    <AuthProvider>
+      <CartProvider>
+        <FilterProvider>
+          <div className="min-h-screen bg-gray-100">
+            <AppContent />
+          </div>
+        </FilterProvider>
+      </CartProvider>
+    </AuthProvider>
   );
 };
 

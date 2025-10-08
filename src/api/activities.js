@@ -103,37 +103,70 @@ export const filterActivities = (activities, filters = {}) => {
   if (!Array.isArray(activities)) return [];
 
   return activities.filter((activity) => {
-    // Filter by location
-    if (filters.location && activity.location !== filters.location) {
+    if (!activity) {
       return false;
     }
 
-    // Filter by price range
-    if (filters.minPrice && activity.base_price < filters.minPrice) {
-      return false;
-    }
-    if (filters.maxPrice && activity.base_price > filters.maxPrice) {
+    const location = activity.location;
+    const price =
+      typeof activity.price === "number"
+        ? activity.price
+        : parseFloat(activity.base_price ?? activity.price ?? 0);
+    const category = activity.category ?? activity.category_name;
+    const subcategory = activity.subcategory ?? activity.subcategory_name;
+    const name = activity.name ?? "";
+    const description = activity.description ?? "";
+
+    if (filters.location && location !== filters.location) {
       return false;
     }
 
-    // Filter by category/subcategory
-    if (filters.category && activity.category_name !== filters.category) {
-      return false;
-    }
     if (
-      filters.subcategory &&
-      activity.subcategory_name !== filters.subcategory
+      filters.minPrice !== null &&
+      filters.minPrice !== undefined &&
+      !Number.isNaN(filters.minPrice) &&
+      price < filters.minPrice
     ) {
       return false;
     }
 
-    // Search by name or description
+    if (
+      filters.maxPrice !== null &&
+      filters.maxPrice !== undefined &&
+      !Number.isNaN(filters.maxPrice) &&
+      price > filters.maxPrice
+    ) {
+      return false;
+    }
+
+    if (filters.category && category !== filters.category) {
+      return false;
+    }
+
+    if (filters.subcategory && subcategory !== filters.subcategory) {
+      return false;
+    }
+
     if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      const nameMatch = activity.name.toLowerCase().includes(searchTerm);
-      const descMatch = activity.description.toLowerCase().includes(searchTerm);
-      if (!nameMatch && !descMatch) {
-        return false;
+      const searchTerm = filters.search.trim().toLowerCase();
+      if (searchTerm.length > 0) {
+        const haystacks = [
+          name,
+          description,
+          category,
+          subcategory,
+          location,
+        ]
+          .filter(Boolean)
+          .map((value) => value.toString().toLowerCase());
+
+        const matches = haystacks.some((value) =>
+          value.includes(searchTerm)
+        );
+
+        if (!matches) {
+          return false;
+        }
       }
     }
 

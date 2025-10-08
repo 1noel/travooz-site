@@ -10,11 +10,9 @@ const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [hotel, setHotel] = useState(null);
-  const [rooms, setRooms] = useState([]);
-  const [roomsLoading, setRoomsLoading] = useState(false);
-  const [roomsError, setRoomsError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [roomsMessage, setRoomsMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedCheckIn, setSelectedCheckIn] = useState("");
   const [showCheckInCalendar, setShowCheckInCalendar] = useState(false);
@@ -256,19 +254,46 @@ const HotelDetails = () => {
         setLoading(true);
         setError(null);
 
-        // Try to fetch from homestays API first
-        const response = await homestayServices.getHomestayById(id);
+        const [homestayResponse, roomsResponse] = await Promise.all([
+          homestayServices.getHomestayById(id),
+          homestayServices.fetchRoomsByHomestayId(id),
+        ]);
 
-        if (response.success && response.data) {
-          const transformedHomestay = transformHomestayData(response.data);
-          setHotel(transformedHomestay);
-          setSelectedImage(transformedHomestay.mainImage || "");
+        if (homestayResponse.success && homestayResponse.data) {
+          const transformedHomestay = transformHomestayData(
+            homestayResponse.data
+          );
+
+          let rooms = [];
+          let roomsNotice = "";
+
+          if (roomsResponse.success && Array.isArray(roomsResponse.data)) {
+            rooms = roomsResponse.data
+              .map((room) => transformRoomData(room))
+              .filter(Boolean);
+
+            if (rooms.length === 0) {
+              roomsNotice = "Rooms are not available right now.";
+            }
+          } else {
+            roomsNotice = "Rooms are not available right now.";
+          }
+
+          const combinedHotel = {
+            ...transformedHomestay,
+            rooms,
+          };
+
+          setHotel(combinedHotel);
+          setSelectedImage(combinedHotel.mainImage || "");
+          setRoomsMessage(roomsNotice);
         } else {
           setError("Homestay not found");
         }
       } catch (err) {
         console.error("Error fetching hotel details:", err);
         setError("Failed to load homestay details");
+        setRoomsMessage("Rooms are not available right now.");
       } finally {
         setLoading(false);
       }
@@ -276,36 +301,6 @@ const HotelDetails = () => {
 
     fetchHotelDetails();
   }, [id]);
-
-  // Fetch rooms data separately
-  useEffect(() => {
-    const fetchRoomsData = async () => {
-      if (!hotel || !id) return;
-
-      try {
-        setRoomsLoading(true);
-        setRoomsError(null);
-
-        const response = await homestayServices.fetchRoomsByHomestayId(id);
-
-        if (response.success && response.data) {
-          const transformedRooms = response.data.map((room) =>
-            transformRoomData(room)
-          );
-          setRooms(transformedRooms);
-        } else {
-          setRoomsError("No rooms available");
-        }
-      } catch (error) {
-        console.error("Error fetching rooms:", error);
-        setRoomsError("Failed to load rooms");
-      } finally {
-        setRoomsLoading(false);
-      }
-    };
-
-    fetchRoomsData();
-  }, [hotel, id]);
 
   // Only show amenities/features that exist in the API response
   const getAvailableAmenities = (hotel) => {
@@ -343,19 +338,89 @@ const HotelDetails = () => {
       .filter(Boolean);
   };
 
+  const getStatusBadgeClasses = (status) => {
+    if (!status) return "";
+
+    const normalized = status.toString().toLowerCase().replace(/\s+/g, "");
+
+    if (["available", "open", "active"].includes(normalized)) {
+      return "bg-green-50 text-green-700 border border-green-200";
+    }
+
+    if (["unavailable", "closed", "inactive", "booked", "occupied"].includes(normalized)) {
+      return "bg-red-50 text-red-600 border border-red-200";
+    }
+
+    if (["limited", "pending", "partial", "reserved", "onhold"].includes(normalized)) {
+      return "bg-amber-50 text-amber-600 border border-amber-200";
+    }
+
+    return "bg-gray-100 text-gray-600 border border-gray-200";
+  };
+
+  const formatBedsLabel = (beds) => {
+    if (beds === null || beds === undefined || beds === "") return null;
+
+    const numericBeds = Number(beds);
+    if (!Number.isNaN(numericBeds)) {
+      return `${numericBeds} ${numericBeds === 1 ? "Bed" : "Beds"}`;
+    }
+
+    return beds;
+  };
+
   // Loading state
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="h-96 bg-gray-200 rounded"></div>
-            <div className="space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+        <div className="animate-pulse space-y-8">
+          <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="h-96 bg-gray-200 rounded-lg"></div>
+            <div className="space-y-5">
+              <div className="h-10 bg-gray-200 rounded w-3/4"></div>
               <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-20 bg-gray-200 rounded"></div>
+              <div className="h-6 bg-gray-200 rounded w-2/5"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="bg-white border border-gray-100 rounded-xl shadow-sm p-4 space-y-4"
+              >
+                <div className="h-40 bg-gray-200 rounded-lg"></div>
+                <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-full"></div>
+                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                </div>
+                <div className="h-10 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-3 lg:col-span-2">
+              <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+              <div className="grid grid-cols-2 gap-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="h-10 bg-gray-200 rounded"></div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white border border-gray-100 rounded-xl p-6 space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+              <div className="space-y-3">
+                <div className="h-10 bg-gray-200 rounded"></div>
+                <div className="h-10 bg-gray-200 rounded"></div>
+                <div className="h-10 bg-gray-200 rounded"></div>
+              </div>
+              <div className="h-12 bg-gray-200 rounded"></div>
             </div>
           </div>
         </div>
@@ -434,69 +499,178 @@ const HotelDetails = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-5">{hotel.name}</h1>
 
-        {/* Desktop Layout - Side by side */}
-        <div className="hidden md:flex gap-5">
-          <div className="w-[55%]">
-            <img
-              src={selectedImage || hotel.image}
-              alt={hotel.name}
-              className="w-full h-[400px] object-cover rounded-lg shadow-lg"
-            />
-          </div>
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex-1 space-y-4">
+            <div className="relative">
+              <img
+                src={selectedImage || hotel.image}
+                alt={hotel.name}
+                className="w-full h-[280px] md:h-[420px] object-cover rounded-xl shadow-lg"
+              />
+            </div>
 
-          <div className="w-[45%]">
-            <div className="grid grid-cols-2 gap-3 h-[400px]">
-              {hotel.images &&
-                hotel.images.slice(0, 6).map((img, index) => (
-                  <div
+            {hotel.images && hotel.images.length > 0 && (
+              <div
+                className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3"
+                role="list"
+                aria-label="Gallery thumbnails"
+              >
+                {hotel.images.slice(0, 6).map((img, index) => (
+                  <button
                     key={index}
-                    className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                    type="button"
+                    onClick={() => setSelectedImage(img)}
+                    className={`group relative rounded-lg overflow-hidden border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                       selectedImage === img
                         ? "border-green-500"
-                        : "border-gray-200 hover:border-gray-400"
+                        : "border-transparent hover:border-green-200"
                     }`}
-                    onClick={() => setSelectedImage(img)}
                   >
                     <img
                       src={img}
                       alt={`${hotel.name} view ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-20 md:h-24 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                  </div>
+                    {selectedImage === img && (
+                      <span className="absolute inset-0 bg-black/10" aria-hidden="true"></span>
+                    )}
+                  </button>
                 ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Layout - Main image with horizontal thumbnails below */}
-        <div className="md:hidden">
-          <div className="mb-4">
-            <img
-              src={selectedImage || hotel.image}
-              alt={hotel.name}
-              className="w-full h-[300px] object-cover rounded-lg shadow-lg"
-            />
+              </div>
+            )}
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {hotel.images &&
-              hotel.images.slice(0, 6).map((img, index) => (
-                <div
-                  key={index}
-                  className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === img
-                      ? "border-green-500"
-                      : "border-gray-200 hover:border-gray-400"
-                  }`}
-                  onClick={() => setSelectedImage(img)}
-                >
-                  <img
-                    src={img}
-                    alt={`${hotel.name} view ${index + 1}`}
-                    className="w-20 h-20 object-cover"
-                  />
+          <div className="w-full lg:w-[360px] xl:w-[400px]">
+            <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg w-full lg:sticky lg:top-24">
+              <h3 className="text-xl font-semibold mb-6 text-center lg:text-left">
+                Quick Booking
+              </h3>
+              <div className="space-y-6">
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Check-in
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={
+                        selectedCheckIn
+                          ? new Date(selectedCheckIn).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : ""
+                      }
+                      placeholder="Select check-in date"
+                      readOnly
+                      onClick={() => setShowCheckInCalendar(!showCheckInCalendar)}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                  {showCheckInCalendar && (
+                    <CustomCalendar
+                      onDateSelect={setSelectedCheckIn}
+                      onClose={() => setShowCheckInCalendar(false)}
+                    />
+                  )}
                 </div>
-              ))}
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Check-out
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={
+                        selectedCheckOut
+                          ? new Date(selectedCheckOut).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : ""
+                      }
+                      placeholder="Select check-out date"
+                      readOnly
+                      onClick={() => setShowCheckOutCalendar(!showCheckOutCalendar)}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                  {showCheckOutCalendar && (
+                    <CustomCalendar
+                      onDateSelect={setSelectedCheckOut}
+                      onClose={() => setShowCheckOutCalendar(false)}
+                    />
+                  )}
+                </div>
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Guests
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowGuestsDropdown(!showGuestsDropdown)}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
+                    >
+                      <span className="font-medium">{selectedGuests}</span>
+                      <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          showGuestsDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        ></path>
+                      </svg>
+                    </button>
+                    {showGuestsDropdown && <CustomGuestsDropdown />}
+                  </div>
+                </div>
+                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                  Check Availability
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -526,316 +700,187 @@ const HotelDetails = () => {
               </>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Rooms Section - Only show if rooms data exists */}
-      {hotel.rooms && hotel.rooms.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Available Rooms
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {hotel.rooms.map((room) => (
-              <div
-                key={room.id}
-                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100"
-              >
-                <div className="w-full h-48">
-                  <img
-                    src={room.image}
-                    alt={room.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-medium text-gray-800 mb-2">
-                    {room.name}
-                  </h3>
-                  {room.description && (
-                    <p className="text-sm text-gray-600 mb-3">
-                      {room.description}
-                    </p>
-                  )}
-                  <button className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
-                    Book Now
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Available Rooms and Booking Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
-        {/* Available Rooms Section */}
-        <div className="lg:col-span-3">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">
-            Available Rooms
-          </h3>
-
-          {roomsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[...Array(2)].map((_, index) => (
-                <div
-                  key={index}
-                  className="animate-pulse bg-white rounded-xl shadow-md overflow-hidden"
-                >
-                  <div className="h-48 bg-gray-200"></div>
-                  <div className="p-6">
-                    <div className="h-6 bg-gray-200 rounded mb-3"></div>
-                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                    <div className="flex justify-between items-center">
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
-                      <div className="h-10 bg-gray-200 rounded w-24"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : roomsError ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600">{roomsError}</p>
-            </div>
-          ) : rooms.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {rooms.map((room) => (
-                <div
-                  key={room.id}
-                  className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200"
-                >
-                  <div className="relative h-48">
-                    <img
-                      src={room.mainImage}
-                      alt={room.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = "/images/default-room.jpg";
-                      }}
-                    />
-                    {room.discount > 0 && (
-                      <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-semibold">
-                        -{room.discount}%
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 bg-black bg-opacity-50 text-white px-2 py-1 rounded-md text-sm">
-                      {room.images.length} photos
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <h4 className="text-xl font-semibold text-gray-800 mb-2">
-                      {room.name}
-                    </h4>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {room.description}
-                    </p>
-
-                    {/* Room Details */}
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="flex items-center gap-2 text-sm text-gray-500">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                          ></path>
-                        </svg>
-                        {room.maxPeople} guests
-                      </span>
-                      <span className="text-green-600 font-medium text-sm">
-                        {room.status === "available"
-                          ? "Available"
-                          : "Unavailable"}
-                      </span>
-                    </div>
-
-                    {/* Included Services */}
-                    {room.included.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">
-                          Included:
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {room.included.join(", ")}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Price and Book Button */}
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                      <div>
-                        <div className="text-2xl font-bold text-green-600">
-                          RWF {room.price.toLocaleString()}
-                        </div>
-                        <div className="text-gray-500 text-sm">
-                          /night
-                        </div>
-                      </div>
-                      <button
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
-                        disabled={room.status !== "available"}
-                      >
-                        {room.status === "available"
-                          ? "Select Room"
-                          : "Unavailable"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-600">
-                No rooms available for this accommodation
+          {hotel.description && (
+            <div className="mt-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+                About this stay
+              </h2>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                {hotel.description}
               </p>
             </div>
           )}
         </div>
-
-        {/* Booking Card */}
-        <div className="lg:col-span-2">
-          <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg sticky top-4">
-            <h3 className="text-xl font-semibold mb-6">Quick Booking</h3>
-            <div className="space-y-4">
-              <div className="relative">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Check-in
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={selectedCheckIn}
-                    placeholder="Select check-in date"
-                    readOnly
-                    onClick={() => setShowCheckInCalendar(!showCheckInCalendar)}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
-                {showCheckInCalendar && (
-                  <CustomCalendar
-                    onDateSelect={setSelectedCheckIn}
-                    onClose={() => setShowCheckInCalendar(false)}
-                  />
-                )}
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Check-out
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={selectedCheckOut}
-                    placeholder="Select check-out date"
-                    readOnly
-                    onClick={() =>
-                      setShowCheckOutCalendar(!showCheckOutCalendar)
-                    }
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
-                {showCheckOutCalendar && (
-                  <CustomCalendar
-                    onDateSelect={setSelectedCheckOut}
-                    onClose={() => setShowCheckOutCalendar(false)}
-                  />
-                )}
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Guests
-                </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowGuestsDropdown(!showGuestsDropdown)}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
-                  >
-                    <span className="font-medium">{selectedGuests}</span>
-                    <svg
-                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                        showGuestsDropdown ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      ></path>
-                    </svg>
-                  </button>
-                  {showGuestsDropdown && <CustomGuestsDropdown />}
-                </div>
-              </div>
-              <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                Check Availability
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Hotel Amenities Section */}
-      {hotel && hotel.features && (
-        <div className="mb-12">
-          <h3 className="text-xl font-semibold mb-4">Hotel Amenities</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {getAvailableAmenities(hotel).map((amenity, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
-              >
-                <span className="text-green-500">✓</span>
-                <span>{amenity}</span>
-              </div>
-            ))}
-          </div>
+      {/* Rooms Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Available Rooms
+          </h2>
+          {roomsMessage && (
+            <span className="text-sm font-medium text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+              {roomsMessage}
+            </span>
+          )}
         </div>
-      )}
+
+        {hotel.rooms && hotel.rooms.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hotel.rooms.map((room) => {
+              const stats = [];
+
+              if (room.size) {
+                stats.push({ icon: "fa-ruler-combined", label: room.size });
+              }
+
+              const bedsLabel = formatBedsLabel(room.beds);
+              if (bedsLabel) {
+                stats.push({ icon: "fa-bed", label: bedsLabel });
+              }
+
+              if (room.capacity) {
+                stats.push({ icon: "fa-user-group", label: `Sleeps ${room.capacity}` });
+              }
+
+              const amenities = Array.isArray(room.amenities)
+                ? room.amenities.filter(Boolean)
+                : [];
+              const displayedAmenities = amenities.slice(0, 4);
+              const remainingAmenitiesCount = Math.max(
+                amenities.length - displayedAmenities.length,
+                0
+              );
+
+              return (
+                <div
+                  key={room.id}
+                  className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100 flex flex-col"
+                >
+                  <div className="w-full h-48">
+                    <img
+                      src={room.mainImage || room.image}
+                      alt={room.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-4 flex flex-col h-full">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <h3 className="text-lg font-semibold text-gray-800 leading-tight">
+                        {room.name}
+                      </h3>
+                      {room.status && (
+                        <span
+                          className={`text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide ${getStatusBadgeClasses(
+                            room.status
+                          )}`}
+                        >
+                          {room.status}
+                        </span>
+                      )}
+                    </div>
+
+                    {(room.shortDescription || room.description) && (
+                      <p className="text-sm text-gray-600 mb-4">
+                        {room.shortDescription || room.description}
+                      </p>
+                    )}
+
+                    {stats.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        {stats.map((stat, index) => (
+                          <div
+                            key={`${stat.label}-${index}`}
+                            className="flex items-center gap-2 text-sm text-gray-600"
+                          >
+                            <i className={`fa ${stat.icon} text-green-500`}></i>
+                            <span>{stat.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {displayedAmenities.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {displayedAmenities.map((amenity, index) => (
+                          <span
+                            key={`${amenity}-${index}`}
+                            className="px-3 py-1 text-xs font-medium rounded-full bg-green-50 text-green-700 border border-green-100"
+                          >
+                            {amenity}
+                          </span>
+                        ))}
+                        {remainingAmenitiesCount > 0 && (
+                          <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                            +{remainingAmenitiesCount} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-auto pt-4 border-t border-gray-100">
+                      {room.price && (
+                        <p className="text-base font-semibold text-green-600 mb-4">
+                          {new Intl.NumberFormat("en-RW", {
+                            style: "currency",
+                            currency: room.currency || "RWF",
+                            currencyDisplay: "code",
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          }).format(room.price)}
+                          <span className="text-sm text-gray-500 ml-1">
+                            / night
+                          </span>
+                        </p>
+                      )}
+                      <button className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition-colors">
+                        Book Now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          !roomsMessage && (
+            <div className="text-gray-500 text-sm bg-gray-50 border border-dashed border-gray-200 rounded-lg p-5">
+              Rooms are not available right now.
+            </div>
+          )
+        )}
+      </div>
+
+      {/* Amenities */}
+      <div className="mb-12">
+        <h3 className="text-xl font-semibold mb-4">Hotel Amenities</h3>
+        {(() => {
+          const availableAmenities = hotel ? getAvailableAmenities(hotel) : [];
+          if (availableAmenities.length === 0) {
+            return (
+              <p className="text-gray-500 text-sm bg-gray-50 border border-dashed border-gray-200 rounded-lg p-4">
+                Amenity details will be available soon. Please check back later.
+              </p>
+            );
+          }
+
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {availableAmenities.map((amenity, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100"
+                >
+                  <span className="text-green-500">✓</span>
+                  <span>{amenity}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
     </div>
   );
 };

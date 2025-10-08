@@ -40,11 +40,23 @@ export const homestayServices = {
 
   // Fetch rooms for a specific homestay
   fetchRoomsByHomestayId: async (homestayId) => {
+    if (!homestayId) {
+      return {
+        data: [],
+        success: false,
+        error: "homestayId is required",
+      };
+    }
+
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/rooms?homestay_id=${homestayId}`);
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/rooms?homestay_id=${homestayId}`
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
       const rooms = await response.json();
       return { data: rooms, success: true };
     } catch (error) {
@@ -52,6 +64,90 @@ export const homestayServices = {
       return { data: [], success: false, error: error.message };
     }
   },
+};
+
+const createShortDescription = (text, maxLength = 140) => {
+  if (!text) return "";
+  const normalizedText = text.replace(/\s+/g, " ").trim();
+  if (normalizedText.length <= maxLength) {
+    return normalizedText;
+  }
+
+  const truncated = normalizedText.slice(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(" ");
+  const safeCut = lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated;
+  return `${safeCut.trim()}…`;
+};
+
+const normalizeCurrencyCode = (currency) => {
+  if (!currency) return "RWF";
+
+  const normalized = currency.toString().trim().toUpperCase();
+
+  if (["RF", "RFW", "FRW", "RW", "RWF"].includes(normalized)) {
+    return "RWF";
+  }
+
+  return normalized;
+};
+
+const toTitleCase = (value) =>
+  value
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+const normalizeStatusLabel = (status) => {
+  if (!status) return null;
+
+  const normalized = status.toString().trim();
+  if (!normalized) return null;
+
+  return toTitleCase(normalized.replace(/[._-]+/g, " "));
+};
+
+const normalizeAmenities = (amenities) => {
+  if (!amenities) return [];
+
+  if (Array.isArray(amenities)) {
+    return amenities
+      .map((amenity) => {
+        if (typeof amenity === "string") {
+          return amenity.trim();
+        }
+        if (amenity && typeof amenity === "object") {
+          if (amenity.label) return amenity.label.toString().trim();
+          if (amenity.name) return amenity.name.toString().trim();
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  if (typeof amenities === "string") {
+    return amenities
+      .split(/[;,|•]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof amenities === "object") {
+    return Object.entries(amenities)
+      .filter(([, value]) => value === true || value === 1)
+      .map(([key]) =>
+        toTitleCase(
+          key
+            .toString()
+            .replace(/([A-Z])/g, " $1")
+            .replace(/[._-]+/g, " ")
+            .trim()
+        )
+      )
+      .filter(Boolean);
+  }
+
+  return [];
 };
 
 // Transform homestay data for frontend use
@@ -91,6 +187,7 @@ export const transformHomestayData = (homestay) => {
     vendorId: homestay.vendor_id,
     name: homestay.name,
     description: homestay.description,
+    shortDescription: createShortDescription(homestay.description),
     location: homestay.location,
     mainImage,
     images: images.map((img) => img.url),
@@ -137,78 +234,56 @@ export const transformHomestayData = (homestay) => {
   return transformedData;
 };
 
-// Transform room data for frontend use
 export const transformRoomData = (room) => {
   if (!room) return null;
 
-  // Transform room images
   const images = room.images
-    ? room.images
-        .sort((a, b) => a.image_order - b.image_order)
+    ? [...room.images]
+        .sort((a, b) => (a.image_order ?? 0) - (b.image_order ?? 0))
         .map((img) => ({
-          id: img.image_id,
+          id: img.image_id ?? img.id,
           url: `${API_BASE_URL}/${img.image_path}`,
-          order: img.image_order,
+          order: img.image_order ?? 0,
         }))
     : [];
 
-  // Get main image (first image)
-  const mainImage = images.length > 0 ? images[0].url : "/images/default-room.jpg";
+  const mainImage = images[0]?.url || "/images/default-room.jpg";
 
-  // Transform amenities (filter only available ones)
-  const amenities = [];
-  const amenityLabels = {
-    minibar: "Minibar",
-    tea_coffee_facilities: "Tea & Coffee",
-    wardrobe_hangers: "Wardrobe",
-    luggage_rack: "Luggage Rack",
-    safe: "Safe",
-    air_conditioner: "AC",
-    heater: "Heater",
-    fan: "Fan",
-    wifi: "WiFi",
-    tv: "TV",
-    speaker: "Speaker",
-    phone: "Phone",
-    usb_charging_points: "USB Charging",
-    power_adapters: "Power Adapters",
-    desk_workspace: "Desk",
-    iron_ironing_board: "Iron & Board",
-    hairdryer: "Hair Dryer",
-    towels: "Towels",
-    bathrobes: "Bathrobes",
-    slippers: "Slippers",
-    toiletries: "Toiletries",
-    teeth_shaving_kits: "Shaving Kits",
-    table_lamps: "Table Lamps",
-    bedside_lamps: "Bedside Lamps",
-    alarm_clock: "Alarm Clock",
-    laundry_bag: "Laundry Bag"
-  };
+  const priceValue = room.price ?? room.price_per_night ?? room.base_price;
 
-  // Add available amenities
-  Object.keys(amenityLabels).forEach(key => {
-    if (room[key] === 1 || (room.amenities && room.amenities[key] === 1)) {
-      amenities.push(amenityLabels[key]);
-    }
-  });
+  const normalizedAmenities = normalizeAmenities(room.amenities);
+  const normalizedStatus = normalizeStatusLabel(room.status ?? room.status_label);
 
-  return {
-    id: room.room_id,
-    homestayId: room.homestay_id,
-    name: room.name,
-    description: room.description,
-    price: parseFloat(room.price),
-    maxPeople: room.max_people,
-    discount: parseFloat(room.discount || 0),
-    included: room.included ? room.included.split(', ') : [],
-    status: room.status,
+  const transformedRoom = {
+    id: room.room_id ?? room.id,
+    name: room.name ?? "Room",
+    description: room.description ?? "",
+    shortDescription: createShortDescription(room.description ?? ""),
+    price: priceValue !== undefined ? parseFloat(priceValue) : null,
+  currency: normalizeCurrencyCode(room.currency),
+    capacity: room.capacity ?? room.max_guests ?? null,
+    amenities: normalizedAmenities,
     mainImage,
-    images: images.map(img => img.url),
-    amenities,
-    createdAt: room.created_at,
-    updatedAt: room.updated_at
+    image: mainImage,
+    images: images.map((img) => img.url),
+    rawImages: images,
+    status: normalizedStatus,
+    statusRaw: room.status ?? room.status_label ?? null,
   };
+
+  if (room.size) {
+    transformedRoom.size = room.size;
+  }
+
+  if (room.beds) {
+    transformedRoom.beds = room.beds;
+  }
+
+  if (room.status) {
+    transformedRoom.status = room.status;
+  }
+
+  return transformedRoom;
 };
 
 export default homestayServices;

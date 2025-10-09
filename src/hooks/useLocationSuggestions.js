@@ -22,7 +22,9 @@ export const useLocationSuggestions = (categoryKey) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const isEnabled = useMemo(
-    () => CATEGORIES_WITH_LOCATION_API.has(categoryKey) || categoryKey === "carRental",
+    () =>
+      CATEGORIES_WITH_LOCATION_API.has(categoryKey) ||
+      categoryKey === "carRental",
     [categoryKey]
   );
 

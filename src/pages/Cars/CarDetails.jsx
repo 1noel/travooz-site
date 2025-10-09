@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { carServices, transformCarData, formatPrice } from "../../api/cars";
+import Toast from "../../components/Toast";
 
 const CarDetails = () => {
   const { id } = useParams();
@@ -14,6 +15,23 @@ const CarDetails = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDays, setSelectedDays] = useState("1 Day");
   const [showDaysDropdown, setShowDaysDropdown] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleBookNow = () => {
+    if (!selectedDate) {
+      showToast("warning", "Please select a preferred date first");
+      return;
+    }
+
+    // Add to cart functionality would go here
+    // For now, just show success message
+    showToast("success", "Car added to cart successfully!");
+  };
 
   // Calendar component
   const CustomCalendar = () => {
@@ -590,7 +608,11 @@ const CarDetails = () => {
               </div>
 
               <div className="space-y-4">
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                <button
+                  onClick={handleBookNow}
+                  type="button"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                >
                   Book Now
                 </button>
               </div>
@@ -661,6 +683,15 @@ const CarDetails = () => {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

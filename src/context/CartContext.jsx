@@ -54,6 +54,8 @@ export const CartProvider = ({ children }) => {
         updated[existingIndex] = {
           ...existingItem,
           quantity: existingItem.quantity + normalizedQuantity,
+          price: item.price ?? existingItem.price,
+          currency: item.currency ?? existingItem.currency,
           metadata: { ...existingItem.metadata, ...item.metadata },
         };
         return updated;
@@ -66,6 +68,8 @@ export const CartProvider = ({ children }) => {
           type: item.type ?? "generic",
           name: item.name ?? "Item",
           quantity: normalizedQuantity,
+          price: item.price,
+          currency: item.currency,
           metadata: item.metadata ?? {},
         },
       ];

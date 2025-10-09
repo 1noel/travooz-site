@@ -46,10 +46,10 @@ export const FilterProvider = ({ children }) => {
   };
 
   const applyFilters = React.useCallback(() => {
-    console.log('📌 FilterProvider - Applying filters:', filterValues);
+    console.log("📌 FilterProvider - Applying filters:", filterValues);
     setAppliedFilters({ ...filterValues });
     setFilterAppliedTimestamp(Date.now());
-    console.log('📌 FilterProvider - Filters applied!');
+    console.log("📌 FilterProvider - Filters applied!");
   }, [filterValues]);
 
   const clearFilters = React.useCallback(() => {
@@ -74,7 +74,14 @@ export const FilterProvider = ({ children }) => {
       clearFilters,
       filterAppliedTimestamp,
     }),
-    [activeCategory, filterValues, appliedFilters, applyFilters, clearFilters, filterAppliedTimestamp]
+    [
+      activeCategory,
+      filterValues,
+      appliedFilters,
+      applyFilters,
+      clearFilters,
+      filterAppliedTimestamp,
+    ]
   );
 
   return (

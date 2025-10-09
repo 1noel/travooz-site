@@ -6,6 +6,7 @@ import {
   transformRoomData,
 } from "../../api/homestays";
 import { useCart } from "../../context/useCart";
+import Toast from "../../components/Toast";
 
 const HotelDetails = () => {
   const { id } = useParams();
@@ -22,8 +23,78 @@ const HotelDetails = () => {
   const [selectedGuests, setSelectedGuests] = useState("1 Guest");
   const [showGuestsDropdown, setShowGuestsDropdown] = useState(false);
   const [roomActionState, setRoomActionState] = useState({});
+  const [toast, setToast] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [availabilityResults, setAvailabilityResults] = useState(null);
 
   const { addItem } = useCart();
+
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleCheckHotelAvailability = async () => {
+    if (!selectedCheckIn || !selectedCheckOut) {
+      showToast("warning", "Please select check-in and check-out dates");
+      return;
+    }
+
+    if (!hotel.rooms || hotel.rooms.length === 0) {
+      showToast("warning", "No rooms available at this time");
+      return;
+    }
+
+    setCheckingAvailability(true);
+    setAvailabilityResults(null);
+
+    try {
+      // Check availability for all rooms
+      const availabilityChecks = hotel.rooms.map(async (room) => {
+        try {
+          const response = await homestayServices.checkRoomAvailability({
+            roomId: room.id,
+            checkIn: selectedCheckIn,
+            checkOut: selectedCheckOut,
+            guests: parseGuestsCount(),
+          });
+          return {
+            room,
+            available: response.success,
+            message: response.data?.message || "",
+          };
+        } catch {
+          return {
+            room,
+            available: false,
+            message: "Unable to check availability",
+          };
+        }
+      });
+
+      const results = await Promise.all(availabilityChecks);
+      const availableRooms = results.filter((r) => r.available);
+
+      setAvailabilityResults({
+        total: results.length,
+        available: availableRooms.length,
+        rooms: results,
+      });
+
+      if (availableRooms.length > 0) {
+        showToast(
+          "success",
+          `${availableRooms.length} room(s) available for your dates!`
+        );
+      } else {
+        showToast("warning", "No rooms available for the selected dates");
+      }
+    } catch {
+      showToast("error", "Failed to check availability. Please try again.");
+    } finally {
+      setCheckingAvailability(false);
+    }
+  };
 
   // Calendar component for check-in/check-out
   const CustomCalendar = ({ onDateSelect, onClose }) => {
@@ -279,166 +350,36 @@ const HotelDetails = () => {
     }
   };
 
-  const formatCurrency = (amount, currency = "RWF") => {
-    if (amount === undefined || amount === null) return null;
-    try {
-      return new Intl.NumberFormat("en-RW", {
-        style: "currency",
-        currency,
-        currencyDisplay: "code",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(amount);
-    } catch (error) {
-      console.warn("Failed to format currency", error);
-      return `${currency} ${amount}`;
-    }
-  };
-
-  const buildAvailabilityMessage = (room, data) => {
-    if (!data) {
-      return "Room is available for the selected dates.";
-    }
-
-    const checkInValue = data.check_in_date || selectedCheckIn;
-    const checkOutValue = data.check_out_date || selectedCheckOut;
-    const guestsValue = data.guests || parseGuestsCount();
-    const priceValue = data.room_price_per_night ?? room.price;
-
-    const segments = [];
-
-    if (checkInValue && checkOutValue) {
-      segments.push(
-        `Available ${formatDateForMetadata(
-          checkInValue
-        )} – ${formatDateForMetadata(checkOutValue)}`
-      );
-    }
-
-    if (guestsValue) {
-      segments.push(`Up to ${guestsValue} guest${guestsValue > 1 ? "s" : ""}`);
-    }
-
-    if (priceValue !== undefined && priceValue !== null) {
-      const formatted = formatCurrency(priceValue, room.currency || "RWF");
-      if (formatted) {
-        segments.push(`${formatted} per night`);
-      }
-    }
-
-    return segments.length > 0
-      ? segments.join(" • ")
-      : "Room is available for the selected dates.";
-  };
-
-  const extractBookingReference = (data) => {
-    if (!data) return undefined;
-    return (
-      data.booking_reference ||
-      data.booking_id ||
-      data.reference ||
-      data.code ||
-      data.id
-    );
-  };
-
-  const ensureDatesSelected = (roomId) => {
+  const ensureDatesSelected = () => {
     if (!selectedCheckIn || !selectedCheckOut) {
-      updateRoomState(roomId, {
-        availabilityStatus: "error",
-        availabilityMessage: "Select check-in and check-out dates first.",
-        bookingStatus: "error",
-        bookingMessage: "Select check-in and check-out dates first.",
-        availabilityLoading: false,
-        bookingLoading: false,
-      });
       return false;
     }
     return true;
   };
 
-  const handleCheckAvailability = async (room) => {
-    if (!ensureDatesSelected(room.id)) {
-      return;
-    }
-
-    updateRoomState(room.id, {
-      availabilityLoading: true,
-      availabilityStatus: null,
-      availabilityMessage: null,
-    });
-
-    try {
-      const response = await homestayServices.checkRoomAvailability({
-        roomId: room.id,
-        checkIn: selectedCheckIn,
-        checkOut: selectedCheckOut,
-        guests: parseGuestsCount(),
-      });
-
-      if (response.success) {
-        const message =
-          response.data?.message ||
-          buildAvailabilityMessage(room, response.data);
-        updateRoomState(room.id, {
-          availabilityLoading: false,
-          availabilityStatus: "success",
-          availabilityMessage: message,
-        });
-      } else {
-        updateRoomState(room.id, {
-          availabilityLoading: false,
-          availabilityStatus: "error",
-          availabilityMessage:
-            response.error || "Unable to confirm availability.",
-        });
-      }
-    } catch (error) {
-      updateRoomState(room.id, {
-        availabilityLoading: false,
-        availabilityStatus: "error",
-        availabilityMessage: error.message || "Unable to confirm availability.",
-      });
-    }
-  };
-
   const handleBookRoom = async (room) => {
-    if (!ensureDatesSelected(room.id)) {
+    if (!ensureDatesSelected()) {
+      showToast("warning", "Please select check-in and check-out dates first");
       return;
     }
 
     updateRoomState(room.id, {
       bookingLoading: true,
-      bookingStatus: null,
-      bookingMessage: null,
     });
 
     try {
-      const response = await homestayServices.bookRoom({
-        roomId: room.id,
-        checkIn: selectedCheckIn,
-        checkOut: selectedCheckOut,
-        guests: parseGuestsCount(),
-      });
-
-      if (!response.success) {
-        throw new Error(response.error || "Booking failed.");
-      }
-
-      const bookingReference = extractBookingReference(response.data);
-      const generatedId = bookingReference || `${room.id}-${Date.now()}`;
+      const bookingReference = `ROOM-${room.id}-${Date.now()}`;
+      const generatedId = bookingReference;
 
       addItem({
         id: generatedId,
         type: "room",
         name: `${hotel.name} • ${room.name}`,
+        price: room.price,
+        currency: room.currency || "RWF",
         metadata: {
-          checkIn:
-            formatDateForMetadata(response.data?.check_in_date) ||
-            formatDateForMetadata(selectedCheckIn),
-          checkOut:
-            formatDateForMetadata(response.data?.check_out_date) ||
-            formatDateForMetadata(selectedCheckOut),
+          checkIn: formatDateForMetadata(selectedCheckIn),
+          checkOut: formatDateForMetadata(selectedCheckOut),
           guests: parseGuestsCount(),
           reference: bookingReference,
         },
@@ -446,15 +387,17 @@ const HotelDetails = () => {
 
       updateRoomState(room.id, {
         bookingLoading: false,
-        bookingStatus: "success",
-        bookingMessage: response.data?.message || "Room added to your cart.",
       });
+
+      showToast("success", "Room added to cart successfully!");
     } catch (error) {
       updateRoomState(room.id, {
         bookingLoading: false,
-        bookingStatus: "error",
-        bookingMessage: error.message || "Booking failed.",
       });
+      showToast(
+        "error",
+        error.message || "Failed to add to cart. Please try again."
+      );
     }
   };
 
@@ -897,9 +840,28 @@ const HotelDetails = () => {
                     {showGuestsDropdown && <CustomGuestsDropdown />}
                   </div>
                 </div>
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                  Check Availability
+                <button
+                  onClick={handleCheckHotelAvailability}
+                  disabled={checkingAvailability}
+                  className={`w-full py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${
+                    checkingAvailability
+                      ? "bg-green-400 cursor-wait"
+                      : "bg-green-600 hover:bg-green-700 transform hover:-translate-y-0.5"
+                  } text-white`}
+                >
+                  {checkingAvailability ? "Checking..." : "Check Availability"}
                 </button>
+                {availabilityResults && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-900 mb-2">
+                      Availability Results:
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      {availabilityResults.available} of{" "}
+                      {availabilityResults.total} room(s) available
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -960,14 +922,7 @@ const HotelDetails = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {hotel.rooms.map((room) => {
               const roomState = roomActionState[room.id] ?? {};
-              const {
-                availabilityLoading,
-                availabilityMessage,
-                availabilityStatus,
-                bookingLoading,
-                bookingMessage,
-                bookingStatus,
-              } = roomState;
+              const { bookingLoading } = roomState;
               const stats = [];
 
               if (room.size) {
@@ -1076,58 +1031,18 @@ const HotelDetails = () => {
                           </span>
                         </p>
                       )}
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleCheckAvailability(room)}
-                          disabled={availabilityLoading || bookingLoading}
-                          className={`w-full sm:w-1/2 px-4 py-3 rounded-lg font-semibold border transition-colors ${
-                            availabilityLoading || bookingLoading
-                              ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                              : "bg-white text-green-600 border-green-500 hover:bg-green-50"
-                          }`}
-                        >
-                          {availabilityLoading
-                            ? "Checking..."
-                            : "Check availability"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleBookRoom(room)}
-                          disabled={bookingLoading}
-                          className={`w-full sm:w-1/2 px-4 py-3 rounded-lg font-semibold transition-colors ${
-                            bookingLoading
-                              ? "bg-green-200 text-white cursor-wait"
-                              : "bg-green-500 hover:bg-green-600 text-white"
-                          }`}
-                        >
-                          {bookingLoading ? "Booking..." : "Book & add to cart"}
-                        </button>
-                      </div>
-
-                      {availabilityMessage && (
-                        <p
-                          className={`text-sm ${
-                            availabilityStatus === "success"
-                              ? "text-green-600"
-                              : "text-rose-500"
-                          }`}
-                        >
-                          {availabilityMessage}
-                        </p>
-                      )}
-
-                      {bookingMessage && (
-                        <p
-                          className={`text-sm ${
-                            bookingStatus === "success"
-                              ? "text-green-600"
-                              : "text-rose-500"
-                          }`}
-                        >
-                          {bookingMessage}
-                        </p>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleBookRoom(room)}
+                        disabled={bookingLoading}
+                        className={`w-full px-4 py-3 rounded-lg font-semibold transition-colors ${
+                          bookingLoading
+                            ? "bg-green-200 text-white cursor-wait"
+                            : "bg-green-500 hover:bg-green-600 text-white"
+                        }`}
+                      >
+                        {bookingLoading ? "Booking..." : "Book"}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1171,6 +1086,15 @@ const HotelDetails = () => {
           );
         })()}
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 };

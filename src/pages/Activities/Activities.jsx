@@ -144,12 +144,14 @@ const Activities = () => {
       if (filteredActivities.length === 0 && activities.length > 0) {
         setToast({
           message: `No activities found matching your search. Try different criteria.`,
-          type: "warning"
+          type: "warning",
         });
       } else if (filteredActivities.length > 0) {
         setToast({
-          message: `Found ${filteredActivities.length} activit${filteredActivities.length > 1 ? 'ies' : 'y'} matching your search.`,
-          type: "success"
+          message: `Found ${filteredActivities.length} activit${
+            filteredActivities.length > 1 ? "ies" : "y"
+          } matching your search.`,
+          type: "success",
         });
       }
     }
@@ -620,9 +622,9 @@ const Activities = () => {
 
       {/* Toast Notification */}
       {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
+        <Toast
+          message={toast.message}
+          type={toast.type}
           onClose={() => setToast(null)}
         />
       )}

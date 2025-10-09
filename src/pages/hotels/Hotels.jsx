@@ -122,9 +122,14 @@ const Hotels = () => {
 
   // Show toast when filters are applied
   useEffect(() => {
-    if (filterAppliedTimestamp > 0 && appliedFilters.destination && appliedFilters.destination.trim() && !loading) {
+    if (
+      filterAppliedTimestamp > 0 &&
+      appliedFilters.destination &&
+      appliedFilters.destination.trim() &&
+      !loading
+    ) {
       const currentFilter = appliedFilters.destination;
-      
+
       if (filteredHotels.length === 0 && hotels.length > 0) {
         setToast({
           message: `No stays found matching "${currentFilter}". Try different search terms.`,

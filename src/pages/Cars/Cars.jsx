@@ -112,18 +112,25 @@ const Cars = () => {
 
   // Show toast when filters are applied
   useEffect(() => {
-    if (filterAppliedTimestamp > 0 && appliedFilters.destination && appliedFilters.destination.trim() && !loading) {
+    if (
+      filterAppliedTimestamp > 0 &&
+      appliedFilters.destination &&
+      appliedFilters.destination.trim() &&
+      !loading
+    ) {
       const currentFilter = appliedFilters.destination;
-      
+
       if (filteredCars.length === 0 && cars.length > 0) {
         setToast({
           message: `No cars found matching "${currentFilter}". Try different search terms.`,
-          type: "warning"
+          type: "warning",
         });
       } else if (filteredCars.length > 0) {
         setToast({
-          message: `Found ${filteredCars.length} car${filteredCars.length > 1 ? 's' : ''} matching your search.`,
-          type: "success"
+          message: `Found ${filteredCars.length} car${
+            filteredCars.length > 1 ? "s" : ""
+          } matching your search.`,
+          type: "success",
         });
       }
     }
@@ -307,9 +314,9 @@ const Cars = () => {
 
       {/* Toast Notification */}
       {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
+        <Toast
+          message={toast.message}
+          type={toast.type}
           onClose={() => setToast(null)}
         />
       )}

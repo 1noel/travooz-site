@@ -5,6 +5,7 @@ import {
   transformApiDataToFrontend,
 } from "../../api/eating";
 import { useCart } from "../../context/useCart";
+import Toast from "../../components/Toast";
 
 const EatingDetails = () => {
   const { id } = useParams();
@@ -28,12 +29,13 @@ const EatingDetails = () => {
     guests: "2",
     tableId: "",
   });
-  const [bookingStatus, setBookingStatus] = useState(null);
-  const [bookingMessage, setBookingMessage] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [availabilityStatus, setAvailabilityStatus] = useState(null);
-  const [availabilityMessage, setAvailabilityMessage] = useState("");
-  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const handleBookingInputChange = (event) => {
     const { name, value } = event.target;
@@ -41,22 +43,6 @@ const EatingDetails = () => {
       ...previous,
       [name]: value,
     }));
-    if (bookingStatus) {
-      setBookingStatus(null);
-      setBookingMessage("");
-    }
-    if (availabilityStatus) {
-      setAvailabilityStatus(null);
-      setAvailabilityMessage("");
-    }
-  };
-
-  const coerceDateTimePayload = (value) => {
-    if (!value) return undefined;
-    if (value.length === 16) {
-      return `${value}:00`;
-    }
-    return value;
   };
 
   const formatDateTimeForMetadata = (value) => {
@@ -72,139 +58,32 @@ const EatingDetails = () => {
     return value.replace("T", " ");
   };
 
-  const handleCheckAvailability = async () => {
-    if (!restaurant) return;
-
-    if (!bookingForm.bookingDate) {
-      setAvailabilityStatus("error");
-      setAvailabilityMessage(
-        "Select a booking date and time before checking availability."
-      );
-      return;
-    }
-
-    const guestsCount = Number(bookingForm.guests);
-    if (!Number.isInteger(guestsCount) || guestsCount <= 0) {
-      setAvailabilityStatus("error");
-      setAvailabilityMessage("Guests must be a positive number.");
-      return;
-    }
-
-    setAvailabilityLoading(true);
-    setAvailabilityStatus(null);
-    setAvailabilityMessage("");
-
-    try {
-      const payload = {
-        restaurantId: restaurant.id,
-        bookingDate: coerceDateTimePayload(bookingForm.bookingDate),
-        guests: guestsCount,
-      };
-
-      const minutesValue = Number(bookingForm.durationMinutes);
-      if (!Number.isNaN(minutesValue) && minutesValue > 0) {
-        payload.durationMinutes = minutesValue;
-      }
-
-      const response = await eatingPlaceServices.checkRestaurantAvailability(
-        payload
-      );
-
-      if (!response.success) {
-        throw new Error(response.error || "Failed to check availability.");
-      }
-
-      const availabilityData = response.data || {};
-      const isUnavailable = availabilityData.available === false;
-
-      if (isUnavailable) {
-        setAvailabilityStatus("error");
-        setAvailabilityMessage(
-          availabilityData.reason ||
-            availabilityData.message ||
-            "No tables are available for the selected slot."
-        );
-      } else {
-        setAvailabilityStatus("success");
-        setAvailabilityMessage(
-          availabilityData.message ||
-            "A table is available for the selected slot."
-        );
-      }
-    } catch (availabilityError) {
-      console.error(
-        "Error checking restaurant availability:",
-        availabilityError
-      );
-      setAvailabilityStatus("error");
-      setAvailabilityMessage(
-        availabilityError.message || "Failed to check availability."
-      );
-    } finally {
-      setAvailabilityLoading(false);
-    }
-  };
-
   const handleRestaurantBooking = async (event) => {
     event.preventDefault();
     if (!restaurant) return;
 
     if (!bookingForm.bookingDate) {
-      setBookingStatus("error");
-      setBookingMessage("Select a booking date and time before submitting.");
+      showToast("warning", "Please select a booking date and time");
       return;
     }
 
     const guestsCount = Number(bookingForm.guests);
     if (!Number.isInteger(guestsCount) || guestsCount <= 0) {
-      setBookingStatus("error");
-      setBookingMessage("Guests must be a positive number.");
+      showToast("warning", "Guests must be a positive number");
       return;
     }
 
     setBookingLoading(true);
-    setBookingStatus(null);
-    setBookingMessage("");
 
     try {
-      const payload = {
-        restaurantId: restaurant.id,
-        bookingDate: coerceDateTimePayload(bookingForm.bookingDate),
-        guests: guestsCount,
-      };
-
-      const arrivalPayload = coerceDateTimePayload(bookingForm.arrivalDate);
-      if (arrivalPayload) {
-        payload.arrivalDate = arrivalPayload;
-      }
-
-      const minutesValue = Number(bookingForm.durationMinutes);
-      if (!Number.isNaN(minutesValue) && minutesValue > 0) {
-        payload.durationMinutes = minutesValue;
-      }
-
-      if (bookingForm.tableId) {
-        payload.tableId = bookingForm.tableId;
-      }
-
-      const response = await eatingPlaceServices.bookRestaurantTable(payload);
-
-      if (!response.success) {
-        throw new Error(response.error || "Failed to book table.");
-      }
-
-      const bookingReference =
-        response.data?.booking_reference ||
-        response.data?.booking_id ||
-        response.data?.reference ||
-        response.data?.code ||
-        response.data?.id;
+      const bookingReference = `TABLE-${restaurant.id}-${Date.now()}`;
 
       const metadata = {
         bookingDate: formatDateTimeForMetadata(bookingForm.bookingDate),
         guests: guestsCount,
         table: bookingForm.tableId || "Any table",
         reference: bookingReference,
+        durationMinutes: Number(bookingForm.durationMinutes),
       };
 
       if (bookingForm.arrivalDate) {
@@ -213,25 +92,17 @@ const EatingDetails = () => {
         );
       }
 
-      if (minutesValue && !Number.isNaN(minutesValue)) {
-        metadata.durationMinutes = minutesValue;
-      }
-
       addItem({
-        id: bookingReference || `restaurant-${restaurant.id}-${Date.now()}`,
+        id: bookingReference,
         type: "restaurant",
         name: `${restaurant.name} • Table reservation`,
         metadata,
       });
 
-      setBookingStatus("success");
-      setBookingMessage(
-        response.data?.message || "Reservation added to your cart."
-      );
+      showToast("success", "Table reservation added to cart successfully!");
     } catch (bookingError) {
       console.error("Error booking restaurant table:", bookingError);
-      setBookingStatus("error");
-      setBookingMessage(bookingError.message || "Failed to book table.");
+      showToast("error", bookingError.message || "Failed to add to cart");
     } finally {
       setBookingLoading(false);
     }
@@ -615,55 +486,17 @@ const EatingDetails = () => {
                   />
                 </div>
 
-                {availabilityMessage && (
-                  <p
-                    className={`text-sm ${
-                      availabilityStatus === "success"
-                        ? "text-green-600"
-                        : "text-rose-500"
-                    }`}
-                  >
-                    {availabilityMessage}
-                  </p>
-                )}
-
-                {bookingMessage && (
-                  <p
-                    className={`text-sm ${
-                      bookingStatus === "success"
-                        ? "text-green-600"
-                        : "text-rose-500"
-                    }`}
-                  >
-                    {bookingMessage}
-                  </p>
-                )}
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCheckAvailability}
-                    disabled={availabilityLoading || bookingLoading}
-                    className={`w-full sm:w-1/2 py-3 px-4 rounded-lg font-semibold border transition-colors ${
-                      availabilityLoading || bookingLoading
-                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                        : "bg-white text-green-600 border-green-500 hover:bg-green-50"
-                    }`}
-                  >
-                    {availabilityLoading ? "Checking..." : "Check availability"}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={bookingLoading}
-                    className={`w-full sm:w-1/2 py-3 px-4 rounded-lg font-semibold transition-colors ${
-                      bookingLoading
-                        ? "bg-green-200 text-white cursor-wait"
-                        : "bg-green-500 hover:bg-green-600 text-white"
-                    }`}
-                  >
-                    {bookingLoading ? "Booking..." : "Book & add to cart"}
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  disabled={bookingLoading}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
+                    bookingLoading
+                      ? "bg-green-200 text-white cursor-wait"
+                      : "bg-green-500 hover:bg-green-600 text-white"
+                  }`}
+                >
+                  {bookingLoading ? "Booking..." : "Book"}
+                </button>
               </form>
             </div>
 
@@ -735,6 +568,15 @@ const EatingDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 };

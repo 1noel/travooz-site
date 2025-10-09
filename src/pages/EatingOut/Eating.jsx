@@ -66,8 +66,7 @@ const Eating = () => {
     if (activeCategory !== "All") {
       filtered = filtered.filter(
         (place) =>
-          place.category === activeCategory ||
-          place.cuisine === activeCategory
+          place.category === activeCategory || place.cuisine === activeCategory
       );
     }
 
@@ -88,18 +87,25 @@ const Eating = () => {
 
   // Show toast when filters are applied
   useEffect(() => {
-    if (filterAppliedTimestamp > 0 && appliedFilters.destination && appliedFilters.destination.trim() && !loading) {
+    if (
+      filterAppliedTimestamp > 0 &&
+      appliedFilters.destination &&
+      appliedFilters.destination.trim() &&
+      !loading
+    ) {
       const currentFilter = appliedFilters.destination;
-      
+
       if (filteredEatingPlaces.length === 0 && eatingPlaces.length > 0) {
         setToast({
           message: `No restaurants found matching "${currentFilter}". Try different search terms.`,
-          type: "warning"
+          type: "warning",
         });
       } else if (filteredEatingPlaces.length > 0) {
         setToast({
-          message: `Found ${filteredEatingPlaces.length} restaurant${filteredEatingPlaces.length > 1 ? 's' : ''} matching your search.`,
-          type: "success"
+          message: `Found ${filteredEatingPlaces.length} restaurant${
+            filteredEatingPlaces.length > 1 ? "s" : ""
+          } matching your search.`,
+          type: "success",
         });
       }
     }
@@ -229,9 +235,9 @@ const Eating = () => {
 
       {/* Toast Notification */}
       {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
+        <Toast
+          message={toast.message}
+          type={toast.type}
           onClose={() => setToast(null)}
         />
       )}

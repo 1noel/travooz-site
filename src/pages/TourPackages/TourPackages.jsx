@@ -155,18 +155,25 @@ const TourPackages = () => {
 
   // Show toast when filters are applied
   useEffect(() => {
-    if (filterAppliedTimestamp > 0 && appliedFilters.destination && appliedFilters.destination.trim() && !loading) {
+    if (
+      filterAppliedTimestamp > 0 &&
+      appliedFilters.destination &&
+      appliedFilters.destination.trim() &&
+      !loading
+    ) {
       const currentFilter = appliedFilters.destination;
-      
+
       if (filteredPackages.length === 0 && tourPackages.length > 0) {
         setToast({
           message: `No tour packages found matching "${currentFilter}". Try different search terms.`,
-          type: "warning"
+          type: "warning",
         });
       } else if (filteredPackages.length > 0) {
         setToast({
-          message: `Found ${filteredPackages.length} tour package${filteredPackages.length > 1 ? 's' : ''} matching your search.`,
-          type: "success"
+          message: `Found ${filteredPackages.length} tour package${
+            filteredPackages.length > 1 ? "s" : ""
+          } matching your search.`,
+          type: "success",
         });
       }
     }
@@ -326,9 +333,9 @@ const TourPackages = () => {
 
       {/* Toast Notification */}
       {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
+        <Toast
+          message={toast.message}
+          type={toast.type}
           onClose={() => setToast(null)}
         />
       )}

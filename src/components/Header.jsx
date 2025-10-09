@@ -30,15 +30,39 @@ const Header = () => {
           <Link to="/blogs" className="text-sm lg:text-base">
             Travel Blogs
           </Link>
-          <Link
-            to="/cart"
-            className="relative text-sm lg:text-base flex items-center gap-2"
-          >
-            <span>Cart</span>
-            <span className="inline-flex items-center justify-center min-w-[24px] px-1.5 py-0.5 text-xs font-semibold bg-white text-green-600 rounded-full">
-              {cartCount}
-            </span>
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              to="/cart"
+              className="relative text-sm lg:text-base flex items-center gap-2"
+            >
+              <span>Cart</span>
+              <span className="inline-flex items-center justify-center min-w-[24px] px-1.5 py-0.5 text-xs font-semibold bg-white text-green-600 rounded-full">
+                {cartCount}
+              </span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => navigate("/sign-in")}
+              className="relative text-sm lg:text-base flex items-center gap-2 opacity-70 hover:opacity-100"
+              title="Sign in to access cart"
+            >
+              <span>Cart</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                />
+              </svg>
+            </button>
+          )}
           {isAuthenticated ? (
             <div className="flex items-center gap-3 lg:gap-4">
               <div className="hidden lg:flex flex-col text-xs text-white/80 leading-tight">
@@ -106,16 +130,42 @@ const Header = () => {
             <Link to="/blogs" className="text-sm">
               Travel Blogs
             </Link>
-            <Link
-              to="/cart"
-              className="text-sm flex items-center justify-between border border-white/20 rounded-md px-4 py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <span>Cart</span>
-              <span className="ml-3 inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 text-xs font-semibold bg-white text-green-600 rounded-full">
-                {cartCount}
-              </span>
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                to="/cart"
+                className="text-sm flex items-center justify-between border border-white/20 rounded-md px-4 py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span>Cart</span>
+                <span className="ml-3 inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 text-xs font-semibold bg-white text-green-600 rounded-full">
+                  {cartCount}
+                </span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  navigate("/sign-in");
+                }}
+                className="text-sm flex items-center justify-between border border-white/20 rounded-md px-4 py-2 opacity-70"
+              >
+                <span>Cart (Sign in required)</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                  />
+                </svg>
+              </button>
+            )}
             {isAuthenticated ? (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between border border-white/20 rounded-md px-4 py-3">

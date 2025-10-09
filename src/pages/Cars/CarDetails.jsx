@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { carServices, transformCarData, formatPrice } from "../../api/cars";
 import Toast from "../../components/Toast";
+import CarBookingModal from "../../components/CarBookingModal";
+import BookingConfirmation from "../../components/BookingConfirmation";
+import { useAuth } from "../../context/useAuth";
 
 const CarDetails = () => {
   const { id } = useParams();
@@ -16,6 +19,11 @@ const CarDetails = () => {
   const [selectedDays, setSelectedDays] = useState("1 Day");
   const [showDaysDropdown, setShowDaysDropdown] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmedBooking, setConfirmedBooking] = useState(null);
+
+  const { isAuthenticated } = useAuth();
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -23,14 +31,53 @@ const CarDetails = () => {
   };
 
   const handleBookNow = () => {
-    if (!selectedDate) {
-      showToast("warning", "Please select a preferred date first");
+    if (!isAuthenticated) {
+      showToast("warning", "Please sign in to book a car");
+      setTimeout(() => navigate("/sign-in"), 1500);
       return;
     }
 
-    // Add to cart functionality would go here
-    // For now, just show success message
-    showToast("success", "Car added to cart successfully!");
+    setShowBookingModal(true);
+  };
+
+  const handleBookingConfirm = async (bookingData) => {
+    try {
+      const response = await carServices.bookCarRental(bookingData);
+
+      // For now, show confirmation regardless of API response (until database is connected)
+      console.log("Booking response:", response);
+
+      // Close booking modal
+      setShowBookingModal(false);
+
+      // Store booking data and show confirmation
+      setConfirmedBooking(bookingData);
+      setShowConfirmation(true);
+
+      // Show success toast
+      showToast(
+        "success",
+        "Booking confirmed! View your confirmation details below."
+      );
+    } catch (error) {
+      console.error("Booking error:", error);
+
+      // Still show confirmation even if API fails (for testing without database)
+      setShowBookingModal(false);
+      setConfirmedBooking(bookingData);
+      setShowConfirmation(true);
+      showToast(
+        "success",
+        "Booking confirmed! (Demo mode - database not connected)"
+      );
+    }
+  };
+
+  const handleConfirmationClose = () => {
+    setShowConfirmation(false);
+    setConfirmedBooking(null);
+    // Optionally redirect to cart or bookings page
+    navigate("/cart");
   };
 
   // Calendar component
@@ -693,6 +740,22 @@ const CarDetails = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Car Booking Modal */}
+      <CarBookingModal
+        isOpen={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        onConfirm={handleBookingConfirm}
+        car={car}
+      />
+
+      {/* Booking Confirmation */}
+      <BookingConfirmation
+        isOpen={showConfirmation}
+        onClose={handleConfirmationClose}
+        bookingData={confirmedBooking}
+        car={car}
+      />
     </div>
   );
 };

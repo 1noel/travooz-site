@@ -97,53 +97,11 @@ const Blogs = () => {
         </h1>
       </div>
 
-      {/* Featured Blog */}
-      {blogs.length > 0 && (
-        <div className="mb-10 md:mb-14">
-          <div
-            onClick={() => handleBlogClick(blogs[0])}
-            className="relative cursor-pointer group overflow-hidden rounded-xl shadow-lg bg-white border border-gray-100 hover:border-green-200"
-          >
-            <div className="grid lg:grid-cols-2 items-center">
-              <div className="relative h-64 md:h-72 lg:h-80 overflow-hidden">
-                <img
-                  src={blogs[0].mainImage}
-                  alt={blogs[0].title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-              <div className="p-6 md:p-8">
-                <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-4">
-                  <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold">
-                    Featured Story
-                  </span>
-                  <span className="text-gray-500 text-sm font-medium">
-                    {blogs[0].date}
-                  </span>
-                  <span className="text-gray-500 text-sm">
-                    {getReadingTime(blogs[0].description)}
-                  </span>
-                </div>
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 group-hover:text-green-600 transition-colors leading-tight">
-                  {blogs[0].title}
-                </h2>
-                <p className="text-gray-600 leading-relaxed mb-6 line-clamp-3 text-sm md:text-base">
-                  {blogs[0].description}
-                </p>
-                <button className="bg-green-600 hover:bg-green-700 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base">
-                  Read Full Story
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Blog Grid */}
-      {blogs.length > 1 && (
+      {/* Blog Grid - uniform 3 columns, no featured */}
+      {blogs.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
-          {blogs.slice(1).map((blog) => (
+          {blogs.map((blog) => (
             <article
               key={blog.id}
               onClick={() => handleBlogClick(blog)}

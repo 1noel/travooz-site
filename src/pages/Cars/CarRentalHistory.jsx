@@ -25,7 +25,7 @@ const CarRentalHistory = () => {
       setLoading(true);
       // TODO: Replace with actual API call when backend is ready
       // const response = await carServices.getUserBookings();
-      
+
       // Mock data for now (will be replaced with real API)
       const mockBookings = [
         {
@@ -198,7 +198,9 @@ License Number: ${booking.driver_license_number}
 PRICING
 -------
 Daily Rate: RWF ${booking.daily_rate.toLocaleString()}
-Insurance (${getInsuranceName(booking.insurance_option)}): RWF ${booking.insurance_cost.toLocaleString()}
+Insurance (${getInsuranceName(
+      booking.insurance_option
+    )}): RWF ${booking.insurance_cost.toLocaleString()}
 Security Deposit: RWF ${booking.security_deposit.toLocaleString()}
 Total Amount: RWF ${booking.total_amount.toLocaleString()}
 

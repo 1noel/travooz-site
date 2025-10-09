@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const BookingConfirmation = ({ isOpen, onClose, bookingData, car }) => {
   const navigate = useNavigate();
-  
+
   if (!isOpen) return null;
 
   const generateConfirmationNumber = () => {
@@ -58,8 +58,12 @@ Category: ${car?.category || "N/A"}
 
 RENTAL DETAILS
 --------------
-Pickup Date: ${formatDate(bookingData?.pickup_date)} at ${formatTime(bookingData?.pickup_time)}
-Drop-off Date: ${formatDate(bookingData?.dropoff_date)} at ${formatTime(bookingData?.dropoff_time)}
+Pickup Date: ${formatDate(bookingData?.pickup_date)} at ${formatTime(
+      bookingData?.pickup_time
+    )}
+Drop-off Date: ${formatDate(bookingData?.dropoff_date)} at ${formatTime(
+      bookingData?.dropoff_time
+    )}
 
 Pickup Location: ${bookingData?.pickup_location}
 Drop-off Location: ${bookingData?.dropoff_location}
@@ -73,7 +77,9 @@ PRICING
 -------
 Daily Rate: RWF ${bookingData?.daily_rate?.toLocaleString()}
 Total Amount: RWF ${bookingData?.total_amount?.toLocaleString()}
-Insurance (${getInsuranceName(bookingData?.insurance_option)}): RWF ${bookingData?.insurance_cost?.toLocaleString()}
+Insurance (${getInsuranceName(
+      bookingData?.insurance_option
+    )}): RWF ${bookingData?.insurance_cost?.toLocaleString()}
 Security Deposit: RWF ${bookingData?.security_deposit?.toLocaleString()}
 
 Special Requests: ${bookingData?.special_requests || "None"}
@@ -131,9 +137,7 @@ Website: www.travooz.com
           {/* Confirmation Number */}
           <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6 mb-6">
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-1">
-                Confirmation Number
-              </p>
+              <p className="text-sm text-gray-600 mb-1">Confirmation Number</p>
               <p className="text-3xl font-bold text-green-600 tracking-wider">
                 {confirmationNumber}
               </p>

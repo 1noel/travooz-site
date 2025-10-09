@@ -2,14 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { subcategoryServices } from "../../api/subcategories";
 import { homestayServices, transformHomestayData } from "../../api/homestays";
+import { useFilterContext } from "../../context/useFilterContext";
+import Toast from "../../components/Toast";
 
 const Hotels = () => {
   const navigate = useNavigate();
+  const { appliedFilters, filterAppliedTimestamp } = useFilterContext();
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("All");
   const [categories, setCategories] = useState(["All"]);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -25,7 +29,8 @@ const Hotels = () => {
         ]);
 
         const fetchedSubcategories =
-          subcategoriesResponse?.success && Array.isArray(subcategoriesResponse.data)
+          subcategoriesResponse?.success &&
+          Array.isArray(subcategoriesResponse.data)
             ? subcategoriesResponse.data
             : [];
 
@@ -34,7 +39,10 @@ const Hotels = () => {
           setCategories(["All", ...subcategoryNames]);
         }
 
-        if (!homestaysResponse?.success || !Array.isArray(homestaysResponse.data)) {
+        if (
+          !homestaysResponse?.success ||
+          !Array.isArray(homestaysResponse.data)
+        ) {
           if (isMounted) {
             setError("Failed to load homestays");
           }
@@ -89,11 +97,50 @@ const Hotels = () => {
     setActiveFilter(category);
   };
 
-  // Filter hotels based on active category
-  const filteredHotels =
-    activeFilter === "All"
-      ? hotels
-      : hotels.filter((hotel) => hotel.category === activeFilter);
+  // Filter hotels based on active category and applied filters
+  const filteredHotels = React.useMemo(() => {
+    let filtered = hotels;
+
+    // Filter by category
+    if (activeFilter !== "All") {
+      filtered = filtered.filter((hotel) => hotel.category === activeFilter);
+    }
+
+    // Filter by destination/location
+    if (appliedFilters.destination && appliedFilters.destination.trim()) {
+      const searchTerm = appliedFilters.destination.toLowerCase().trim();
+
+      filtered = filtered.filter(
+        (hotel) =>
+          hotel.location?.toLowerCase().includes(searchTerm) ||
+          hotel.name?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    return filtered;
+  }, [hotels, activeFilter, appliedFilters]);
+
+  // Show toast when filters are applied
+  useEffect(() => {
+    if (filterAppliedTimestamp > 0 && appliedFilters.destination && appliedFilters.destination.trim() && !loading) {
+      const currentFilter = appliedFilters.destination;
+      
+      if (filteredHotels.length === 0 && hotels.length > 0) {
+        setToast({
+          message: `No stays found matching "${currentFilter}". Try different search terms.`,
+          type: "warning",
+        });
+      } else if (filteredHotels.length > 0) {
+        setToast({
+          message: `Found ${filteredHotels.length} stay${
+            filteredHotels.length > 1 ? "s" : ""
+          } matching your search.`,
+          type: "success",
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterAppliedTimestamp]);
 
   // Loading state
   if (loading) {
@@ -212,11 +259,11 @@ const Hotels = () => {
               )}
 
               {/* Description */}
-              {((hotel.shortDescription || hotel.description) && (
+              {(hotel.shortDescription || hotel.description) && (
                 <p className="text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed">
                   {hotel.shortDescription || hotel.description}
                 </p>
-              ))}
+              )}
 
               {/* Bottom Section */}
               <div className="flex items-center justify-between pt-2">
@@ -269,6 +316,15 @@ const Hotels = () => {
               : `No accommodations found in the "${activeFilter}" category.`}
           </p>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

@@ -4,14 +4,18 @@ import {
   eatingPlaceServices,
   transformApiDataToFrontend,
 } from "../../api/eating";
+import { useFilterContext } from "../../context/useFilterContext";
+import Toast from "../../components/Toast";
 
 const Eating = () => {
   const navigate = useNavigate();
+  const { appliedFilters, filterAppliedTimestamp } = useFilterContext();
   const [eatingPlaces, setEatingPlaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [availableCategories, setAvailableCategories] = useState(["All"]);
+  const [toast, setToast] = useState(null);
 
   // Get unique categories from API data
   const getUniqueCategories = (places) => {
@@ -54,15 +58,53 @@ const Eating = () => {
     setActiveCategory(category);
   };
 
-  // Filter eating places based on active category
-  const filteredEatingPlaces =
-    activeCategory === "All"
-      ? eatingPlaces
-      : eatingPlaces.filter(
-          (place) =>
-            place.category === activeCategory ||
-            place.cuisine === activeCategory
-        );
+  // Filter eating places based on active category and applied filters
+  const filteredEatingPlaces = React.useMemo(() => {
+    let filtered = eatingPlaces;
+
+    // Filter by category
+    if (activeCategory !== "All") {
+      filtered = filtered.filter(
+        (place) =>
+          place.category === activeCategory ||
+          place.cuisine === activeCategory
+      );
+    }
+
+    // Filter by destination/location/name
+    if (appliedFilters.destination && appliedFilters.destination.trim()) {
+      const searchTerm = appliedFilters.destination.toLowerCase().trim();
+      filtered = filtered.filter(
+        (place) =>
+          place.location?.toLowerCase().includes(searchTerm) ||
+          place.name?.toLowerCase().includes(searchTerm) ||
+          place.cuisine?.toLowerCase().includes(searchTerm) ||
+          place.category?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    return filtered;
+  }, [eatingPlaces, activeCategory, appliedFilters]);
+
+  // Show toast when filters are applied
+  useEffect(() => {
+    if (filterAppliedTimestamp > 0 && appliedFilters.destination && appliedFilters.destination.trim() && !loading) {
+      const currentFilter = appliedFilters.destination;
+      
+      if (filteredEatingPlaces.length === 0 && eatingPlaces.length > 0) {
+        setToast({
+          message: `No restaurants found matching "${currentFilter}". Try different search terms.`,
+          type: "warning"
+        });
+      } else if (filteredEatingPlaces.length > 0) {
+        setToast({
+          message: `Found ${filteredEatingPlaces.length} restaurant${filteredEatingPlaces.length > 1 ? 's' : ''} matching your search.`,
+          type: "success"
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterAppliedTimestamp]);
 
   if (loading) {
     return (
@@ -183,6 +225,15 @@ const Eating = () => {
             No eating places found for "{activeCategory}"
           </p>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

@@ -7,8 +7,11 @@ import {
 } from "../../api/activities";
 import { subcategoryServices } from "../../api/subcategories";
 import { locationServices } from "../../api/locations";
+import { useFilterContext } from "../../context/useFilterContext";
+import Toast from "../../components/Toast";
 
 const Activities = () => {
+  const { appliedFilters } = useFilterContext();
   const [activities, setActivities] = useState([]);
   const [filteredActivities, setFilteredActivities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,8 +24,16 @@ const Activities = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const navigate = useNavigate();
+
+  // Apply filter values from top-level filter when they change
+  useEffect(() => {
+    if (appliedFilters.destination) {
+      setSelectedLocation(appliedFilters.destination);
+    }
+  }, [appliedFilters]);
 
   // Note: Activities category doesn't have subcategories in the system
   // Fetch subcategories for Activities (category_id: 1)
@@ -126,6 +137,24 @@ const Activities = () => {
     selectedSubcategory,
     priceRange,
   ]);
+
+  // Show toast when search results change
+  useEffect(() => {
+    if ((searchTerm || selectedLocation) && !loading) {
+      if (filteredActivities.length === 0 && activities.length > 0) {
+        setToast({
+          message: `No activities found matching your search. Try different criteria.`,
+          type: "warning"
+        });
+      } else if (filteredActivities.length > 0) {
+        setToast({
+          message: `Found ${filteredActivities.length} activit${filteredActivities.length > 1 ? 'ies' : 'y'} matching your search.`,
+          type: "success"
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, selectedLocation]);
 
   const handleActivityClick = (activityId) => {
     navigate(`/activities/${activityId}`);
@@ -587,6 +616,15 @@ const Activities = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

@@ -3,12 +3,26 @@ import { locationServices } from "../api/locations";
 
 const CATEGORIES_WITH_LOCATION_API = new Set(["restStay", "tourPackages"]);
 
+// Popular cities in Rwanda for car rental and other categories
+const RWANDA_POPULAR_CITIES = [
+  "Kigali",
+  "Musanze (Ruhengeri)",
+  "Rubavu (Gisenyi)",
+  "Huye (Butare)",
+  "Karongi",
+  "Nyanza",
+  "Rusizi (Cyangugu)",
+  "Muhanga",
+  "Nyagatare",
+  "Rwamagana",
+];
+
 export const useLocationSuggestions = (categoryKey) => {
   const [suggestions, setSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const isEnabled = useMemo(
-    () => CATEGORIES_WITH_LOCATION_API.has(categoryKey),
+    () => CATEGORIES_WITH_LOCATION_API.has(categoryKey) || categoryKey === "carRental",
     [categoryKey]
   );
 
@@ -18,6 +32,12 @@ export const useLocationSuggestions = (categoryKey) => {
     const loadLocations = async () => {
       if (!isEnabled) {
         setSuggestions([]);
+        return;
+      }
+
+      // For car rental, use hardcoded Rwanda cities
+      if (categoryKey === "carRental") {
+        setSuggestions(RWANDA_POPULAR_CITIES);
         return;
       }
 

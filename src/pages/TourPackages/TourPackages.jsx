@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { tourPackageServices } from "../../api/tourPackages";
 import { subcategoryServices } from "../../api/subcategories";
+import { useFilterContext } from "../../context/useFilterContext";
+import Toast from "../../components/Toast";
 
 const TourPackages = () => {
   const navigate = useNavigate();
+  const { appliedFilters, filterAppliedTimestamp } = useFilterContext();
   const [tourPackages, setTourPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,6 +15,7 @@ const TourPackages = () => {
   const [filteredPackages, setFilteredPackages] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [categories, setCategories] = useState(["All"]);
+  const [toast, setToast] = useState(null);
 
   // Helper function to get subcategory name by ID
   const getSubcategoryName = React.useCallback(
@@ -126,16 +130,48 @@ const TourPackages = () => {
     }
   }, [subcategories, getSubcategoryName]);
 
-  // Filter packages based on selected category
+  // Filter packages based on selected category and applied filters
   useEffect(() => {
-    if (selectedCategory === "All") {
-      setFilteredPackages(tourPackages);
-    } else {
-      setFilteredPackages(
-        tourPackages.filter((pkg) => pkg.category === selectedCategory)
+    let filtered = tourPackages;
+
+    // Filter by category
+    if (selectedCategory !== "All") {
+      filtered = filtered.filter((pkg) => pkg.category === selectedCategory);
+    }
+
+    // Filter by destination/location
+    if (appliedFilters.destination && appliedFilters.destination.trim()) {
+      const searchTerm = appliedFilters.destination.toLowerCase().trim();
+      filtered = filtered.filter(
+        (pkg) =>
+          pkg.location?.toLowerCase().includes(searchTerm) ||
+          pkg.title?.toLowerCase().includes(searchTerm) ||
+          pkg.description?.toLowerCase().includes(searchTerm)
       );
     }
-  }, [tourPackages, selectedCategory]);
+
+    setFilteredPackages(filtered);
+  }, [tourPackages, selectedCategory, appliedFilters]);
+
+  // Show toast when filters are applied
+  useEffect(() => {
+    if (filterAppliedTimestamp > 0 && appliedFilters.destination && appliedFilters.destination.trim() && !loading) {
+      const currentFilter = appliedFilters.destination;
+      
+      if (filteredPackages.length === 0 && tourPackages.length > 0) {
+        setToast({
+          message: `No tour packages found matching "${currentFilter}". Try different search terms.`,
+          type: "warning"
+        });
+      } else if (filteredPackages.length > 0) {
+        setToast({
+          message: `Found ${filteredPackages.length} tour package${filteredPackages.length > 1 ? 's' : ''} matching your search.`,
+          type: "success"
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterAppliedTimestamp]);
 
   const handlePackageClick = (tourPackage) => {
     navigate(`/tour-package/${tourPackage.id}`);
@@ -286,6 +322,15 @@ const TourPackages = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

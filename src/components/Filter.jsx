@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useFilterContext } from "../context/useFilterContext";
 import { useLocationSuggestions } from "../hooks/useLocationSuggestions";
+import Toast from "./Toast";
 
 const FILTER_CONFIGS = {
   restStay: {
@@ -205,7 +206,7 @@ const getInitialCalendarState = (dateLike) => {
 };
 
 const Filter = () => {
-  const { activeCategory } = useFilterContext();
+  const { activeCategory, setFilterValues, applyFilters, clearFilters } = useFilterContext();
 
   const config = useMemo(
     () => FILTER_CONFIGS[activeCategory] ?? FILTER_CONFIGS.default,
@@ -224,6 +225,8 @@ const Filter = () => {
   const [showAdultsDropdown, setShowAdultsDropdown] = useState(false);
   const [locationInputValue, setLocationInputValue] = useState("");
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [toast, setToast] = useState(null);
   const {
     suggestions: locationSuggestions,
     isLoading: isLoadingLocations,
@@ -781,6 +784,44 @@ const Filter = () => {
     </div>
   );
 
+  const handleSearch = async () => {
+    // Update filter values in context
+    const newFilters = {
+      destination: locationInputValue,
+      checkIn: checkInValue,
+      checkOut: checkOutValue,
+      guests: selectedAdults,
+    };
+    
+    setFilterValues(newFilters);
+    setIsSearching(true);
+    
+    // Simulate searching with a brief delay for loading state
+    setTimeout(() => {
+      // Apply the filters
+      applyFilters();
+      setIsSearching(false);
+      
+      // Toast will be shown by the results page based on found items
+    }, 600);
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
+
+  const handleClearFilters = () => {
+    // Clear local state
+    setLocationInputValue("");
+    setCheckInValue("");
+    setCheckOutValue("");
+    setSelectedAdults(config.dropdownDefault ?? config.dropdownOptions?.[0] ?? "");
+    setTempRange({ start: null, end: null });
+    
+    // Clear context filters
+    clearFilters();
+  };
+
   return (
     <div
       ref={filterRef}
@@ -894,11 +935,65 @@ const Filter = () => {
         </div>
 
         <div className="filter-field flex items-end">
-          <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors duration-200 text-sm">
-            {config.searchButtonText}
+          <button 
+            type="button"
+            onClick={handleSearch}
+            disabled={isSearching}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-colors duration-200 text-sm flex items-center justify-center gap-2"
+          >
+            {isSearching ? (
+              <>
+                <svg 
+                  className="animate-spin h-5 w-5 text-white" 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24"
+                >
+                  <circle 
+                    className="opacity-25" 
+                    cx="12" 
+                    cy="12" 
+                    r="10" 
+                    stroke="currentColor" 
+                    strokeWidth="4"
+                  ></circle>
+                  <path 
+                    className="opacity-75" 
+                    fill="currentColor" 
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span>Searching...</span>
+              </>
+            ) : (
+              config.searchButtonText
+            )}
           </button>
         </div>
       </div>
+
+      {/* Clear Filters Button - Show when any filter has a value */}
+      {(locationInputValue || checkInValue || checkOutValue || selectedAdults !== (config.dropdownDefault ?? config.dropdownOptions?.[0] ?? "")) && (
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="px-4 py-2 text-sm text-green-600 hover:text-green-700 font-semibold border border-green-300 hover:border-green-500 rounded-lg hover:bg-green-50 transition-colors"
+          >
+            <i className="fa fa-times mr-2"></i>
+            Clear All Filters
+          </button>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast}
+        />
+      )}
     </div>
   );
 };

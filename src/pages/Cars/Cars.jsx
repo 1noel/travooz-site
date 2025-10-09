@@ -2,8 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { carServices, transformCarData, formatPrice } from "../../api/cars";
 import { subcategoryServices } from "../../api/subcategories";
+import { useFilterContext } from "../../context/useFilterContext";
+import Toast from "../../components/Toast";
 
 const Cars = () => {
+  const { appliedFilters, filterAppliedTimestamp } = useFilterContext();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,6 +14,7 @@ const Cars = () => {
   const [categories, setCategories] = useState(["All"]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [filteredCars, setFilteredCars] = useState([]);
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
   // Helper function to get subcategory name by ID
@@ -82,14 +86,49 @@ const Cars = () => {
     }
   }, [subcategories, getSubcategoryName]);
 
-  // Filter cars based on selected category
+  // Filter cars based on selected category and applied filters
   useEffect(() => {
-    if (selectedCategory === "All") {
-      setFilteredCars(cars);
-    } else {
-      setFilteredCars(cars.filter((car) => car.category === selectedCategory));
+    let filtered = cars;
+
+    // Filter by category
+    if (selectedCategory !== "All") {
+      filtered = filtered.filter((car) => car.category === selectedCategory);
     }
-  }, [cars, selectedCategory]);
+
+    // Filter by pickup location (destination in filter context)
+    if (appliedFilters.destination && appliedFilters.destination.trim()) {
+      const searchTerm = appliedFilters.destination.toLowerCase().trim();
+      filtered = filtered.filter(
+        (car) =>
+          car.location?.toLowerCase().includes(searchTerm) ||
+          car.name?.toLowerCase().includes(searchTerm) ||
+          car.model?.toLowerCase().includes(searchTerm) ||
+          car.brand?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    setFilteredCars(filtered);
+  }, [cars, selectedCategory, appliedFilters]);
+
+  // Show toast when filters are applied
+  useEffect(() => {
+    if (filterAppliedTimestamp > 0 && appliedFilters.destination && appliedFilters.destination.trim() && !loading) {
+      const currentFilter = appliedFilters.destination;
+      
+      if (filteredCars.length === 0 && cars.length > 0) {
+        setToast({
+          message: `No cars found matching "${currentFilter}". Try different search terms.`,
+          type: "warning"
+        });
+      } else if (filteredCars.length > 0) {
+        setToast({
+          message: `Found ${filteredCars.length} car${filteredCars.length > 1 ? 's' : ''} matching your search.`,
+          type: "success"
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterAppliedTimestamp]);
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
@@ -264,6 +303,15 @@ const Cars = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

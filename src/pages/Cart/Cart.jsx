@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useCart } from "../../context/useCart";
+import { useNavigate } from "react-router-dom";
 import BookingModal from "../../components/BookingModal";
 import Toast from "../../components/Toast";
 
 const Cart = () => {
   const { items, cartCount, clearCart, removeItem } = useCart();
+  const navigate = useNavigate();
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [bookingHistory, setBookingHistory] = useState(() => {
@@ -151,31 +153,53 @@ const Cart = () => {
           />
         )}
 
-        {/* Header with History Button */}
-        <div className="flex items-center justify-between">
+        {/* Header with History Buttons */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-semibold text-gray-800">Your cart</h1>
-          <button
-            type="button"
-            onClick={() => setShowHistory(!showHistory)}
-            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              type="button"
+              onClick={() => navigate("/car-rental-history")}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            {showHistory
-              ? "Hide History"
-              : `View History (${bookingHistory.length})`}
-          </button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
+                />
+              </svg>
+              My Car Rentals
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowHistory(!showHistory)}
+              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              {showHistory
+                ? "Hide History"
+                : `View History (${bookingHistory.length})`}
+            </button>
+          </div>
         </div>
 
         {/* Booking History Section */}
@@ -343,7 +367,27 @@ const Cart = () => {
             {cartCount} {cartCount === 1 ? "item" : "items"} ready to review.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            type="button"
+            onClick={() => navigate("/car-rental-history")}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
+              />
+            </svg>
+            My Car Rentals
+          </button>
           <button
             type="button"
             onClick={() => setShowHistory(!showHistory)}

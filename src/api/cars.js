@@ -37,6 +37,56 @@ export const carServices = {
       return { data: null, success: false, error: error.message };
     }
   },
+
+  // Book a car rental
+  bookCarRental: async (bookingData) => {
+    try {
+      // Get auth token from localStorage
+      const session = localStorage.getItem("travooz-auth-session");
+      let token = null;
+      
+      if (session) {
+        const { token: authToken } = JSON.parse(session);
+        token = authToken;
+      }
+
+      const headers = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/car-rental-bookings`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(bookingData),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create booking");
+      }
+
+      return {
+        success: true,
+        data: data.data || data,
+        message: "Booking created successfully!",
+      };
+    } catch (error) {
+      console.error("Error creating car rental booking:", error);
+      return {
+        success: false,
+        error: error.message || "Failed to create booking",
+      };
+    }
+  },
 };
 
 // Transform car data for frontend use

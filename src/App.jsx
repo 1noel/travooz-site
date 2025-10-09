@@ -14,6 +14,7 @@ import Blogs from "./pages/Blogs/Blogs";
 import BlogDetails from "./pages/Blogs/BlogDetails";
 import Cars from "./pages/Cars/Cars";
 import CarDetails from "./pages/Cars/CarDetails";
+import CarRentalHistory from "./pages/Cars/CarRentalHistory";
 import Filter from "./components/Filter";
 import { FilterProvider } from "./context/FilterProvider";
 import { getFilterSettingsForPath } from "./context/filterSettings";
@@ -50,6 +51,14 @@ const AppContent = () => {
         <Route path="/blog/:id" element={<BlogDetails />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/car/:id" element={<CarDetails />} />
+        <Route
+          path="/car-rental-history"
+          element={
+            <ProtectedRoute>
+              <CarRentalHistory />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/cart"
           element={

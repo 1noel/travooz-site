@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { carServices, transformCarData, formatPrice } from "../../api/cars";
 import Toast from "../../components/Toast";
-import CarBookingModal from "../../components/CarBookingModal";
+import BookingModal from "../../components/BookingModal";
 import BookingConfirmation from "../../components/BookingConfirmation";
 import { useAuth } from "../../context/useAuth";
 
@@ -742,11 +742,14 @@ const CarDetails = () => {
       )}
 
       {/* Car Booking Modal */}
-      <CarBookingModal
+      <BookingModal
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
-        onConfirm={handleBookingConfirm}
-        car={car}
+        bookingType="car rental"
+        itemName={`${car.brand} ${car.model}`}
+        onConfirmBooking={handleBookingConfirm}
+        totalAmount={car.rates.daily}
+        currency="USD"
       />
 
       {/* Booking Confirmation */}

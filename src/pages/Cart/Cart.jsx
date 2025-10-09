@@ -10,7 +10,7 @@ const Cart = () => {
   const [bookingHistory, setBookingHistory] = useState(() => {
     // Load booking history from localStorage
     try {
-      const stored = localStorage.getItem('travooz-booking-history');
+      const stored = localStorage.getItem("travooz-booking-history");
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -54,20 +54,23 @@ const Cart = () => {
       id: `booking-${Date.now()}`,
       date: new Date().toISOString(),
       items: bookingData.items,
-      paymentMethod: bookingData.paymentMethod || 'N/A',
+      paymentMethod: bookingData.paymentMethod || "N/A",
       totalAmount: bookingData.totalAmount || 0,
-      status: bookingData.status || 'confirmed',
-      type: bookingData.type || 'booking'
+      status: bookingData.status || "confirmed",
+      type: bookingData.type || "booking",
     };
 
     const updatedHistory = [historyEntry, ...bookingHistory];
     setBookingHistory(updatedHistory);
-    
+
     // Save to localStorage
     try {
-      localStorage.setItem('travooz-booking-history', JSON.stringify(updatedHistory));
+      localStorage.setItem(
+        "travooz-booking-history",
+        JSON.stringify(updatedHistory)
+      );
     } catch (error) {
-      console.error('Failed to save booking history:', error);
+      console.error("Failed to save booking history:", error);
     }
   };
 
@@ -78,8 +81,8 @@ const Cart = () => {
     // Save to history
     saveToHistory({
       items: [...items],
-      type: 'reservation',
-      status: 'pending confirmation'
+      type: "reservation",
+      status: "pending confirmation",
     });
 
     // Show success message
@@ -118,8 +121,8 @@ const Cart = () => {
       items: [...items],
       paymentMethod: paymentData.method,
       totalAmount: paymentData.amount,
-      type: 'payment',
-      status: 'paid'
+      type: "payment",
+      status: "paid",
     });
 
     // Show appropriate success message
@@ -147,7 +150,7 @@ const Cart = () => {
             onClose={() => setToast(null)}
           />
         )}
-        
+
         {/* Header with History Button */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-800">Your cart</h1>
@@ -156,10 +159,22 @@ const Cart = () => {
             onClick={() => setShowHistory(!showHistory)}
             className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
-            {showHistory ? 'Hide History' : `View History (${bookingHistory.length})`}
+            {showHistory
+              ? "Hide History"
+              : `View History (${bookingHistory.length})`}
           </button>
         </div>
 
@@ -167,8 +182,18 @@ const Cart = () => {
         {showHistory && bookingHistory.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="w-6 h-6 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
               Booking History
             </h2>
@@ -181,23 +206,27 @@ const Cart = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <p className="text-sm font-semibold text-gray-800">
-                        {new Date(booking.date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
+                        {new Date(booking.date).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={`inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full ${
-                          booking.status === 'paid' 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {booking.status === 'paid' ? '✓ Paid' : '⏳ Pending Confirmation'}
+                        <span
+                          className={`inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full ${
+                            booking.status === "paid"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {booking.status === "paid"
+                            ? "✓ Paid"
+                            : "⏳ Pending Confirmation"}
                         </span>
-                        {booking.paymentMethod !== 'N/A' && (
+                        {booking.paymentMethod !== "N/A" && (
                           <span className="text-xs text-gray-500">
                             via {booking.paymentMethod.toUpperCase()}
                           </span>
@@ -208,21 +237,26 @@ const Cart = () => {
                       <div className="text-right">
                         <p className="text-sm text-gray-500">Total</p>
                         <p className="text-lg font-bold text-green-600">
-                          {new Intl.NumberFormat('en-RW', {
+                          {new Intl.NumberFormat("en-RW", {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 0,
-                          }).format(booking.totalAmount)} RWF
+                          }).format(booking.totalAmount)}{" "}
+                          RWF
                         </p>
                       </div>
                     )}
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-700">
-                      {booking.items.length} {booking.items.length === 1 ? 'item' : 'items'}:
+                      {booking.items.length}{" "}
+                      {booking.items.length === 1 ? "item" : "items"}:
                     </p>
                     <ul className="text-sm text-gray-600 space-y-1">
                       {booking.items.map((item, index) => (
-                        <li key={`${booking.id}-item-${index}`} className="flex items-start gap-2">
+                        <li
+                          key={`${booking.id}-item-${index}`}
+                          className="flex items-start gap-2"
+                        >
                           <span className="text-green-600 mt-0.5">•</span>
                           <span>{item.name}</span>
                         </li>
@@ -234,10 +268,14 @@ const Cart = () => {
             </div>
             <button
               onClick={() => {
-                if (window.confirm('Are you sure you want to clear your booking history?')) {
+                if (
+                  window.confirm(
+                    "Are you sure you want to clear your booking history?"
+                  )
+                ) {
                   setBookingHistory([]);
-                  localStorage.removeItem('travooz-booking-history');
-                  showToast('Booking history cleared', 'info');
+                  localStorage.removeItem("travooz-booking-history");
+                  showToast("Booking history cleared", "info");
                 }
               }}
               className="mt-4 text-sm text-red-600 hover:text-red-700 font-semibold"
@@ -249,10 +287,22 @@ const Cart = () => {
 
         {showHistory && bookingHistory.length === 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="w-16 h-16 text-gray-300 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">No Booking History</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              No Booking History
+            </h3>
             <p className="text-sm text-gray-600">
               Your completed bookings and reservations will appear here.
             </p>
@@ -284,7 +334,7 @@ const Cart = () => {
           onClose={() => setToast(null)}
         />
       )}
-      
+
       {/* Header with History Toggle */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
@@ -299,10 +349,22 @@ const Cart = () => {
             onClick={() => setShowHistory(!showHistory)}
             className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
-            {showHistory ? 'Hide History' : `View History (${bookingHistory.length})`}
+            {showHistory
+              ? "Hide History"
+              : `View History (${bookingHistory.length})`}
           </button>
           <button
             type="button"
@@ -318,8 +380,18 @@ const Cart = () => {
       {showHistory && bookingHistory.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             Booking History
           </h2>
@@ -332,23 +404,27 @@ const Cart = () => {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="text-sm font-semibold text-gray-800">
-                      {new Date(booking.date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
+                      {new Date(booking.date).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full ${
-                        booking.status === 'paid' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {booking.status === 'paid' ? '✓ Paid' : '⏳ Pending Confirmation'}
+                      <span
+                        className={`inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full ${
+                          booking.status === "paid"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {booking.status === "paid"
+                          ? "✓ Paid"
+                          : "⏳ Pending Confirmation"}
                       </span>
-                      {booking.paymentMethod !== 'N/A' && (
+                      {booking.paymentMethod !== "N/A" && (
                         <span className="text-xs text-gray-500">
                           via {booking.paymentMethod.toUpperCase()}
                         </span>
@@ -359,21 +435,26 @@ const Cart = () => {
                     <div className="text-right">
                       <p className="text-sm text-gray-500">Total</p>
                       <p className="text-lg font-bold text-green-600">
-                        {new Intl.NumberFormat('en-RW', {
+                        {new Intl.NumberFormat("en-RW", {
                           minimumFractionDigits: 0,
                           maximumFractionDigits: 0,
-                        }).format(booking.totalAmount)} RWF
+                        }).format(booking.totalAmount)}{" "}
+                        RWF
                       </p>
                     </div>
                   )}
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-gray-700">
-                    {booking.items.length} {booking.items.length === 1 ? 'item' : 'items'}:
+                    {booking.items.length}{" "}
+                    {booking.items.length === 1 ? "item" : "items"}:
                   </p>
                   <ul className="text-sm text-gray-600 space-y-1">
                     {booking.items.map((item, index) => (
-                      <li key={`${booking.id}-item-${index}`} className="flex items-start gap-2">
+                      <li
+                        key={`${booking.id}-item-${index}`}
+                        className="flex items-start gap-2"
+                      >
                         <span className="text-green-600 mt-0.5">•</span>
                         <span>{item.name}</span>
                       </li>
@@ -385,10 +466,14 @@ const Cart = () => {
           </div>
           <button
             onClick={() => {
-              if (window.confirm('Are you sure you want to clear your booking history?')) {
+              if (
+                window.confirm(
+                  "Are you sure you want to clear your booking history?"
+                )
+              ) {
                 setBookingHistory([]);
-                localStorage.removeItem('travooz-booking-history');
-                showToast('Booking history cleared', 'info');
+                localStorage.removeItem("travooz-booking-history");
+                showToast("Booking history cleared", "info");
               }
             }}
             className="mt-4 text-sm text-red-600 hover:text-red-700 font-semibold"
@@ -400,10 +485,22 @@ const Cart = () => {
 
       {showHistory && bookingHistory.length === 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-          <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <svg
+            className="w-16 h-16 text-gray-300 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
           </svg>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">No Booking History</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            No Booking History
+          </h3>
           <p className="text-sm text-gray-600">
             Your completed bookings and reservations will appear here.
           </p>

@@ -45,12 +45,25 @@ export const FilterProvider = ({ children }) => {
     }));
   };
 
-  const applyFilters = React.useCallback(() => {
-    console.log("📌 FilterProvider - Applying filters:", filterValues);
-    setAppliedFilters({ ...filterValues });
-    setFilterAppliedTimestamp(Date.now());
-    console.log("📌 FilterProvider - Filters applied!");
-  }, [filterValues]);
+  const applyFilters = React.useCallback(
+    (filtersToApply) => {
+      // If filters are provided, use them and update filterValues state
+      // Otherwise use current filterValues
+      const filters = filtersToApply || filterValues;
+
+      console.log("📌 FilterProvider - Applying filters:", filters);
+
+      // Update both filterValues and appliedFilters to keep them in sync
+      if (filtersToApply) {
+        setFilterValuesState(filtersToApply);
+      }
+
+      setAppliedFilters({ ...filters });
+      setFilterAppliedTimestamp(Date.now());
+      console.log("📌 FilterProvider - Filters applied!");
+    },
+    [filterValues]
+  );
 
   const clearFilters = React.useCallback(() => {
     const emptyFilters = {

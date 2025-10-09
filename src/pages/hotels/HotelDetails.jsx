@@ -7,6 +7,10 @@ import {
 } from "../../api/homestays";
 import { useCart } from "../../context/useCart";
 import Toast from "../../components/Toast";
+import RatingModal from "../../components/RatingModal";
+import RatingDisplay from "../../components/RatingDisplay";
+import { ratingsService } from "../../api/ratings";
+import { useAuth } from "../../context/useAuth";
 
 const HotelDetails = () => {
   const { id } = useParams();
@@ -26,12 +30,49 @@ const HotelDetails = () => {
   const [toast, setToast] = useState(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [availabilityResults, setAvailabilityResults] = useState(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [hotelRating, setHotelRating] = useState({
+    averageRating: 0,
+    totalReviews: 0,
+  });
 
   const { addItem } = useCart();
+  const { isAuthenticated } = useAuth();
 
   const showToast = (type, message) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleRateClick = () => {
+    if (!isAuthenticated) {
+      showToast("warning", "Please sign in to rate this property");
+      return;
+    }
+    setShowRatingModal(true);
+  };
+
+  const handleRatingSubmit = async (ratingData) => {
+    try {
+      const response = await ratingsService.submitHomestayRating({
+        homestayId: id,
+        rating: ratingData.rating,
+        comment: ratingData.comment,
+      });
+
+      if (response.success) {
+        showToast("success", "Thank you for your rating!");
+        // Update local rating state
+        setHotelRating((prev) => ({
+          averageRating: response.data.averageRating || prev.averageRating,
+          totalReviews: prev.totalReviews + 1,
+        }));
+      } else {
+        showToast("error", response.error || "Failed to submit rating");
+      }
+    } catch {
+      showToast("error", "An error occurred while submitting your rating");
+    }
   };
 
   const handleCheckHotelAvailability = async () => {
@@ -407,10 +448,12 @@ const HotelDetails = () => {
         setLoading(true);
         setError(null);
 
-        const [homestayResponse, roomsResponse] = await Promise.all([
-          homestayServices.getHomestayById(id),
-          homestayServices.fetchRoomsByHomestayId(id),
-        ]);
+        const [homestayResponse, roomsResponse, ratingsResponse] =
+          await Promise.all([
+            homestayServices.getHomestayById(id),
+            homestayServices.fetchRoomsByHomestayId(id),
+            ratingsService.getHomestayRatings(id),
+          ]);
 
         if (homestayResponse.success && homestayResponse.data) {
           const transformedHomestay = transformHomestayData(
@@ -440,6 +483,24 @@ const HotelDetails = () => {
           setHotel(combinedHotel);
           setSelectedImage(combinedHotel.mainImage || "");
           setRoomsMessage(roomsNotice);
+
+          // Set rating data
+          if (ratingsResponse.success && ratingsResponse.data) {
+            setHotelRating({
+              averageRating:
+                ratingsResponse.data.averageRating || combinedHotel.stars || 0,
+              totalReviews:
+                ratingsResponse.data.totalReviews ||
+                combinedHotel.totalReviews ||
+                0,
+            });
+          } else if (combinedHotel.stars) {
+            // Fallback to hotel's star rating if ratings API fails
+            setHotelRating({
+              averageRating: combinedHotel.stars,
+              totalReviews: combinedHotel.totalReviews || 0,
+            });
+          }
         } else {
           setError("Homestay not found");
         }
@@ -907,6 +968,15 @@ const HotelDetails = () => {
         </div>
       </div>
 
+      {/* Rating Section */}
+      <div className="mb-8">
+        <RatingDisplay
+          averageRating={hotelRating.averageRating}
+          totalReviews={hotelRating.totalReviews}
+          onRateClick={handleRateClick}
+        />
+      </div>
+
       {/* Rooms Section */}
       <div className="mb-8">
         <div className="flex items-center justify-between gap-3 mb-6">
@@ -1095,6 +1165,15 @@ const HotelDetails = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Rating Modal */}
+      <RatingModal
+        isOpen={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        onSubmit={handleRatingSubmit}
+        propertyName={hotel?.name || ""}
+        propertyType="hotel"
+      />
     </div>
   );
 };

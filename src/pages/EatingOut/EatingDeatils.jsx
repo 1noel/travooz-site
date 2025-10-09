@@ -6,6 +6,10 @@ import {
 } from "../../api/eating";
 import { useCart } from "../../context/useCart";
 import Toast from "../../components/Toast";
+import RatingModal from "../../components/RatingModal";
+import RatingDisplay from "../../components/RatingDisplay";
+import { ratingsService } from "../../api/ratings";
+import { useAuth } from "../../context/useAuth";
 
 const EatingDetails = () => {
   const { id } = useParams();
@@ -31,10 +35,48 @@ const EatingDetails = () => {
   });
   const [bookingLoading, setBookingLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [restaurantRating, setRestaurantRating] = useState({
+    averageRating: 0,
+    totalReviews: 0,
+  });
+
+  const { isAuthenticated } = useAuth();
 
   const showToast = (type, message) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleRateClick = () => {
+    if (!isAuthenticated) {
+      showToast("warning", "Please sign in to rate this restaurant");
+      return;
+    }
+    setShowRatingModal(true);
+  };
+
+  const handleRatingSubmit = async (ratingData) => {
+    try {
+      const response = await ratingsService.submitRestaurantRating({
+        eatingPlaceId: id,
+        rating: ratingData.rating,
+        comment: ratingData.comment,
+      });
+
+      if (response.success) {
+        showToast("success", "Thank you for your rating!");
+        // Update local rating state
+        setRestaurantRating((prev) => ({
+          averageRating: response.data.averageRating || prev.averageRating,
+          totalReviews: prev.totalReviews + 1,
+        }));
+      } else {
+        showToast("error", response.error || "Failed to submit rating");
+      }
+    } catch {
+      showToast("error", "An error occurred while submitting your rating");
+    }
   };
 
   const handleBookingInputChange = (event) => {
@@ -115,13 +157,36 @@ const EatingDetails = () => {
         setLoading(true);
 
         try {
-          // First try to fetch from API
-          const response = await eatingPlaceServices.fetchEatingPlaceById(id);
+          // Fetch restaurant data and ratings in parallel
+          const [response, ratingsResponse] = await Promise.all([
+            eatingPlaceServices.fetchEatingPlaceById(id),
+            ratingsService.getRestaurantRatings(id),
+          ]);
 
           if (response.success && response.data) {
             const transformedData = transformApiDataToFrontend(response.data);
             setRestaurant(transformedData);
             setSelectedImage(transformedData.image);
+
+            // Set rating data
+            if (ratingsResponse.success && ratingsResponse.data) {
+              setRestaurantRating({
+                averageRating:
+                  ratingsResponse.data.averageRating ||
+                  transformedData.stars ||
+                  0,
+                totalReviews:
+                  ratingsResponse.data.totalReviews ||
+                  transformedData.totalReviews ||
+                  0,
+              });
+            } else if (transformedData.stars) {
+              // Fallback to restaurant's star rating if ratings API fails
+              setRestaurantRating({
+                averageRating: transformedData.stars,
+                totalReviews: transformedData.totalReviews || 0,
+              });
+            }
           } else {
             setError("Restaurant not found");
           }
@@ -283,6 +348,15 @@ const EatingDetails = () => {
             </h1>
           </div>
         </div>
+      </div>
+
+      {/* Rating Section */}
+      <div className="mb-8">
+        <RatingDisplay
+          averageRating={restaurantRating.averageRating}
+          totalReviews={restaurantRating.totalReviews}
+          onRateClick={handleRateClick}
+        />
       </div>
 
       {/* Main Content Grid - 60% Left, 40% Right */}
@@ -577,6 +651,15 @@ const EatingDetails = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Rating Modal */}
+      <RatingModal
+        isOpen={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        onSubmit={handleRatingSubmit}
+        propertyName={restaurant?.name || ""}
+        propertyType="restaurant"
+      />
     </div>
   );
 };

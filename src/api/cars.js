@@ -44,7 +44,7 @@ export const carServices = {
       // Get auth token from localStorage
       const session = localStorage.getItem("travooz-auth-session");
       let token = null;
-      
+
       if (session) {
         const { token: authToken } = JSON.parse(session);
         token = authToken;

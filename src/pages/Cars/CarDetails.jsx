@@ -46,25 +46,30 @@ const CarDetails = () => {
 
       // For now, show confirmation regardless of API response (until database is connected)
       console.log("Booking response:", response);
-      
+
       // Close booking modal
       setShowBookingModal(false);
-      
+
       // Store booking data and show confirmation
       setConfirmedBooking(bookingData);
       setShowConfirmation(true);
-      
+
       // Show success toast
-      showToast("success", "Booking confirmed! View your confirmation details below.");
-      
+      showToast(
+        "success",
+        "Booking confirmed! View your confirmation details below."
+      );
     } catch (error) {
       console.error("Booking error:", error);
-      
+
       // Still show confirmation even if API fails (for testing without database)
       setShowBookingModal(false);
       setConfirmedBooking(bookingData);
       setShowConfirmation(true);
-      showToast("success", "Booking confirmed! (Demo mode - database not connected)");
+      showToast(
+        "success",
+        "Booking confirmed! (Demo mode - database not connected)"
+      );
     }
   };
 

@@ -22,6 +22,7 @@ import Cart from "./pages/Cart/Cart.jsx";
 import Register from "./pages/Auth/Register.jsx";
 import Login from "./pages/Auth/Login.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 const AppContent = () => {
   const location = useLocation();
@@ -49,7 +50,14 @@ const AppContent = () => {
         <Route path="/blog/:id" element={<BlogDetails />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/car/:id" element={<CarDetails />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/register" element={<Register />} />
         <Route path="/sign-in" element={<Login />} />
       </Routes>

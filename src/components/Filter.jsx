@@ -206,8 +206,7 @@ const getInitialCalendarState = (dateLike) => {
 };
 
 const Filter = () => {
-  const { activeCategory, setFilterValues, applyFilters, clearFilters } =
-    useFilterContext();
+  const { activeCategory, applyFilters, clearFilters } = useFilterContext();
 
   const config = useMemo(
     () => FILTER_CONFIGS[activeCategory] ?? FILTER_CONFIGS.default,
@@ -786,7 +785,7 @@ const Filter = () => {
   );
 
   const handleSearch = async () => {
-    // Update filter values in context
+    // Create the new filter values
     const newFilters = {
       destination: locationInputValue,
       checkIn: checkInValue,
@@ -794,13 +793,12 @@ const Filter = () => {
       guests: selectedAdults,
     };
 
-    setFilterValues(newFilters);
     setIsSearching(true);
 
     // Simulate searching with a brief delay for loading state
     setTimeout(() => {
-      // Apply the filters
-      applyFilters();
+      // Apply the filters - this will update both filterValues and appliedFilters
+      applyFilters(newFilters);
       setIsSearching(false);
 
       // Toast will be shown by the results page based on found items

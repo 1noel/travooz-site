@@ -25,6 +25,8 @@ import Login from "./pages/Auth/Login.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
+import Whatsapp from "./components/Whatsapp";
+
 const AppContent = () => {
   const location = useLocation();
   const { show } = getFilterSettingsForPath(location.pathname);
@@ -70,6 +72,10 @@ const AppContent = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/sign-in" element={<Login />} />
       </Routes>
+      <Whatsapp
+        phoneNumber="2348012345678"
+        message="Hello! I have a question about Travooz."
+      />
     </>
   );
 };

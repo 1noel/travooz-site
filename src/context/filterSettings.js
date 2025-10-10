@@ -5,6 +5,16 @@ const defaultSettings = {
 
 const ROUTE_FILTER_RULES = [
   {
+    test: (path) => path.startsWith("/register"),
+    category: "default",
+    show: false,
+  },
+  {
+    test: (path) => path.startsWith("/sign-in"),
+    category: "default",
+    show: false,
+  },
+  {
     test: (path) => path.startsWith("/hotel/"),
     category: "restStay",
     show: false,

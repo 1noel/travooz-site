@@ -1,3 +1,6 @@
+html {
+  font-size: 91%;
+}
 @import "tailwindcss";
 
 /* Custom scrollbar styles for image galleries */

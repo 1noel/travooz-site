@@ -305,22 +305,6 @@ const BlogDetails = () => {
             </div>
           </section>
         )}
-
-        {/* CTA Section */}
-        <div className="bg-green-100 rounded-lg p-6 md:p-8 text-center border border-green-200 mt-8 md:mt-12">
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">
-            Ready to Start Your Adventure?
-          </h3>
-          <p className="text-gray-700 mb-6 text-sm md:text-base">
-            Discover amazing tour packages and create unforgettable memories
-          </p>
-          <button
-            onClick={() => navigate("/tour-packages")}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base"
-          >
-            Browse Tour Packages
-          </button>
-        </div>
       </div>
     </div>
   );

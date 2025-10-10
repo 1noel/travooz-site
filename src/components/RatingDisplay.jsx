@@ -5,12 +5,12 @@ const RatingDisplay = ({ averageRating, totalReviews, onRateClick }) => {
   const fullStars = Math.floor(displayRating);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        {/* Left: Average Rating */}
-        <div className="flex items-center gap-6">
-          <div className="text-center">
-            <div className="text-5xl font-bold text-gray-800">
+    <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm w-full">
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        {/* Left: Average Rating and Breakdown */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full md:w-auto">
+          <div className="text-center min-w-[100px]">
+            <div className="text-4xl sm:text-5xl font-bold text-gray-800">
               {displayRating > 0 ? displayRating.toFixed(1) : "N/A"}
             </div>
             <div className="flex items-center justify-center mt-2">
@@ -35,7 +35,7 @@ const RatingDisplay = ({ averageRating, totalReviews, onRateClick }) => {
                 </svg>
               ))}
             </div>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
               {totalReviews > 0 ? (
                 <>
                   Based on <span className="font-semibold">{totalReviews}</span>{" "}
@@ -46,10 +46,9 @@ const RatingDisplay = ({ averageRating, totalReviews, onRateClick }) => {
               )}
             </p>
           </div>
-
-          {/* Rating Breakdown */}
+          {/* Rating Breakdown: visible on all screens, horizontal scroll on mobile */}
           {displayRating > 0 && (
-            <div className="hidden lg:block flex-1 min-w-[200px]">
+            <div className="flex-1 w-full min-w-[180px] max-w-xs sm:max-w-sm md:max-w-xs overflow-x-auto">
               {[5, 4, 3, 2, 1].map((star) => (
                 <div key={star} className="flex items-center gap-2 mb-1">
                   <span className="text-xs text-gray-600 w-8">{star} ★</span>
@@ -66,12 +65,11 @@ const RatingDisplay = ({ averageRating, totalReviews, onRateClick }) => {
             </div>
           )}
         </div>
-
         {/* Right: Rate Button */}
-        <div className="flex flex-col items-center justify-center gap-3">
+        <div className="flex flex-col items-center justify-center gap-2 sm:gap-3 w-full md:w-auto mt-4 md:mt-0">
           <button
             onClick={onRateClick}
-            className="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all transform hover:scale-105 shadow-md hover:shadow-lg flex items-center gap-2"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
           >
             <svg
               className="w-5 h-5"

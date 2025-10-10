@@ -97,7 +97,6 @@ const Blogs = () => {
         </h1>
       </div>
 
-
       {/* Blog Grid - uniform 3 columns, no featured */}
       {blogs.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
@@ -168,26 +167,7 @@ const Blogs = () => {
         </div>
       )}
 
-      {/* Newsletter CTA */}
-      <div className="bg-green-50 rounded-xl p-6 md:p-8 text-center border border-green-100 mt-12 md:mt-16">
-        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
-          Stay Updated with Travel Tips
-        </h3>
-        <p className="text-gray-600 mb-6 text-base md:text-lg">
-          Subscribe to our newsletter for the latest travel stories and
-          destination guides.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-          <input
-            type="email"
-            placeholder="Enter your email address"
-            className="flex-1 p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 text-sm md:text-base"
-          />
-          <button className="bg-green-600 hover:bg-green-700 text-white px-4 md:px-6 py-4 rounded-xl font-semibold transition-all duration-200 whitespace-nowrap shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base">
-            Subscribe Now
-          </button>
-        </div>
-      </div>
+      {/* Newsletter CTA removed as requested */}
     </div>
   );
 };

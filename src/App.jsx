@@ -1,3 +1,5 @@
+// src/App.jsx
+
 import React from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
@@ -61,14 +63,7 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/cart" element={<Cart />} />
         <Route path="/register" element={<Register />} />
         <Route path="/sign-in" element={<Login />} />
       </Routes>

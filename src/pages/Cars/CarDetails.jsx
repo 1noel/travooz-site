@@ -1,3 +1,5 @@
+// src/pages/Cars/CarDetails.jsx
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { carServices, transformCarData, formatPrice } from "../../api/cars";
@@ -409,14 +411,14 @@ const CarDetails = () => {
         >
           Home
         </button>
-        <span className="text-gray-400">{"/"}</span>
+        <span className="text-gray-400">/</span>
         <button
           onClick={() => navigate("/cars")}
           className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
         >
           Cars
         </button>
-        <span className="text-gray-400">{"/"}</span>
+        <span className="text-gray-400">/</span>
         <span className="text-gray-600 font-medium truncate">
           {car.brand} {car.model}
         </span>
@@ -425,141 +427,123 @@ const CarDetails = () => {
       {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-8">
           {/* Car Title */}
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-8">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
             {car.brand} {car.model}
           </h1>
 
-          {/* Main Image */}
-          <div className="mb-6">
+          {/* Image Gallery */}
+          <div className="space-y-4">
             <img
               src={selectedImage}
               alt={`${car.brand} ${car.model}`}
-              className="w-full h-64 md:h-80 lg:h-96 object-cover rounded-xl shadow-lg"
+              className="w-full h-96 object-cover rounded-xl shadow-lg"
             />
-          </div>
-
-          {/* Image Gallery */}
-          {car.images && car.images.length > 1 && (
-            <div className="mb-8">
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {car.images.map((img, index) => (
-                  <div
+            {car.images && car.images.length > 1 && (
+              <div className="grid grid-cols-5 gap-3">
+                {car.images.slice(0, 5).map((img, index) => (
+                  <button
                     key={img.id}
-                    className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImage === img.url
-                        ? "border-green-500 ring-2 ring-green-200"
-                        : "border-gray-200 hover:border-green-300"
-                    }`}
                     onClick={() => setSelectedImage(img.url)}
+                    className={`rounded-lg overflow-hidden border-2 ${
+                      selectedImage === img.url
+                        ? "border-green-500"
+                        : "border-transparent"
+                    }`}
                   >
                     <img
                       src={img.url}
                       alt={`${car.brand} ${car.model} ${index + 1}`}
-                      className="w-20 h-16 md:w-24 md:h-20 object-cover"
+                      className="w-full h-24 object-cover"
                     />
-                  </div>
+                  </button>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* Details Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 space-y-8">
+            {/* About This Car */}
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                About This Car
+              </h3>
+              <p className="text-gray-700 leading-relaxed text-lg">
+                {car.description}
+              </p>
             </div>
-          )}
-
-          {/* Tab Content */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-            <div className="space-y-6">
-              {/* About This Car */}
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  About This Car
-                </h3>
-                <p className="text-gray-700 leading-relaxed text-lg">
-                  {car.description}
-                </p>
-              </div>
-
-              {/* Car Details */}
-              <div>
-                <h4 className="text-xl font-bold text-gray-900 mb-4">
-                  Car Details
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                      Location
-                    </span>
-                    <span className="text-gray-900 font-semibold">
-                      {car.location}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                      Year
-                    </span>
-                    <span className="text-gray-900 font-semibold">
-                      {car.year}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                      Seats
-                    </span>
-                    <span className="text-gray-900 font-semibold">
-                      {car.seatCapacity} people
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                      Transmission
-                    </span>
-                    <span className="text-gray-900 font-semibold">
-                      {car.transmission}
-                    </span>
-                  </div>
+            {/* Car Details */}
+            <div>
+              <h4 className="text-xl font-bold text-gray-900 mb-4">
+                Car Details
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
+                <div className="flex flex-col">
+                  <span className="text-gray-500 text-xs uppercase mb-1">
+                    Location
+                  </span>
+                  <span className="font-semibold">{car.location}</span>
                 </div>
-                {car.color && (
-                  <div className="mt-4">
-                    <div className="flex flex-col">
-                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                        Color
-                      </span>
-                      <span className="text-gray-900 font-semibold">
-                        {car.color}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                <div className="flex flex-col">
+                  <span className="text-gray-500 text-xs uppercase mb-1">
+                    Year
+                  </span>
+                  <span className="font-semibold">{car.year}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-500 text-xs uppercase mb-1">
+                    Seats
+                  </span>
+                  <span className="font-semibold">
+                    {car.seatCapacity} people
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-500 text-xs uppercase mb-1">
+                    Transmission
+                  </span>
+                  <span className="font-semibold">{car.transmission}</span>
+                </div>
               </div>
-
-              {/* Features */}
-              {car.features && Object.keys(car.features).length > 0 && (
-                <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-6">
-                    Car Features
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(car.features)
-                      .filter(([, value]) => value === true)
-                      .map(([key]) => (
-                        <div
-                          key={key}
-                          className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                        >
-                          <span className="text-gray-800 font-medium leading-relaxed capitalize">
-                            {key}
-                          </span>
-                        </div>
-                      ))}
+              {car.color && (
+                <div className="mt-4">
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 text-xs uppercase mb-1">
+                      Color
+                    </span>
+                    <span className="font-semibold">{car.color}</span>
                   </div>
                 </div>
               )}
             </div>
+            {/* Features */}
+            {car.features && Object.keys(car.features).length > 0 && (
+              <div>
+                <h4 className="text-xl font-bold text-gray-900 mb-6">
+                  Car Features
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(car.features)
+                    .filter(([, value]) => value === true)
+                    .map(([key]) => (
+                      <div
+                        key={key}
+                        className="p-4 bg-gray-50 border border-gray-200 rounded-lg"
+                      >
+                        <span className="font-medium capitalize">{key}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Booking Sidebar */}
         <div className="lg:col-span-1">
-          <div className="sticky top-4">
+          <div className="sticky top-24">
             <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-8">
               <div className="text-center mb-6">
                 <div className="bg-green-600 text-white p-4 rounded-xl mb-4">
@@ -694,37 +678,32 @@ const CarDetails = () => {
 
       {/* Related Cars */}
       {relatedCars.length > 0 && (
-        <section className="border-t border-gray-200 pt-8 md:pt-12">
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8">
+        <section className="mt-12 pt-8 border-t border-gray-200">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">
             Similar Cars
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {relatedCars.map((relatedCar) => (
               <article
                 key={relatedCar.id}
                 onClick={() => navigate(`/car/${relatedCar.id}`)}
-                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 hover:border-green-200 group"
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
               >
                 <img
                   src={relatedCar.mainImage}
                   alt={`${relatedCar.brand} ${relatedCar.model}`}
-                  className="w-full h-40 md:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-48 object-cover rounded-t-xl"
                 />
-                <div className="p-4 md:p-6">
-                  <h4 className="font-semibold text-gray-900 mb-2 hover:text-green-600 transition-colors text-base md:text-lg group-hover:text-green-600">
+                <div className="p-4">
+                  <h4 className="font-semibold text-gray-800">
                     {relatedCar.brand} {relatedCar.model}
                   </h4>
-                  <p className="text-gray-600 text-sm mb-3">
+                  <p className="text-sm text-gray-600">
                     {relatedCar.year} • {relatedCar.seatCapacity} seats
                   </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-green-600">
-                      {formatPrice(relatedCar.rates.daily)}/day
-                    </span>
-                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                      {relatedCar.category}
-                    </span>
-                  </div>
+                  <p className="text-lg font-bold text-green-600 mt-2">
+                    {formatPrice(relatedCar.rates.daily)}/day
+                  </p>
                 </div>
               </article>
             ))}
@@ -732,7 +711,6 @@ const CarDetails = () => {
         </section>
       )}
 
-      {/* Toast Notification */}
       {toast && (
         <Toast
           type={toast.type}
@@ -740,8 +718,6 @@ const CarDetails = () => {
           onClose={() => setToast(null)}
         />
       )}
-
-      {/* Car Booking Modal */}
       <BookingModal
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
@@ -751,8 +727,6 @@ const CarDetails = () => {
         totalAmount={car.rates.daily}
         currency="USD"
       />
-
-      {/* Booking Confirmation */}
       <BookingConfirmation
         isOpen={showConfirmation}
         onClose={handleConfirmationClose}

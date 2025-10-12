@@ -1,3 +1,5 @@
+// src/pages/Auth/Register.jsx
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authServices from "../../api/auth";
@@ -106,13 +108,26 @@ const Register = () => {
               and enjoy personalised travel recommendations.
             </p>
           </div>
-          <div className="mt-12 text-sm text-green-100 space-y-2">
-            <p>
-              • Client role is automatically assigned and cannot be changed.
-            </p>
-            <p>• Use a strong password with letters, numbers, and symbols.</p>
-            <p>• Keep your profile up to date for a tailored experience.</p>
-          </div>
+          <ul className="mt-12 text-sm text-green-100 space-y-4">
+            <li className="flex items-start gap-2">
+              <span className="mt-1 font-bold">•</span>
+              <span>
+                Client role is automatically assigned and cannot be changed.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1 font-bold">•</span>
+              <span>
+                Use a strong password with letters, numbers, and symbols.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1 font-bold">•</span>
+              <span>
+                Keep your profile up to date for a tailored experience.
+              </span>
+            </li>
+          </ul>
         </div>
 
         <div className="lg:col-span-3 p-8 sm:p-12">

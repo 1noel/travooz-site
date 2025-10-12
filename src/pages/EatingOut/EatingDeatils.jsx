@@ -1,3 +1,5 @@
+// src/pages/EatingOut/EatingDeatils.jsx
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -23,6 +25,7 @@ const EatingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
+  const [selectedMenuItems, setSelectedMenuItems] = useState([]);
 
   const { addItem } = useCart();
 
@@ -104,6 +107,14 @@ const EatingDetails = () => {
     event.preventDefault();
     if (!restaurant) return;
 
+    if (selectedMenuItems.length === 0) {
+      showToast(
+        "warning",
+        "Please select at least one menu item before booking."
+      );
+      return;
+    }
+
     if (!bookingForm.bookingDate) {
       showToast("warning", "Please select a booking date and time");
       return;
@@ -126,6 +137,9 @@ const EatingDetails = () => {
         table: bookingForm.tableId || "Any table",
         reference: bookingReference,
         durationMinutes: Number(bookingForm.durationMinutes),
+        "Menu Items": selectedMenuItems
+          .map((item) => `${item.name} (x${item.quantity})`)
+          .join(", "),
       };
 
       if (bookingForm.arrivalDate) {
@@ -134,20 +148,65 @@ const EatingDetails = () => {
         );
       }
 
+      const totalMenuPrice = selectedMenuItems.reduce(
+        (total, item) => total + parseFloat(item.price) * item.quantity,
+        0
+      );
+
       addItem({
         id: bookingReference,
         type: "restaurant",
         name: `${restaurant.name} • Table reservation`,
+        price: totalMenuPrice,
+        currency: "RWF",
         metadata,
       });
 
-      showToast("success", "Table reservation added to cart successfully!");
+      showToast(
+        "success",
+        "Table reservation and menu items added to cart successfully!"
+      );
+      setSelectedMenuItems([]);
     } catch (bookingError) {
       console.error("Error booking restaurant table:", bookingError);
       showToast("error", bookingError.message || "Failed to add to cart");
     } finally {
       setBookingLoading(false);
     }
+  };
+
+  const handleAddMenuItem = (menuItem) => {
+    setSelectedMenuItems((prevItems) => {
+      const existingItem = prevItems.find(
+        (item) => item.menu_id === menuItem.menu_id
+      );
+      if (existingItem) {
+        return prevItems.map((item) =>
+          item.menu_id === menuItem.menu_id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prevItems, { ...menuItem, quantity: 1 }];
+      }
+    });
+  };
+
+  const handleRemoveMenuItem = (menuItem) => {
+    setSelectedMenuItems((prevItems) => {
+      const existingItem = prevItems.find(
+        (item) => item.menu_id === menuItem.menu_id
+      );
+      if (existingItem && existingItem.quantity > 1) {
+        return prevItems.map((item) =>
+          item.menu_id === menuItem.menu_id
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        );
+      } else {
+        return prevItems.filter((item) => item.menu_id !== menuItem.menu_id);
+      }
+    });
   };
 
   // Fetch restaurant details from API
@@ -238,31 +297,16 @@ const EatingDetails = () => {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-          <div className="h-12 bg-gray-200 rounded w-2/3 mb-8"></div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
-            <div className="lg:col-span-3 space-y-6">
-              <div className="h-[350px] bg-gray-200 rounded-lg"></div>
-              <div className="flex gap-3">
-                {Array.from({ length: 5 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="w-20 h-16 bg-gray-200 rounded-lg"
-                  ></div>
-                ))}
-              </div>
-              <div className="bg-white rounded-lg shadow-sm p-5 space-y-4">
-                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-              </div>
+        <div className="animate-pulse space-y-8">
+          <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="h-96 bg-gray-200 rounded-lg"></div>
+              <div className="h-20 bg-gray-200 rounded-lg"></div>
+              <div className="h-40 bg-gray-200 rounded-lg"></div>
             </div>
-            <div className="lg:col-span-2">
-              <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-              <div className="rounded-lg shadow-sm h-[400px] bg-gray-200"></div>
+            <div className="lg:col-span-1">
+              <div className="h-96 bg-gray-200 rounded-lg"></div>
             </div>
           </div>
         </div>
@@ -321,227 +365,213 @@ const EatingDetails = () => {
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Breadcrumb Navigation */}
-      <nav className="mb-6 flex items-center space-x-2 text-md">
+      <nav className="mb-6 flex items-center space-x-2 text-sm">
         <button
           onClick={() => navigate("/")}
           className="text-green-600 hover:text-green-800 cursor-pointer"
         >
           Home
         </button>
-        <span className="text-gray-400">{"/"}</span>
+        <span className="text-gray-400">/</span>
         <button
           onClick={() => navigate("/eating-out")}
           className="text-green-600 hover:text-green-800 cursor-pointer"
         >
           Eating Out
         </button>
-        <span className="text-gray-400">{"/"}</span>
-        <span className="text-gray-600">{restaurant.name}</span>
+        <span className="text-gray-400">/</span>
+        <span className="text-gray-600 font-medium truncate">
+          {restaurant.name}
+        </span>
       </nav>
 
-      {/* Restaurant Header */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column (Details) */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {restaurant.name}
             </h1>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content Grid - 60% Left, 40% Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
-        {/* Left Side - Restaurant Image, Description, Features, Location, Contact (60%) */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Restaurant Image Gallery */}
-          <div className="mb-6">
-            {/* Main Image */}
-            <div className="mb-4">
-              <img
-                src={selectedImage || restaurant.image}
-                alt={restaurant.name}
-                className="w-full h-[350px] object-cover rounded-lg shadow-lg"
-              />
-            </div>
-
-            {/* Image Thumbnails */}
+          {/* Image Gallery */}
+          <div className="space-y-4">
+            <img
+              src={selectedImage || restaurant.image}
+              alt={restaurant.name}
+              className="w-full h-96 object-cover rounded-xl shadow-lg"
+            />
             {restaurant.images && restaurant.images.length > 1 && (
-              <div>
-                <p className="text-sm text-gray-600 mb-2">
-                  More Photos ({restaurant.images.length})
-                </p>
-                <div className="flex gap-3 overflow-x-auto pb-2">
-                  {restaurant.images.map((img, index) => (
-                    <div
-                      key={index}
-                      className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
-                        selectedImage === img
-                          ? "border-green-500 ring-2 ring-green-200 shadow-lg"
-                          : "border-gray-200 hover:border-green-300 hover:shadow-md"
-                      }`}
-                      onClick={() => setSelectedImage(img)}
-                      title={`View photo ${index + 1}`}
-                    >
-                      <img
-                        src={img}
-                        alt={`${restaurant.name} view ${index + 1}`}
-                        className="w-20 h-16 object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-5 gap-3">
+                {restaurant.images.slice(0, 5).map((img, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setSelectedImage(img)}
+                    className={`group relative rounded-lg overflow-hidden border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 ${
+                      selectedImage === img
+                        ? "border-green-500"
+                        : "border-transparent hover:border-green-300"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${restaurant.name} view ${index + 1}`}
+                      className="w-full h-24 object-cover group-hover:opacity-90"
+                    />
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm">
-            {/* Description */}
-            <div className=" p-5">
-              <h3 className="text-xl font-bold text-gray-800 mb-3">
-                About {restaurant.name}
-              </h3>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                {restaurant.description}
-              </p>
-            </div>
+          {/* About Section */}
+          <div className="py-6 border-t border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              About {restaurant.name}
+            </h2>
+            <p className="text-gray-700 leading-relaxed">
+              {restaurant.description}
+            </p>
+          </div>
 
-            {/* Location & Contact Info */}
-            <div className="p-5">
-              <h4 className="text-lg font-semibold text-gray-800 mb-3">
-                Location & Contact
-              </h4>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <i className="fa fa-location-dot text-green-600 w-5"></i>
-                  <span className="text-gray-700">{restaurant.location}</span>
+          {/* Restaurant Features */}
+          <div className="py-6 border-t border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              Features & Contact
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              {restaurant.wifi && (
+                <div>
+                  <i className="fa fa-wifi text-green-500 mr-2"></i> Free WiFi
                 </div>
-                <div className="flex items-center gap-3">
-                  <i className="fa fa-clock text-green-600 w-5"></i>
-                  <span className="text-gray-700">
-                    Open: 10:00 AM - 10:00 PM
-                  </span>
+              )}
+              {restaurant.parking && (
+                <div>
+                  <i className="fa fa-parking text-green-500 mr-2"></i> Parking
+                  Available
                 </div>
-                {restaurant.phone && (
-                  <div className="flex items-center gap-3">
-                    <i className="fa fa-phone text-green-600 w-5"></i>
-                    <span className="text-gray-700">{restaurant.phone}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <i className="fa fa-envelope text-green-600 w-5"></i>
-                  <span className="text-gray-700">
-                    info@{restaurant.name.toLowerCase().replace(/\s+/g, "")}.rw
-                  </span>
+              )}
+              {restaurant.delivery && (
+                <div>
+                  <i className="fa fa-motorcycle text-green-500 mr-2"></i>{" "}
+                  Delivery Support
                 </div>
+              )}
+              {restaurant.totalTables > 0 && (
+                <div>
+                  <i className="fa fa-chair text-green-500 mr-2"></i> Table
+                  Service
+                </div>
+              )}
+              {restaurant.phone && (
+                <div>
+                  <i className="fa fa-phone text-green-500 mr-2"></i>{" "}
+                  {restaurant.phone}
+                </div>
+              )}
+              <div>
+                <i className="fa fa-clock text-green-500 mr-2"></i> Open: 10:00
+                AM - 10:00 PM
               </div>
             </div>
           </div>
 
-          {/* Restaurant Features */}
-          <div className="bg-white  rounded-lg p-5 shadow-sm">
-            <h4 className="text-lg font-semibold text-gray-800 mb-3">
-              Restaurant Features
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              {restaurant.wifi && (
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
-                  <span className="text-green-600 text-xs">✓</span>
-                  <span className="text-gray-700">Free WiFi</span>
-                </div>
-              )}
-              {restaurant.parking && (
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
-                  <span className="text-green-600 text-xs">✓</span>
-                  <span className="text-gray-700">Parking Available</span>
-                </div>
-              )}
-              {restaurant.delivery && (
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
-                  <span className="text-green-600 text-xs">✓</span>
-                  <span className="text-gray-700">Delivery Support</span>
-                </div>
-              )}
-              {restaurant.totalTables > 0 && (
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
-                  <span className="text-green-600 text-xs">✓</span>
-                  <span className="text-gray-700">Table Service</span>
-                </div>
-              )}
-            </div>
+          {/* Rating Display */}
+          <div className="py-6 border-t border-gray-200">
+            <RatingDisplay
+              averageRating={restaurantRating.averageRating}
+              totalReviews={restaurantRating.totalReviews}
+              onRateClick={handleRateClick}
+            />
           </div>
         </div>
 
-        {/* Right Side - Menu Section (40%) */}
-        <div className="lg:col-span-2">
-          <div className="sticky top-4 space-y-6">
+        {/* Right Column (Booking & Menu) */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-24 space-y-6">
             {/* Menu Section */}
-            <div className="bg-white rounded-lg shadow-sm p-4 max-h-96 overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 max-h-96 overflow-y-auto">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Menu</h3>
               {menuLoading ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, index) => (
-                    <div
-                      key={index}
-                      className="animate-pulse border-b border-gray-100 pb-4 last:border-b-0"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                        <div className="ml-4 flex-shrink-0">
-                          <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <p>Loading menu...</p>
               ) : menuError ? (
                 <p className="text-gray-600 text-center py-8">{menuError}</p>
               ) : menu.length > 0 ? (
                 <div className="space-y-4">
-                  {menu.map((item) => (
-                    <div
-                      key={item.menu_id}
-                      className="border-b border-gray-100 pb-4 last:border-b-0"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-800 mb-1">
-                            {item.name}
-                          </h4>
-                          <p className="text-gray-600 text-sm mb-2">
-                            {item.description}
-                          </p>
-                          <p className="text-green-600 font-bold">
-                            RWF {parseFloat(item.price).toLocaleString()}
-                          </p>
-                        </div>
-                        {item.image && (
-                          <div className="ml-4 flex-shrink-0">
-                            <img
-                              src={`https://travooz.kadgroupltd.com/${item.image}`}
-                              alt={item.name}
-                              className="w-16 h-16 object-cover rounded-lg"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                              }}
-                            />
+                  {menu.map((item) => {
+                    const selectedItem = selectedMenuItems.find(
+                      (i) => i.menu_id === item.menu_id
+                    );
+                    const quantity = selectedItem ? selectedItem.quantity : 0;
+                    return (
+                      <div
+                        key={item.menu_id}
+                        className="border-b border-gray-100 pb-4 last:border-b-0"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-800 mb-1">
+                              {item.name}
+                            </h4>
+                            <p className="text-gray-600 text-sm mb-2">
+                              {item.description}
+                            </p>
+                            <p className="text-green-600 font-bold">
+                              RWF {parseFloat(item.price).toLocaleString()}
+                            </p>
                           </div>
-                        )}
+                          <div className="ml-4 flex-shrink-0 text-center">
+                            {item.image && (
+                              <img
+                                src={`https://travooz.kadgroupltd.com/${item.image}`}
+                                alt={item.name}
+                                className="w-16 h-16 object-cover rounded-lg mb-2 mx-auto"
+                              />
+                            )}
+                            {quantity === 0 ? (
+                              <button
+                                onClick={() => handleAddMenuItem(item)}
+                                className="w-full bg-green-100 text-green-700 px-3 py-1 rounded-md text-xs font-semibold hover:bg-green-200"
+                              >
+                                Add
+                              </button>
+                            ) : (
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => handleRemoveMenuItem(item)}
+                                  className="bg-gray-200 text-gray-700 w-7 h-7 rounded-full"
+                                >
+                                  -
+                                </button>
+                                <span className="w-6 text-center font-semibold">
+                                  {quantity}
+                                </span>
+                                <button
+                                  onClick={() => handleAddMenuItem(item)}
+                                  className="bg-green-500 text-white w-7 h-7 rounded-full"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-gray-600 text-center py-8">
-                  Menu information not available
+                  Menu not available
                 </p>
               )}
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-5">
+
+            {/* Booking Form */}
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-5">
               <h3 className="text-xl font-bold text-gray-800 mb-4">
                 Reserve a Table
               </h3>
@@ -559,7 +589,6 @@ const EatingDetails = () => {
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Arrival time (optional)
@@ -572,7 +601,6 @@ const EatingDetails = () => {
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -602,7 +630,6 @@ const EatingDetails = () => {
                     />
                   </div>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Table number (optional)
@@ -616,13 +643,12 @@ const EatingDetails = () => {
                     placeholder="e.g. 12"
                   />
                 </div>
-
                 <button
                   type="submit"
-                  disabled={bookingLoading}
+                  disabled={bookingLoading || selectedMenuItems.length === 0}
                   className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-                    bookingLoading
-                      ? "bg-green-200 text-white cursor-wait"
+                    bookingLoading || selectedMenuItems.length === 0
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-green-500 hover:bg-green-600 text-white"
                   }`}
                 >
@@ -651,14 +677,6 @@ const EatingDetails = () => {
         propertyName={restaurant?.name || ""}
         propertyType="restaurant"
       />
-      {/* Rating Section */}
-      <div className="mb-8">
-        <RatingDisplay
-          averageRating={restaurantRating.averageRating}
-          totalReviews={restaurantRating.totalReviews}
-          onRateClick={handleRateClick}
-        />
-      </div>
     </div>
   );
 };

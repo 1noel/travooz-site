@@ -1,12 +1,16 @@
+// src/pages/Cart/Cart.jsx
+
 import React, { useState } from "react";
 import { useCart } from "../../context/useCart";
 import { useNavigate } from "react-router-dom";
 import BookingModal from "../../components/BookingModal";
 import Toast from "../../components/Toast";
+import { useAuth } from "../../context/useAuth";
 
 const Cart = () => {
   const { items, cartCount, clearCart, removeItem } = useCart();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [bookingHistory, setBookingHistory] = useState(() => {
@@ -47,6 +51,12 @@ const Cart = () => {
       return;
     }
 
+    if (!isAuthenticated) {
+      showToast("Please sign in to complete your booking.", "warning");
+      setTimeout(() => navigate("/sign-in"), 2000);
+      return;
+    }
+
     // Open payment modal for priced items
     setIsPaymentModalOpen(true);
   };
@@ -77,6 +87,11 @@ const Cart = () => {
   };
 
   const handleConfirmBookingsWithoutPayment = () => {
+    if (!isAuthenticated) {
+      showToast("Please sign in to confirm your reservation.", "warning");
+      setTimeout(() => navigate("/sign-in"), 2000);
+      return;
+    }
     // Process bookings that don't require payment (like table reservations)
     console.log("Confirming bookings without payment:", items);
 
@@ -576,7 +591,7 @@ const Cart = () => {
                         <span className="font-medium capitalize">
                           {key.replace(/([A-Z])/g, " $1").trim()}:
                         </span>{" "}
-                        <span>{value}</span>
+                        <span>{String(value)}</span>
                       </li>
                     ))}
                 </ul>

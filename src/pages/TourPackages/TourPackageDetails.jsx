@@ -1,3 +1,5 @@
+// src/pages/TourPackages/TourPackageDetails.jsx
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { tourPackageServices } from "../../api/tourPackages";
@@ -449,37 +451,27 @@ const TourPackageDetails = () => {
         <span className="text-gray-600 font-medium">{tourPackage.title}</span>
       </nav>
 
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-          <div className="flex-1">
-            {/* Subcategory Badge */}
-            <div className="mb-4">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
-                {tourPackage.category}
-              </span>
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Side - Images and Details */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Header */}
+          <div>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200 mb-4">
+              {tourPackage.category}
+            </span>
+            <h1 className="text-4xl font-bold text-gray-900">
               {tourPackage.title}
             </h1>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Left Side - Images and Details */}
-        <div className="lg:col-span-2">
           {/* Image Gallery */}
-          <div className="mb-8">
-            <div className="mb-4">
-              <img
-                src={selectedImage}
-                alt={tourPackage.title}
-                className="w-full h-[400px] object-cover rounded-xl shadow-lg"
-              />
-            </div>
-
+          <div className="space-y-4">
+            <img
+              src={selectedImage}
+              alt={tourPackage.title}
+              className="w-full h-[400px] object-cover rounded-xl shadow-lg"
+            />
             {tourPackage.images && tourPackage.images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {tourPackage.images.map((img, index) => (
@@ -503,168 +495,117 @@ const TourPackageDetails = () => {
             )}
           </div>
 
-          {/* Tab Navigation */}
-          <div className="mb-8">
-            <div className="flex border-b-2 border-gray-100">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`relative px-6 py-4 font-semibold transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? "text-green-600"
-                      : "text-gray-600 hover:text-green-600"
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-600 rounded-full"></div>
-                  )}
-                </button>
-              ))}
+          {/* Details Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 space-y-8">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                About This Tour
+              </h3>
+              <p className="text-gray-700 leading-relaxed text-lg">
+                {tourPackage.fullDescription || tourPackage.description}
+              </p>
             </div>
-          </div>
 
-          {/* Tab Content */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-            {activeTab === "overview" && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                    About This Tour
-                  </h3>
-                  <p className="text-gray-700 leading-relaxed text-lg">
-                    {tourPackage.fullDescription || tourPackage.description}
-                  </p>
+            {tourPackage.highlights && (
+              <div>
+                <h4 className="text-xl font-bold text-gray-900 mb-6">
+                  Tour Highlights
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {tourPackage.highlights.map((highlight, index) => (
+                    <div
+                      key={index}
+                      className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-start gap-3"
+                    >
+                      <i className="fa fa-check-circle text-green-500 mt-1"></i>
+                      <span className="text-gray-800 font-medium leading-relaxed">
+                        {highlight}
+                      </span>
+                    </div>
+                  ))}
                 </div>
+              </div>
+            )}
 
-                {tourPackage.highlights && (
-                  <div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-6">
-                      Tour Highlights
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {tourPackage.highlights.map((highlight, index) => (
-                        <div
-                          key={index}
-                          className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                        >
-                          <span className="text-gray-800 font-medium leading-relaxed">
-                            {highlight}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-4">
-                    Tour Details
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div className="flex flex-col">
-                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                        Category
-                      </span>
-                      <span className="text-gray-900 font-semibold">
-                        {tourPackage.category}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                        Location
-                      </span>
-                      <span className="text-gray-900 font-semibold">
-                        {tourPackage.location}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                        Duration
-                      </span>
-                      <span className="text-gray-900 font-semibold">
-                        {tourPackage.duration}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                        Group Size
-                      </span>
-                      <span className="text-gray-900 font-semibold">
-                        {tourPackage.groupSize}
-                      </span>
-                    </div>
-                    {tourPackage.instructorLanguage && (
-                      <div className="flex flex-col">
-                        <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                          Language
-                        </span>
-                        <span className="text-gray-900 font-semibold">
-                          {tourPackage.instructorLanguage}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  {tourPackage.phone && (
-                    <div className="mt-4">
-                      <div className="flex flex-col">
-                        <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
-                          Contact
-                        </span>
-                        <span className="text-gray-900 font-semibold">
-                          {tourPackage.phone}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+            <div>
+              <h4 className="text-xl font-bold text-gray-900 mb-4">
+                Tour Details
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-gray-500 text-xs uppercase font-medium mb-1">
+                    Location
+                  </span>
+                  <span className="text-gray-900 font-semibold">
+                    {tourPackage.location}
+                  </span>
                 </div>
-
-                {/* Meeting Point */}
-                {tourPackage.meetingPoint && (
-                  <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl">
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">
-                      Meeting Point
-                    </h4>
-                    <p className="text-gray-800 leading-relaxed">
-                      {tourPackage.meetingPoint}
-                    </p>
+                <div className="flex flex-col">
+                  <span className="text-gray-500 text-xs uppercase font-medium mb-1">
+                    Duration
+                  </span>
+                  <span className="text-gray-900 font-semibold">
+                    {tourPackage.duration}
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-500 text-xs uppercase font-medium mb-1">
+                    Group Size
+                  </span>
+                  <span className="text-gray-900 font-semibold">
+                    {tourPackage.groupSize}
+                  </span>
+                </div>
+                {tourPackage.instructorLanguage && (
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 text-xs uppercase font-medium mb-1">
+                      Language
+                    </span>
+                    <span className="text-gray-900 font-semibold">
+                      {tourPackage.instructorLanguage}
+                    </span>
                   </div>
                 )}
+              </div>
+            </div>
 
-                {/* What to Bring */}
-                {tourPackage.whatToBring &&
-                  tourPackage.whatToBring.length > 0 && (
-                    <div>
-                      <h4 className="text-xl font-bold text-gray-900 mb-6">
-                        What to Bring
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {tourPackage.whatToBring.map((item, index) => (
-                          <div
-                            key={index}
-                            className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm"
-                          >
-                            <span className="text-gray-800 font-medium">
-                              {item}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+            {tourPackage.meetingPoint && (
+              <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl">
+                <h4 className="text-xl font-bold text-gray-900 mb-3">
+                  Meeting Point
+                </h4>
+                <p className="text-gray-800 leading-relaxed">
+                  {tourPackage.meetingPoint}
+                </p>
+              </div>
+            )}
+
+            {tourPackage.whatToBring && tourPackage.whatToBring.length > 0 && (
+              <div>
+                <h4 className="text-xl font-bold text-gray-900 mb-6">
+                  What to Bring
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {tourPackage.whatToBring.map((item, index) => (
+                    <div
+                      key={index}
+                      className="p-4 bg-gray-50 border border-gray-200 rounded-lg"
+                    >
+                      <span className="text-gray-800 font-medium">{item}</span>
                     </div>
-                  )}
+                  ))}
+                </div>
+              </div>
+            )}
 
-                {/* Things to Know */}
-                {tourPackage.thingsToKnow && (
-                  <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-xl">
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">
-                      Important Information
-                    </h4>
-                    <p className="text-gray-800 leading-relaxed whitespace-pre-line">
-                      {tourPackage.thingsToKnow}
-                    </p>
-                  </div>
-                )}
+            {tourPackage.thingsToKnow && (
+              <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-xl">
+                <h4 className="text-xl font-bold text-gray-900 mb-3">
+                  Important Information
+                </h4>
+                <p className="text-gray-800 leading-relaxed whitespace-pre-line">
+                  {tourPackage.thingsToKnow}
+                </p>
               </div>
             )}
           </div>
@@ -672,7 +613,7 @@ const TourPackageDetails = () => {
 
         {/* Right Side - Booking Card */}
         <div className="lg:col-span-1">
-          <div className="sticky top-4">
+          <div className="sticky top-24">
             <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-8">
               <div className="text-center mb-6">
                 <div className="bg-green-600 text-white p-4 rounded-xl mb-4">
@@ -706,25 +647,15 @@ const TourPackageDetails = () => {
                       placeholder="Select a date"
                       readOnly
                       onClick={() => setShowCalendar(!showCalendar)}
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 cursor-pointer"
                     />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        ></path>
-                      </svg>
-                    </div>
+                    {showCalendar && (
+                      <CustomCalendar
+                        onDateSelect={setSelectedDate}
+                        onClose={() => setShowCalendar(false)}
+                      />
+                    )}
                   </div>
-                  {showCalendar && <CustomCalendar />}
                 </div>
                 <div className="relative">
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -736,24 +667,14 @@ const TourPackageDetails = () => {
                       onClick={() =>
                         setShowTravelersDropdown(!showTravelersDropdown)
                       }
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 text-left flex items-center justify-between"
                     >
                       <span className="font-medium">{selectedTravelers}</span>
-                      <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                      <i
+                        className={`fa fa-chevron-down text-gray-400 transition-transform ${
                           showTravelersDropdown ? "rotate-180" : ""
                         }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M19 9l-7 7-7-7"
-                        ></path>
-                      </svg>
+                      ></i>
                     </button>
                     {showTravelersDropdown && <CustomTravelersDropdown />}
                   </div>
@@ -763,8 +684,8 @@ const TourPackageDetails = () => {
                     Special Requests
                   </label>
                   <textarea
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 h-24 resize-none transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300"
-                    placeholder="Any special requirements or requests..."
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 h-24 resize-none"
+                    placeholder="Any special requirements..."
                   ></textarea>
                 </div>
               </div>
@@ -773,7 +694,7 @@ const TourPackageDetails = () => {
                 <button
                   onClick={handleBookNow}
                   type="button"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition-all shadow-md"
                 >
                   Book Now
                 </button>
@@ -787,20 +708,16 @@ const TourPackageDetails = () => {
                   {tourPackage.phone && (
                     <a
                       href={`tel:${tourPackage.phone}`}
-                      className="flex items-center justify-center text-green-600 hover:text-green-700 hover:bg-green-50 p-4 rounded-xl transition-all duration-200 border border-green-200"
+                      className="flex items-center justify-center text-green-600 hover:text-green-700 p-4 rounded-xl border border-green-200"
                     >
-                      <span className="text-sm font-semibold">
-                        {tourPackage.phone}
-                      </span>
+                      {tourPackage.phone}
                     </a>
                   )}
                   <a
                     href="mailto:info@travooz.com"
-                    className="flex items-center justify-center text-green-600 hover:text-green-700 hover:bg-green-50 p-4 rounded-xl transition-all duration-200 border border-green-200"
+                    className="flex items-center justify-center text-green-600 hover:text-green-700 p-4 rounded-xl border border-green-200"
                   >
-                    <span className="text-sm font-semibold">
-                      info@travooz.com
-                    </span>
+                    info@travooz.com
                   </a>
                 </div>
               </div>

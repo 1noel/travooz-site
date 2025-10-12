@@ -1,3 +1,5 @@
+// src/pages/Auth/Login.jsx
+
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import authServices from "../../api/auth";
@@ -54,11 +56,20 @@ const Login = () => {
               new travel experiences tailored to you.
             </p>
           </div>
-          <div className="mt-12 text-sm text-green-100 space-y-2">
-            <p>• Use the same email you registered with.</p>
-            <p>• Forgot your password? Contact support for assistance.</p>
-            <p>• Your client role grants access to booking features.</p>
-          </div>
+          <ul className="mt-12 text-sm text-green-100 space-y-4">
+            <li className="flex items-start gap-2">
+              <span className="mt-1 font-bold">•</span>
+              <span>Use the same email you registered with.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1 font-bold">•</span>
+              <span>Forgot your password? Contact support for assistance.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1 font-bold">•</span>
+              <span>Your client role grants access to booking features.</span>
+            </li>
+          </ul>
         </div>
 
         <div className="lg:col-span-3 p-8 sm:p-12">

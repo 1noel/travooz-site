@@ -1,13 +1,9 @@
-// src/pages/Activities/ActivityDetails.jsx
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   activityServices,
   transformActivityToFrontend,
 } from "../../api/activities";
-import { useCart } from "../../context/useCart";
-import Toast from "../../components/Toast";
 
 const ActivityDetails = () => {
   const { id } = useParams();
@@ -17,187 +13,15 @@ const ActivityDetails = () => {
   const [error, setError] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  // New state for booking form
-  const { addItem } = useCart();
-  const [selectedDate, setSelectedDate] = useState("");
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedTravelers, setSelectedTravelers] = useState("1 Traveler");
-  const [showTravelersDropdown, setShowTravelersDropdown] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const showToast = (type, message) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const handleBookNow = () => {
-    if (!activity) return;
-
-    if (!selectedDate) {
-      showToast("warning", "Please select a date for the activity.");
-      return;
-    }
-
-    const travelersCount = parseInt(selectedTravelers, 10) || 1;
-
-    addItem({
-      id: `activity-${activity.id}-${Date.now()}`,
-      type: "activity",
-      name: activity.name,
-      price: activity.price,
-      currency: "RWF", // Set currency to RWF
-      metadata: {
-        Date: new Date(selectedDate).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-        Travelers: travelersCount,
-        Location: activity.location,
-      },
-    });
-
-    showToast("success", `${activity.name} has been added to your cart.`);
-  };
-
-  // Calendar component
-  const CustomCalendar = () => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const [displayMonth, setDisplayMonth] = useState(currentMonth);
-    const [displayYear, setDisplayYear] = useState(currentYear);
-
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    const getDaysInMonth = (month, year) =>
-      new Date(year, month + 1, 0).getDate();
-    const getFirstDayOfMonth = (month, year) =>
-      new Date(year, month, 1).getDay();
-
-    const handleDateSelect = (day) => {
-      const date = new Date(displayYear, displayMonth, day);
-      const formattedDate = date.toLocaleDateString("en-CA");
-      setSelectedDate(formattedDate);
-      setShowCalendar(false);
-    };
-
-    const handleMonthChange = (direction) => {
-      setDisplayMonth((prev) => {
-        const newMonth = prev + direction;
-        if (newMonth < 0) {
-          setDisplayYear(displayYear - 1);
-          return 11;
-        }
-        if (newMonth > 11) {
-          setDisplayYear(displayYear + 1);
-          return 0;
-        }
-        return newMonth;
-      });
-    };
-
-    const daysInMonth = getDaysInMonth(displayMonth, displayYear);
-    const firstDay = getFirstDayOfMonth(displayMonth, displayYear);
-    const days = Array.from({ length: firstDay }, () => <div />);
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isPast =
-        new Date(displayYear, displayMonth, day) <
-        new Date(new Date().toDateString());
-      days.push(
-        <button
-          key={day}
-          onClick={() => !isPast && handleDateSelect(day)}
-          disabled={isPast}
-          className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm font-medium transition-colors ${
-            isPast
-              ? "text-gray-300 cursor-not-allowed"
-              : "text-gray-700 hover:bg-green-100"
-          }`}
-        >
-          {day}
-        </button>
-      );
-    }
-
-    return (
-      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => handleMonthChange(-1)}
-            className="p-2 hover:bg-gray-100 rounded-full"
-          >
-            <i className="fa fa-chevron-left text-gray-600"></i>
-          </button>
-          <h3 className="text-lg font-semibold text-gray-800">
-            {monthNames[displayMonth]} {displayYear}
-          </h3>
-          <button
-            onClick={() => handleMonthChange(1)}
-            className="p-2 hover:bg-gray-100 rounded-full"
-          >
-            <i className="fa fa-chevron-right text-gray-600"></i>
-          </button>
-        </div>
-        <div className="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-medium text-gray-500">
-          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-            <div key={day}>{day}</div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7 gap-1">{days}</div>
-      </div>
-    );
-  };
-
-  // Custom Travelers Dropdown component
-  const CustomTravelersDropdown = () => {
-    const travelerOptions = [
-      "1 Traveler",
-      "2 Travelers",
-      "3 Travelers",
-      "4 Travelers",
-      "5+ Travelers",
-    ];
-    return (
-      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-2">
-        {travelerOptions.map((option) => (
-          <button
-            key={option}
-            onClick={() => {
-              setSelectedTravelers(option);
-              setShowTravelersDropdown(false);
-            }}
-            className={`w-full px-4 py-3 text-left hover:bg-green-50 ${
-              selectedTravelers === option
-                ? "text-green-600 font-bold"
-                : "text-gray-700"
-            }`}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    );
-  };
-
   useEffect(() => {
     const fetchActivityDetails = async () => {
       try {
         setLoading(true);
         setError(null);
+
         const response = await activityServices.fetchActivityById(id);
+        console.log("Activity Details API Response:", response);
+
         if (response?.data) {
           const transformedActivity = transformActivityToFrontend(
             response.data
@@ -207,42 +31,99 @@ const ActivityDetails = () => {
           setError("Activity not found");
         }
       } catch (err) {
+        console.error("Failed to fetch activity details:", err);
         setError("Failed to load activity details. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchActivityDetails();
+
+    if (id) {
+      fetchActivityDetails();
+    }
   }, [id]);
 
+  // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const handleBooking = () => {
+    if (activity?.phone) {
+      window.open(`tel:${activity.phone}`, "_self");
+    } else {
+      alert("Contact information not available. Please try again later.");
+    }
+  };
+
+  const handleWhatsApp = () => {
+    if (activity?.phone) {
+      const message = `Hi! I'm interested in booking the ${activity.name} activity. Could you please provide more information?`;
+      const whatsappUrl = `https://wa.me/${activity.phone.replace(
+        /[^0-9]/g,
+        ""
+      )}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, "_blank");
+    }
+  };
 
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
         <div className="animate-pulse">
+          {/* Breadcrumb skeleton */}
           <div className="h-6 bg-gray-300 rounded w-64 mb-6"></div>
+
+          {/* Header skeleton */}
           <div className="mb-8">
             <div className="h-8 bg-gray-300 rounded w-2/3 mb-2"></div>
             <div className="h-4 bg-gray-300 rounded w-1/2"></div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="w-full h-96 bg-gray-300 rounded-lg"></div>
+
+          {/* Content grid skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-3 space-y-6">
+              {/* Main image skeleton */}
+              <div className="w-full h-[350px] bg-gray-300 rounded-lg"></div>
+
+              {/* Thumbnail gallery skeleton */}
               <div className="flex gap-3">
-                {Array.from({ length: 4 }).map((_, index) => (
+                {Array.from({ length: 4 }, (_, index) => (
                   <div
                     key={index}
                     className="w-20 h-16 bg-gray-300 rounded-lg"
                   ></div>
                 ))}
               </div>
-              <div className="bg-gray-200 rounded-lg p-5 h-48"></div>
+
+              {/* Info section skeleton */}
+              <div className="bg-gray-200 rounded-lg p-5">
+                <div className="h-6 bg-gray-300 rounded w-1/3 mb-4"></div>
+                <div className="space-y-2 mb-4">
+                  <div className="h-4 bg-gray-300 rounded"></div>
+                  <div className="h-4 bg-gray-300 rounded"></div>
+                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Array.from({ length: 4 }, (_, index) => (
+                    <div key={index} className="h-4 bg-gray-300 rounded"></div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="lg:col-span-1">
-              <div className="bg-gray-200 rounded-lg p-5 h-96"></div>
+
+            {/* Sidebar skeleton */}
+            <div className="lg:col-span-2">
+              <div className="bg-gray-200 rounded-lg p-5">
+                <div className="text-center mb-6">
+                  <div className="h-8 bg-gray-300 rounded w-2/3 mx-auto mb-2"></div>
+                  <div className="h-4 bg-gray-300 rounded w-1/2 mx-auto"></div>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-10 bg-gray-300 rounded"></div>
+                  <div className="h-10 bg-gray-300 rounded"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -250,119 +131,176 @@ const ActivityDetails = () => {
     );
   }
 
-  if (error || !activity) {
+  if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">
-          {error || "Activity not found"}
-        </h2>
-        <button
-          onClick={() => navigate("/activities")}
-          className="px-6 py-2 bg-green-600 text-white rounded-lg"
-        >
-          Back to Activities
-        </button>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="text-red-500 text-xl mb-4">
+            <i className="fa fa-exclamation-triangle"></i>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            Oops! Something went wrong
+          </h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="space-x-4">
+            <button
+              onClick={() => navigate("/activities")}
+              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Back to Activities
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
+  if (!activity) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            Activity not found
+          </h2>
+          <p className="text-gray-600 mb-4">
+            The activity you're looking for doesn't exist or has been removed.
+          </p>
+          <button
+            onClick={() => navigate("/activities")}
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Back to Activities
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Prepare images for gallery
   const allImages = [activity.mainImage, ...activity.galleryImages].filter(
     Boolean
   );
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <nav className="mb-6 flex items-center space-x-2 text-sm">
+      {/* Breadcrumb Navigation */}
+      <nav className="mb-6 flex items-center space-x-2 text-md">
         <button
           onClick={() => navigate("/")}
-          className="text-green-600 hover:text-green-800"
+          className="text-green-600 hover:text-green-800 cursor-pointer"
         >
           Home
         </button>
-        <span className="text-gray-400">/</span>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/activities")}
-          className="text-green-600 hover:text-green-800"
+          className="text-green-600 hover:text-green-800 cursor-pointer"
         >
           Activities
         </button>
-        <span className="text-gray-400">/</span>
-        <span className="text-gray-600 font-medium truncate">
-          {activity.name}
-        </span>
+        <span className="text-gray-400">{"/"}</span>
+        <span className="text-gray-600 text-sm">{activity.name}</span>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      {/* Activity Header */}
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-gray-800 mb-2">
               {activity.name}
             </h1>
           </div>
-          <div className="space-y-4">
-            <img
-              src={allImages[selectedImageIndex] || activity.mainImage}
-              alt={activity.name}
-              className="w-full h-96 object-cover rounded-xl shadow-lg"
-            />
+        </div>
+      </div>
+
+      {/* Main Content Grid - 60% Left, 40% Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
+        {/* Left Side - Activity Image, Description, Info (60%) */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Activity Image Gallery */}
+          <div className="mb-6">
+            {/* Main Image */}
+            <div className="mb-4">
+              <img
+                src={allImages[selectedImageIndex] || activity.mainImage}
+                alt={activity.name}
+                className="w-full h-[350px] object-cover rounded-lg shadow-lg"
+                onError={(e) => {
+                  e.target.src = "/images/kgl.jpg";
+                }}
+                loading="lazy"
+              />
+            </div>
+
+            {/* Image Thumbnails */}
             {allImages.length > 1 && (
-              <div className="grid grid-cols-5 gap-3">
-                {allImages.slice(0, 5).map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`rounded-lg overflow-hidden border-2 ${
-                      selectedImageIndex === index
-                        ? "border-green-500"
-                        : "border-transparent"
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${activity.name} view ${index + 1}`}
-                      className="w-full h-24 object-cover"
-                    />
-                  </button>
-                ))}
+              <div>
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {allImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
+                        selectedImageIndex === index
+                          ? "border-green-500 ring-2 ring-green-200 shadow-lg"
+                          : "border-gray-200 hover:border-green-300 hover:shadow-md"
+                      }`}
+                      onClick={() => setSelectedImageIndex(index)}
+                      title={`View photo ${index + 1}`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${activity.name} view ${index + 1}`}
+                        className="w-20 h-16 object-cover"
+                        onError={(e) => {
+                          e.target.src = "/images/kgl.jpg";
+                        }}
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
-          <div className="py-6 border-t border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              About This Activity
-            </h2>
-            <p className="text-gray-700 leading-relaxed">
+          {/* Activity Info */}
+          <div className="bg-white rounded-lg shadow-sm p-5">
+            <h3 className="text-lg font-bold text-gray-800 mb-3">
+              About {activity.name}
+            </h3>
+            <p className="text-gray-700 text-sm leading-relaxed mb-4">
               {activity.description}
             </p>
-          </div>
 
-          <div className="py-6 border-t border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              Details
-            </h2>
-            <div className="grid grid-cols-2 gap-4 text-gray-700">
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
               {activity.location && (
-                <div className="flex items-center gap-2">
-                  <i className="fa fa-map-marker-alt text-green-500"></i>{" "}
+                <div>
+                  <span className="font-medium text-gray-800 text-xs">Location:</span>{" "}
                   {activity.location}
                 </div>
               )}
               {activity.capacity && (
-                <div className="flex items-center gap-2">
-                  <i className="fa fa-users text-green-500"></i> Up to{" "}
+                <div>
+                  <span className="font-medium text-gray-800 text-xs">Capacity:</span>{" "}
                   {activity.capacity} people
                 </div>
               )}
               {activity.schedule && (
-                <div className="flex items-center gap-2">
-                  <i className="fa fa-clock text-green-500"></i>{" "}
+                <div>
+                  <span className="font-medium text-gray-800 text-xs">Schedule:</span>{" "}
                   {activity.schedule}
                 </div>
               )}
               {activity.vendorName && (
-                <div className="flex items-center gap-2">
-                  <i className="fa fa-user-tie text-green-500"></i> Provided by{" "}
+                <div className="md:col-span-2">
+                  <span className="font-medium text-gray-800 text-xs">Provider:</span>{" "}
                   {activity.vendorName}
                 </div>
               )}
@@ -370,69 +308,66 @@ const ActivityDetails = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-1">
-          <div className="sticky top-24">
-            <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 w-full">
-              {activity.price > 0 && (
-                <div className="text-left mb-6">
-                  <p className="text-gray-500 text-sm">Starting from</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {new Intl.NumberFormat("en-RW", {
-                      style: "currency",
-                      currency: "RWF",
-                      minimumFractionDigits: 0,
-                    }).format(activity.price)}
+        {/* Right Side - Booking Information (40%) */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg shadow-sm p-5 sticky top-6">
+            {/* Price */}
+            {activity.price && (
+              <div className="text-center mb-6">
+                <div className="text-3xl font-bold text-green-600">
+                  {new Intl.NumberFormat("RW", {
+                    style: "currency",
+                    currency: "RWF",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  }).format(activity.price)}
+                </div>
+                <p className="text-gray-500 text-sm">Starting price</p>
+              </div>
+            )}
+
+            {/* Contact Information */}
+            {activity.phone && (
+              <div className="mb-6">
+                <h3 className="font-semibold text-gray-800 mb-3">
+                  Contact Information
+                </h3>
+                <div className="text-gray-600 mb-4">
+                  <p>
+                    <span className="font-medium">Phone:</span> {activity.phone}
                   </p>
                 </div>
-              )}
-              <div className="space-y-4">
-                <div className="relative">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
-                    Date
-                  </label>
-                  <input
-                    type="text"
-                    value={selectedDate}
-                    placeholder="Select a date"
-                    readOnly
-                    onClick={() => setShowCalendar(!showCalendar)}
-                    className="w-full p-3 border border-gray-300 rounded-lg cursor-pointer"
-                  />
-                  {showCalendar && <CustomCalendar />}
-                </div>
-                <div className="relative">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
-                    Travelers
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowTravelersDropdown(!showTravelersDropdown)
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-lg text-left"
-                  >
-                    {selectedTravelers}
-                  </button>
-                  {showTravelersDropdown && <CustomTravelersDropdown />}
-                </div>
-                <button
-                  onClick={handleBookNow}
-                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors"
-                >
-                  Book
-                </button>
+              </div>
+            )}
+
+            {/* Booking Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleBooking}
+                className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                Call to Book
+              </button>
+
+              <button
+                onClick={handleWhatsApp}
+                className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-colors font-medium"
+              >
+                WhatsApp Inquiry
+              </button>
+            </div>
+
+            {/* Additional Notes */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="text-sm text-gray-500 space-y-2">
+                <p>• Contact directly for availability</p>
+                <p>• Verified activity provider</p>
+                <p>• Instant response during business hours</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 };

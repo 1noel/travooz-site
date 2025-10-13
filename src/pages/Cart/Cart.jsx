@@ -157,67 +157,52 @@ const Cart = () => {
 
   if (cartCount === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5">
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
 
-        {/* Header with History Buttons */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <h1 className="text-2xl font-semibold text-gray-800">Your cart</h1>
-          <div className="flex items-center gap-3 flex-wrap">
-            <button
-              type="button"
-              onClick={() => navigate("/car-rental-history")}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
-                />
-              </svg>
-              My Car Rentals
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowHistory(!showHistory)}
-              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              {showHistory
-                ? "Hide History"
-                : `View History (${bookingHistory.length})`}
-            </button>
+          {/* Modern Header */}
+          <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 mb-8">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h7" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Your Cart</h1>
+                  <p className="text-sm text-gray-500">Your travel bookings and reservations</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate("/car-rental-history")}
+                  className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all duration-200 shadow hover:shadow-sm"
+                >
+                  Car Rentals
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-all duration-200 shadow hover:shadow-sm"
+                >
+                  {showHistory ? "Hide History" : `History (${bookingHistory.length})`}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
 
         {/* Booking History Section */}
         {showHistory && bookingHistory.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-xl shadow border border-gray-100 p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <svg
                 className="w-6 h-6 text-blue-600"
@@ -323,7 +308,7 @@ const Cart = () => {
         )}
 
         {showHistory && bookingHistory.length === 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+          <div className="bg-white rounded-xl shadow border border-gray-100 p-8 text-center">
             <svg
               className="w-16 h-16 text-gray-300 mx-auto mb-4"
               fill="none"
@@ -346,15 +331,38 @@ const Cart = () => {
           </div>
         )}
 
-        {/* Empty Cart Message */}
-        <div className="bg-white rounded-xl shadow-sm p-8 text-center space-y-3">
-          <h1 className="text-2xl font-semibold text-gray-800">
-            Your cart is empty
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Start exploring stays, activities, or restaurants to add bookings to
-            your cart.
-          </p>
+          {/* Empty Cart Message */}
+          <div className="bg-white rounded-2xl shadow border border-gray-100 p-12 text-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Your cart is empty</h2>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              Discover amazing hotels, restaurants, activities, and car rentals. Start exploring and add items to your cart.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => navigate("/")}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl transition-all duration-200 shadow hover:shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Browse Hotels
+              </button>
+              <button
+                onClick={() => navigate("/eating-out")}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition-all duration-200 shadow hover:shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Find Restaurants
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -363,79 +371,61 @@ const Cart = () => {
   const totalAmount = calculateTotal();
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
 
-      {/* Header with History Toggle */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-800">Your cart</h1>
-          <p className="text-gray-600 text-sm">
-            {cartCount} {cartCount === 1 ? "item" : "items"} ready to review.
-          </p>
+        {/* Modern Header */}
+        <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 mb-8">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h7" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Your Cart</h1>
+                <p className="text-sm text-gray-500">
+                  {cartCount} {cartCount === 1 ? "item" : "items"} ready for checkout
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/car-rental-history")}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all duration-200 shadow hover:shadow-sm"
+              >
+                Car Rentals
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowHistory(!showHistory)}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-all duration-200 shadow hover:shadow-sm"
+              >
+                {showHistory ? "Hide History" : `History (${bookingHistory.length})`}
+              </button>
+              <button
+                type="button"
+                onClick={clearCart}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200"
+              >
+                Clear Cart
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <button
-            type="button"
-            onClick={() => navigate("/car-rental-history")}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
-              />
-            </svg>
-            My Car Rentals
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowHistory(!showHistory)}
-            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            {showHistory
-              ? "Hide History"
-              : `View History (${bookingHistory.length})`}
-          </button>
-          <button
-            type="button"
-            onClick={clearCart}
-            className="text-sm text-red-600 hover:text-red-700 font-semibold"
-          >
-            Clear cart
-          </button>
-        </div>
-      </div>
 
       {/* Booking History Section */}
       {showHistory && bookingHistory.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow border border-gray-100 p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <svg
               className="w-6 h-6 text-blue-600"
@@ -541,7 +531,7 @@ const Cart = () => {
       )}
 
       {showHistory && bookingHistory.length === 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+        <div className="bg-white rounded-xl shadow border border-gray-100 p-8 text-center">
           <svg
             className="w-16 h-16 text-gray-300 mx-auto mb-4"
             fill="none"
@@ -564,289 +554,238 @@ const Cart = () => {
         </div>
       )}
 
-      <div className="space-y-4">
-        {items.map((item) => (
-          <div
-            key={`${item.type}-${item.id}`}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col md:flex-row md:items-start md:justify-between gap-4"
-          >
-            <div className="flex-1 space-y-2">
-              <span className="inline-flex items-center text-xs font-semibold uppercase tracking-wide text-green-600 bg-green-50 rounded-full px-3 py-1">
-                {item.type}
-              </span>
-              <h2 className="text-lg font-semibold text-gray-800">
-                {item.name}
-              </h2>
-              {item.metadata && (
-                <ul className="text-sm text-gray-600 space-y-1">
-                  {Object.entries(item.metadata)
-                    .filter(
-                      ([key, value]) =>
-                        value !== undefined && 
-                        value !== null && 
-                        value !== "" &&
-                        !key.toLowerCase().includes('checkin') &&
-                        !key.toLowerCase().includes('checkout') &&
-                        !key.toLowerCase().includes('check-in') &&
-                        !key.toLowerCase().includes('check-out') &&
-                        !key.toLowerCase().includes('arrival') &&
-                        !key.toLowerCase().includes('departure')
-                    )
-                    .map(([key, value]) => (
-                      <li key={key}>
-                        <span className="font-medium capitalize">
-                          {key.replace(/([A-Z])/g, " $1").trim()}:
-                        </span>{" "}
-                        <span>{String(value)}</span>
-                      </li>
-                    ))}
-                </ul>
-              )}
-            </div>
-            <div className="flex flex-col items-start md:items-end gap-3 min-w-[120px]">
-              {item.price && parseFloat(item.price) > 0 && (
-                <div className="text-right">
-                  <p className="text-sm text-gray-500 mb-1">Price</p>
-                  <p className="text-lg font-bold text-green-600">
-                    {new Intl.NumberFormat("en-RW", {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(parseFloat(item.price))}{" "}
-                    {item.currency || "RWF"}
-                  </p>
-                  {item.quantity > 1 && (
-                    <p className="text-xs text-gray-500">
-                      × {item.quantity} ={" "}
-                      {new Intl.NumberFormat("en-RW", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      }).format(parseFloat(item.price) * item.quantity)}{" "}
-                      {item.currency || "RWF"}
-                    </p>
-                  )}
-                </div>
-              )}
-              {(!item.price || parseFloat(item.price) <= 0) && (
-                <div className="text-right">
-                  <p className="text-sm text-gray-500 mb-1">Quantity</p>
-                  <p className="text-lg font-semibold text-gray-700">
-                    {item.quantity}
-                  </p>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => removeItem(item.id, item.type)}
-                className="text-sm text-red-600 hover:text-red-700 font-semibold"
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Cart Items - Left Side */}
+          <div className="lg:col-span-2 space-y-3">
+            {items.map((item) => (
+              <div
+                key={`${item.type}-${item.id}`}
+                className="bg-white rounded-xl shadow border border-gray-100 p-4 hover:shadow-sm transition-all duration-200"
               >
-                Remove
-              </button>
+                <div className="flex items-start gap-3">
+                  {/* Item Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <span className={`inline-flex items-center text-xs font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full ${
+                          item.type === 'food' ? 'text-orange-700 bg-orange-100' :
+                          item.type === 'hotel' ? 'text-blue-700 bg-blue-100' :
+                          item.type === 'restaurant' ? 'text-purple-700 bg-purple-100' :
+                          item.type === 'car' ? 'text-red-700 bg-red-100' :
+                          'text-green-700 bg-green-100'
+                        }`}>
+                          {item.type}
+                        </span>
+                        <h3 className="text-base font-semibold text-gray-900 mt-1 leading-tight">
+                          {item.name}
+                        </h3>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.id, item.type)}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all duration-200"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Item Details */}
+                    {item.metadata && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                        {Object.entries(item.metadata)
+                          .filter(
+                            ([key, value]) =>
+                              value !== undefined && 
+                              value !== null && 
+                              value !== "" &&
+                              !key.toLowerCase().includes('checkin') &&
+                              !key.toLowerCase().includes('checkout') &&
+                              !key.toLowerCase().includes('check-in') &&
+                              !key.toLowerCase().includes('check-out') &&
+                              !key.toLowerCase().includes('arrival') &&
+                              !key.toLowerCase().includes('departure')
+                          )
+                          .slice(0, 4) // Limit to 4 most important details
+                          .map(([key, value]) => (
+                            <div key={key} className="flex items-center gap-1 text-xs">
+                              <span className="w-1.5 h-1.5 bg-gray-300 rounded-full flex-shrink-0"></span>
+                              <span className="font-medium text-gray-700 capitalize">
+                                {key.replace(/([A-Z])/g, " $1").trim()}:
+                              </span>
+                              <span className="text-gray-600 truncate">{String(value)}</span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+
+                    {/* Price and Quantity */}
+                    <div className="flex items-center justify-between">
+                      {item.price && parseFloat(item.price) > 0 ? (
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <p className="text-lg font-bold text-gray-900">
+                              {new Intl.NumberFormat("en-RW", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                              }).format(parseFloat(item.price))}{" "}
+                              <span className="text-sm text-gray-600">{item.currency || "RWF"}</span>
+                            </p>
+                            {item.quantity > 1 && (
+                              <p className="text-xs text-gray-500">
+                                × {item.quantity} = {new Intl.NumberFormat("en-RW", {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 0,
+                                }).format(parseFloat(item.price) * item.quantity)} {item.currency || "RWF"}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-gray-500">Quantity:</span>
+                          <span className="text-sm font-semibold text-gray-900">{item.quantity}</span>
+                        </div>
+                      )}
+                      {item.quantity > 1 && (
+                        <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-md">
+                          <span className="text-xs font-medium text-gray-700">{item.quantity}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Order Summary Sidebar - Right Side */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow border border-gray-100 p-4 sticky top-8">
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-lg font-bold text-gray-900">Order Summary</h2>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-sm text-gray-600">
+                    Items ({cartCount})
+                  </span>
+                  <span className="text-sm font-semibold text-gray-900">{cartCount}</span>
+                </div>
+
+                {hasPricedItems && (
+                  <>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-sm text-gray-600">Subtotal</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {new Intl.NumberFormat("en-RW", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }).format(totalAmount)} RWF
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-sm text-gray-600">Service Fee</span>
+                      <span className="text-sm font-semibold text-green-600">Free</span>
+                    </div>
+
+                    <div className="border-t border-gray-200 pt-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-base font-bold text-gray-900">Total</span>
+                        <span className="text-lg font-bold text-green-600">
+                          {new Intl.NumberFormat("en-RW", {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          }).format(totalAmount)} RWF
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {hasUnpricedItems && !hasPricedItems && (
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900 mb-1">Reservation Request</p>
+                        <p className="text-xs text-blue-700">
+                          No payment required. We'll contact you to confirm availability.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {hasUnpricedItems && hasPricedItems && (
+                  <div className="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-amber-900 mb-1">Mixed Cart</p>
+                        <p className="text-xs text-amber-700">
+                          Contains both paid bookings and reservation requests.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                {/* Payment Button - for priced items */}
+                {hasPricedItems && (
+                  <button
+                    onClick={handleCheckout}
+                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium py-3 rounded-lg transition-all duration-200 shadow hover:shadow-sm flex items-center justify-center gap-1"
+                  >
+                    Complete Payment
+                  </button>
+                )}
+
+                {/* Reservation Request Button - for unpriced items */}
+                {hasUnpricedItems && !hasPricedItems && (
+                  <button
+                    onClick={handleConfirmBookingsWithoutPayment}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-medium py-3 rounded-lg transition-all duration-200 shadow hover:shadow-sm flex items-center justify-center gap-1"
+                  >
+                    Request Reservation
+                  </button>
+                )}
+
+                {/* Both buttons for mixed carts */}
+                {hasPricedItems && hasUnpricedItems && (
+                  <button
+                    onClick={handleConfirmBookingsWithoutPayment}
+                    className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-sm font-medium py-3 rounded-lg transition-all duration-200 shadow hover:shadow-sm flex items-center justify-center gap-1"
+                  >
+                    Also Request Reservations
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <span>Secure checkout protected by SSL</span>
+                </div>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Order Summary & Checkout */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-3">
-          Order Summary
-        </h2>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>
-              Items ({cartCount} {cartCount === 1 ? "item" : "items"})
-            </span>
-            <span className="font-medium text-gray-800">{cartCount}</span>
-          </div>
-
-          {hasPricedItems && (
-            <>
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>Subtotal</span>
-                <span className="font-medium text-gray-800">
-                  {new Intl.NumberFormat("en-RW", {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  }).format(totalAmount)}{" "}
-                  RWF
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>Service Fee</span>
-                <span className="font-medium text-gray-800">0 RWF</span>
-              </div>
-
-              <div className="border-t border-gray-200 pt-3 mt-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-semibold text-gray-800">
-                    Total
-                  </span>
-                  <span className="text-2xl font-bold text-green-600">
-                    {new Intl.NumberFormat("en-RW", {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(totalAmount)}{" "}
-                    RWF
-                  </span>
-                </div>
-              </div>
-            </>
-          )}
-
-          {hasUnpricedItems && !hasPricedItems && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
-              <div className="flex items-start gap-2">
-                <svg
-                  className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div>
-                  <p className="text-sm font-semibold text-blue-800 mb-1">
-                    Reservation Request
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    No payment required. Submit your reservation request and
-                    we'll contact you to confirm availability and details.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {hasUnpricedItems && hasPricedItems && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
-              <div className="flex items-start gap-2">
-                <svg
-                  className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-                <div>
-                  <p className="text-sm font-semibold text-amber-800 mb-1">
-                    Mixed Cart
-                  </p>
-                  <p className="text-xs text-amber-700">
-                    Your cart contains bookings requiring payment and
-                    reservation requests. Use separate buttons below to complete
-                    each action.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Payment Button - for priced items */}
-        {hasPricedItems && (
-          <button
-            onClick={handleCheckout}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-              />
-            </svg>
-            Complete Payment
-          </button>
-        )}
-
-        {/* Reservation Request Button - for unpriced items */}
-        {hasUnpricedItems && !hasPricedItems && (
-          <button
-            onClick={handleConfirmBookingsWithoutPayment}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            Request Reservation
-          </button>
-        )}
-
-        {/* Both buttons for mixed carts */}
-        {hasPricedItems && hasUnpricedItems && (
-          <button
-            onClick={handleConfirmBookingsWithoutPayment}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 mt-3"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            Also Request Table Reservations
-          </button>
-        )}
-
-        <p className="text-xs text-center text-gray-500 mt-4">
-          {hasPricedItems &&
-            !hasUnpricedItems &&
-            "By proceeding, you agree to our terms and conditions"}
-          {!hasPricedItems &&
-            hasUnpricedItems &&
-            "No payment required now. We'll contact you to confirm your reservation."}
-          {hasPricedItems &&
-            hasUnpricedItems &&
-            "Complete payment for bookings, then submit your reservation requests."}
-        </p>
+        {/* Payment Modal */}
+        <BookingModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          bookingType="cart"
+          itemName={`${cartCount} ${cartCount === 1 ? "item" : "items"} in cart`}
+          onConfirmBooking={handlePaymentConfirm}
+          totalAmount={totalAmount}
+          currency="RWF"
+        />
       </div>
-
-      {/* Payment Modal */}
-      <BookingModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        bookingType="cart"
-        itemName={`${cartCount} ${cartCount === 1 ? "item" : "items"} in cart`}
-        onConfirmBooking={handlePaymentConfirm}
-        totalAmount={totalAmount}
-        currency="RWF"
-      />
     </div>
   );
 };

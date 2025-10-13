@@ -15,6 +15,11 @@ const ROUTE_FILTER_RULES = [
     show: false,
   },
   {
+    test: (path) => path.startsWith("/cart"),
+    category: "default",
+    show: false,
+  },
+  {
     test: (path) => path.startsWith("/hotel/"),
     category: "restStay",
     show: false,

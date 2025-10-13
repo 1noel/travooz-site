@@ -1,5 +1,3 @@
-// src/pages/Cart/Cart.jsx
-
 import React, { useState } from "react";
 import { useCart } from "../../context/useCart";
 import { useNavigate } from "react-router-dom";
@@ -159,7 +157,7 @@ const Cart = () => {
 
   if (cartCount === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-10 space-y-6">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5">
         {toast && (
           <Toast
             message={toast.message}
@@ -365,7 +363,7 @@ const Cart = () => {
   const totalAmount = calculateTotal();
 
   return (
-    <div className="max-w-4xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-10 space-y-6">
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5">
       {toast && (
         <Toast
           message={toast.message}
@@ -583,8 +581,16 @@ const Cart = () => {
                 <ul className="text-sm text-gray-600 space-y-1">
                   {Object.entries(item.metadata)
                     .filter(
-                      ([, value]) =>
-                        value !== undefined && value !== null && value !== ""
+                      ([key, value]) =>
+                        value !== undefined && 
+                        value !== null && 
+                        value !== "" &&
+                        !key.toLowerCase().includes('checkin') &&
+                        !key.toLowerCase().includes('checkout') &&
+                        !key.toLowerCase().includes('check-in') &&
+                        !key.toLowerCase().includes('check-out') &&
+                        !key.toLowerCase().includes('arrival') &&
+                        !key.toLowerCase().includes('departure')
                     )
                     .map(([key, value]) => (
                       <li key={key}>

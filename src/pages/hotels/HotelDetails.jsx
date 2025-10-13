@@ -929,7 +929,7 @@ const HotelDetails = () => {
         </div>
 
         <div className="mt-6">
-          <p className="text-lg text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 mb-4">
             <i className="fa fa-location-dot text-green-500"></i>{" "}
             {hotel.location}
           </p>
@@ -957,24 +957,15 @@ const HotelDetails = () => {
 
           {hotel.description && (
             <div className="mt-6">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+              <h2 className="text-lg font-bold text-gray-800 mb-3">
                 About this stay
               </h2>
-              <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                 {hotel.description}
               </p>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Rating Section */}
-      <div className="mb-8">
-        <RatingDisplay
-          averageRating={hotelRating.averageRating}
-          totalReviews={hotelRating.totalReviews}
-          onRateClick={handleRateClick}
-        />
       </div>
 
       {/* Rooms Section */}
@@ -989,7 +980,7 @@ const HotelDetails = () => {
         </div>
 
         {hotel.rooms && hotel.rooms.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {hotel.rooms.map((room) => {
               const roomState = roomActionState[room.id] ?? {};
               const { bookingLoading } = roomState;
@@ -1023,97 +1014,73 @@ const HotelDetails = () => {
               return (
                 <div
                   key={room.id}
-                  className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100 flex flex-col"
+                  className="overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white cursor-pointer rounded"
                 >
-                  <div className="w-full h-48">
-                    <img
-                      src={room.mainImage || room.image}
-                      alt={room.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="p-4 flex flex-col h-full">
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <h3 className="text-lg font-semibold text-gray-800 leading-tight">
-                        {room.name}
-                      </h3>
-                      {room.status && (
-                        <span
-                          className={`text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide ${getStatusBadgeClasses(
-                            room.status
-                          )}`}
-                        >
-                          {room.status}
-                        </span>
-                      )}
-                    </div>
+                  <img
+                    src={room.mainImage || room.image}
+                    alt={room.name}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="px-4 py-2">
+                    <h2 className="font-semibold text-gray-800">{room.name}</h2>
+                    {room.status && (
+                      <span
+                        className={`text-xs font-semibold px-2 py-1 rounded-full uppercase tracking-wide ${getStatusBadgeClasses(
+                          room.status
+                        )}`}
+                      >
+                        {room.status}
+                      </span>
+                    )}
 
                     {(room.shortDescription || room.description) && (
-                      <p className="text-sm text-gray-600 mb-4">
+                      <p className="text-xs text-gray-600 mt-1">
                         {room.shortDescription || room.description}
                       </p>
                     )}
 
                     {stats.length > 0 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                        {stats.map((stat, index) => (
-                          <div
-                            key={`${stat.label}-${index}`}
-                            className="flex items-center gap-2 text-sm text-gray-600"
-                          >
-                            <i className={`fa ${stat.icon} text-green-500`}></i>
-                            <span>{stat.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {displayedAmenities.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {displayedAmenities.map((amenity, index) => (
+                      <div className="flex items-center gap-2 mt-2">
+                        {stats.slice(0, 2).map((stat, index) => (
                           <span
-                            key={`${amenity}-${index}`}
-                            className="px-3 py-1 text-xs font-medium rounded-full bg-green-50 text-green-700 border border-green-100"
+                            key={`${stat.label}-${index}`}
+                            className="text-xs text-gray-500"
                           >
-                            {amenity}
+                            <i className={`fa ${stat.icon} mr-1 text-green-600`}></i>
+                            {stat.label}
                           </span>
                         ))}
-                        {remainingAmenitiesCount > 0 && (
-                          <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-                            +{remainingAmenitiesCount} more
-                          </span>
-                        )}
                       </div>
                     )}
 
-                    <div className="mt-auto pt-4 border-t border-gray-100 space-y-3">
-                      {room.price && (
-                        <p className="text-base font-semibold text-green-600 mb-4">
-                          {new Intl.NumberFormat("en-RW", {
-                            style: "currency",
-                            currency: room.currency || "RWF",
-                            currencyDisplay: "code",
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          }).format(room.price)}
-                          <span className="text-sm text-gray-500 ml-1">
-                            / night
-                          </span>
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleBookRoom(room)}
-                        disabled={bookingLoading}
-                        className={`w-full px-4 py-3 rounded-lg font-semibold transition-colors ${
-                          bookingLoading
-                            ? "bg-green-200 text-white cursor-wait"
-                            : "bg-green-500 hover:bg-green-600 text-white"
-                        }`}
-                      >
-                        {bookingLoading ? "Booking..." : "Book"}
-                      </button>
-                    </div>
+                    {room.price && (
+                      <p className="text-sm font-semibold text-green-600 mt-2">
+                        {new Intl.NumberFormat("en-RW", {
+                          style: "currency",
+                          currency: room.currency || "RWF",
+                          currencyDisplay: "code",
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }).format(room.price)}
+                        <span className="text-xs text-gray-500 ml-1">
+                          / night
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="px-4 py-2 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => handleBookRoom(room)}
+                      disabled={bookingLoading}
+                      className={`w-full px-3 py-2 rounded-lg font-medium text-xs transition-colors ${
+                        bookingLoading
+                          ? "bg-green-200 text-white cursor-wait"
+                          : "bg-green-500 hover:bg-green-600 text-white"
+                      }`}
+                    >
+                      {bookingLoading ? "Booking..." : "Book"}
+                    </button>
                   </div>
                 </div>
               );

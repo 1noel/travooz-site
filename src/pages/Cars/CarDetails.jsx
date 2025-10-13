@@ -470,17 +470,17 @@ const CarDetails = () => {
             <div className="space-y-6">
               {/* About This Car */}
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">
                   About This Car
                 </h3>
-                <p className="text-gray-700 leading-relaxed text-lg">
+                <p className="text-gray-700 leading-relaxed text-sm">
                   {car.description}
                 </p>
               </div>
 
               {/* Car Details */}
               <div>
-                <h4 className="text-xl font-bold text-gray-900 mb-4">
+                <h4 className="text-lg font-bold text-gray-900 mb-4">
                   Car Details
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
@@ -534,7 +534,7 @@ const CarDetails = () => {
               {/* Features */}
               {car.features && Object.keys(car.features).length > 0 && (
                 <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-6">
+                  <h4 className="text-lg font-bold text-gray-900 mb-6">
                     Car Features
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

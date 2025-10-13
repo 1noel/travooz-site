@@ -145,7 +145,6 @@ const Cars = () => {
     navigate(`/car/${car.id}`);
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
@@ -153,21 +152,22 @@ const Cars = () => {
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-3/4 mb-6"></div>
           <div className="flex gap-4 mb-6">
-            {Array.from({ length: 4 }, (_, i) => (
+            {Array.from({ length: 6 }, (_, i) => (
               <div key={i} className="h-8 bg-gray-200 rounded w-24"></div>
             ))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }, (_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 10 }, (_, i) => (
               <div
                 key={i}
-                className="bg-white rounded-lg shadow-sm overflow-hidden"
+                className="bg-white rounded shadow-sm overflow-hidden"
               >
                 <div className="h-48 bg-gray-200"></div>
-                <div className="p-4 space-y-3">
+                <div className="px-4 py-2 space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-full"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                   <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
                 </div>
               </div>
             ))}
@@ -177,26 +177,16 @@ const Cars = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-12">
-        <div className="text-center">
-          <div className="w-16 h-16 md:w-24 md:h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
-            <div className="w-8 h-8 md:w-12 md:h-12 bg-gray-300 rounded-lg"></div>
-          </div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
-            Unable to Load Cars
-          </h1>
-          <p className="text-gray-600 mb-6">
-            We're having trouble loading the car rentals. Please try again
-            later.
-          </p>
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
+        <div className="text-center py-10">
+          <p className="text-red-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
+            className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
-            Retry
+            Try Again
           </button>
         </div>
       </div>
@@ -204,111 +194,65 @@ const Cars = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10 pb-16">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-          Car Rentals
-        </h1>
+    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5 mt-10">
+      <h1 className="text-2xl font-bold mb-4">Car Rentals</h1>
+
+      <div className="flex flex-wrap gap-4">
+        {categories.map((category) => (
+          <span
+            key={category}
+            onClick={() => handleCategoryChange(category)}
+            className={`cursor-pointer pb-1 transition-colors ${
+              selectedCategory === category
+                ? "border-b-2 border-green-500 text-green-500"
+                : "hover:text-green-500"
+            }`}
+          >
+            {category}
+          </span>
+        ))}
       </div>
 
-      {/* Error message */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-3 text-red-600">
-            <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-            <span className="font-medium text-sm md:text-base">{error}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Category Filter */}
-      <div className="mb-10">
-        <div className="flex flex-wrap gap-4">
-          {categories.map((category) => (
-            <span
-              key={category}
-              onClick={() => handleCategoryChange(category)}
-              className={`cursor-pointer pb-1 transition-colors ${
-                selectedCategory === category
-                  ? "border-b-2 border-green-500 text-green-500"
-                  : "hover:text-green-500"
-              }`}
-            >
-              {category}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Cars Grid */}
-      {filteredCars.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-6">
-            <div className="w-16 h-16 md:w-24 md:h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-gray-300 rounded-lg"></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-5">
+        {filteredCars.map((car) => (
+          <div
+            key={car.id}
+            onClick={() => handleCarClick(car)}
+            className="overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white cursor-pointer rounded"
+          >
+            <img
+              src={car.mainImage}
+              alt={`${car.brand} ${car.model}`}
+              className="w-full h-48 object-cover"
+            />
+            <div className="px-4 py-2">
+              <h2 className="font-semibold text-gray-800">{car.brand} {car.model}</h2>
+              <p className="text-xs text-gray-600">
+                <i className="fa fa-location-dot"></i> {car.location}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {car.category} / {car.year}
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs text-gray-500">
+                  {car.seatCapacity} seats • {car.transmission}
+                </span>
+              </div>
+              <div className="mt-2">
+                <span className="font-bold text-green-600">
+                  {formatPrice(car.rates.daily, car.currency)}/day
+                </span>
+              </div>
             </div>
           </div>
-          <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">
-            No Cars Available
-          </h3>
-          <p className="text-gray-500 text-sm md:text-base">
-            {selectedCategory === "All"
-              ? "No cars are currently available for rent."
-              : `No cars found in the "${selectedCategory}" category.`}
+        ))}
+      </div>
+
+      {filteredCars.length === 0 && (
+        <div className="text-center py-10">
+          <p className="text-gray-600">
+            No cars found for "{selectedCategory}"
           </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8">
-          {filteredCars.map((car) => (
-            <div
-              key={car.id}
-              onClick={() => handleCarClick(car)}
-              className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group border border-gray-100 hover:border-green-200"
-            >
-              {/* Car Image */}
-              <div className="relative overflow-hidden">
-                <img
-                  src={car.mainImage}
-                  alt={`${car.brand} ${car.model}`}
-                  className="w-full h-48 md:h-56 object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-
-              {/* Car Content */}
-              <div className="p-4 md:p-6">
-                {/* Category Badge */}
-                <div className="mb-3">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                    {car.category}
-                  </span>
-                </div>
-
-                {/* Title */}
-                <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors leading-tight">
-                  {car.brand} {car.model}
-                </h2>
-
-                {/* Car Details */}
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
-                  {car.year} • {car.seatCapacity} seats • {car.transmission}
-                </p>
-
-                {/* Price and Button */}
-                <div className="flex items-center justify-between pt-4">
-                  <div>
-                    <span className="text-xl md:text-2xl font-bold text-green-600">
-                      {formatPrice(car.rates.daily)}/day
-                    </span>
-                  </div>
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                    View Details
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       )}
 

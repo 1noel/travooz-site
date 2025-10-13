@@ -530,17 +530,17 @@ const TourPackageDetails = () => {
             {activeTab === "overview" && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                    About This Tour
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    About this Tour
                   </h3>
-                  <p className="text-gray-700 leading-relaxed text-lg">
-                    {tourPackage.fullDescription || tourPackage.description}
+                  <p className="text-gray-700 leading-relaxed text-sm">
+                    {tourPackage.description}
                   </p>
                 </div>
 
                 {tourPackage.highlights && (
                   <div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-6">
+                    <h4 className="text-lg font-bold text-gray-900 mb-6">
                       Tour Highlights
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -559,10 +559,10 @@ const TourPackageDetails = () => {
                 )}
 
                 <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-4">
                     Tour Details
                   </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                     <div className="flex flex-col">
                       <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
                         Category

@@ -205,14 +205,14 @@ const ActivityDetails = () => {
           Activities
         </button>
         <span className="text-gray-400">{"/"}</span>
-        <span className="text-gray-600">{activity.name}</span>
+        <span className="text-gray-600 text-sm">{activity.name}</span>
       </nav>
 
       {/* Activity Header */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            <h1 className="text-xl font-bold text-gray-800 mb-2">
               {activity.name}
             </h1>
           </div>
@@ -271,10 +271,10 @@ const ActivityDetails = () => {
 
           {/* Activity Info */}
           <div className="bg-white rounded-lg shadow-sm p-5">
-            <h3 className="text-xl font-bold text-gray-800 mb-3">
+            <h3 className="text-lg font-bold text-gray-800 mb-3">
               About {activity.name}
             </h3>
-            <p className="text-gray-700 leading-relaxed mb-4">
+            <p className="text-gray-700 text-sm leading-relaxed mb-4">
               {activity.description}
             </p>
 
@@ -282,25 +282,25 @@ const ActivityDetails = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
               {activity.location && (
                 <div>
-                  <span className="font-medium text-gray-800">Location:</span>{" "}
+                  <span className="font-medium text-gray-800 text-xs">Location:</span>{" "}
                   {activity.location}
                 </div>
               )}
               {activity.capacity && (
                 <div>
-                  <span className="font-medium text-gray-800">Capacity:</span>{" "}
+                  <span className="font-medium text-gray-800 text-xs">Capacity:</span>{" "}
                   {activity.capacity} people
                 </div>
               )}
               {activity.schedule && (
                 <div>
-                  <span className="font-medium text-gray-800">Schedule:</span>{" "}
+                  <span className="font-medium text-gray-800 text-xs">Schedule:</span>{" "}
                   {activity.schedule}
                 </div>
               )}
               {activity.vendorName && (
                 <div className="md:col-span-2">
-                  <span className="font-medium text-gray-800">Provider:</span>{" "}
+                  <span className="font-medium text-gray-800 text-xs">Provider:</span>{" "}
                   {activity.vendorName}
                 </div>
               )}
@@ -315,7 +315,7 @@ const ActivityDetails = () => {
             {activity.price && (
               <div className="text-center mb-6">
                 <div className="text-3xl font-bold text-green-600">
-                  {new Intl.NumberFormat("en-RW", {
+                  {new Intl.NumberFormat("RW", {
                     style: "currency",
                     currency: "RWF",
                     minimumFractionDigits: 0,

@@ -123,7 +123,7 @@ const Eating = () => {
               <div key={i} className="h-8 bg-gray-200 rounded w-24"></div>
             ))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {Array.from({ length: 10 }, (_, i) => (
               <div
                 key={i}
@@ -180,7 +180,7 @@ const Eating = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-5">
         {filteredEatingPlaces.map((place) => (
           <div
             key={place.id}
@@ -190,7 +190,7 @@ const Eating = () => {
             <img
               src={place.image}
               alt={place.name}
-              className="w-full h-48 md:h-56 object-cover"
+              className="w-full h-48  object-cover"
             />
             <div className="px-4 py-2">
               <h2 className="font-semibold text-gray-800">{place.name}</h2>

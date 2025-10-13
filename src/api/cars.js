@@ -128,6 +128,7 @@ export const transformCarData = (car) => {
   const dailyRate = parseFloat(car.daily_rate) || 0;
   const weeklyRate = parseFloat(car.weekly_rate) || 0;
   const monthlyRate = parseFloat(car.monthly_rate) || 0;
+  const currency = car.currency || 'USD'; // Get currency from database
 
   // Determine category based on subcategory_id or car type
   const getCarCategory = (subcategoryId, brand, model) => {
@@ -178,6 +179,7 @@ export const transformCarData = (car) => {
       weekly: weeklyRate,
       monthly: monthlyRate,
     },
+    currency: currency,
     category: getCarCategory(car.subcategory_id, car.brand, car.model),
     isAvailable: car.is_available !== false, // Default to true if not specified
     mileage: car.mileage,
@@ -197,7 +199,7 @@ export const getAvailabilityStatus = (car) => {
 };
 
 // Format price display
-export const formatPrice = (price, currency = "USD") => {
+export const formatPrice = (price, currency) => {
   if (!price || price === 0) return "Contact for Price";
 
   const formattedPrice = new Intl.NumberFormat().format(price);
@@ -206,9 +208,14 @@ export const formatPrice = (price, currency = "USD") => {
     return `$${formattedPrice}`;
   } else if (currency === "RWF") {
     return `${formattedPrice} RWF`;
+  } else if (currency === "EUR") {
+    return `€${formattedPrice}`;
+  } else if (currency === "GBP") {
+    return `£${formattedPrice}`;
   }
 
-  return `$${formattedPrice}`;
+  // For any other currency, display as is with currency code
+  return `${formattedPrice} ${currency || 'USD'}`;
 };
 
 export default carServices;

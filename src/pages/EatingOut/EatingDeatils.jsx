@@ -336,14 +336,14 @@ const EatingDetails = () => {
           Eating Out
         </button>
         <span className="text-gray-400">{"/"}</span>
-        <span className="text-gray-600">{restaurant.name}</span>
+        <span className="text-gray-600 capitalize">{restaurant.name}</span>
       </nav>
 
       {/* Restaurant Header */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2 capitalize">
               {restaurant.name}
             </h1>
           </div>
@@ -398,7 +398,7 @@ const EatingDetails = () => {
           <div className="bg-white rounded-lg shadow-sm">
             {/* Description */}
             <div className=" p-5">
-              <h3 className="text-xl font-bold text-gray-800 mb-3">
+              <h3 className="text-lg font-bold text-gray-800 mb-3">
                 About {restaurant.name}
               </h3>
               <p className="text-gray-700 leading-relaxed mb-4">
@@ -408,7 +408,7 @@ const EatingDetails = () => {
 
             {/* Location & Contact Info */}
             <div className="p-5">
-              <h4 className="text-lg font-semibold text-gray-800 mb-3">
+              <h4 className="font-semibold text-gray-800 mb-3">
                 Location & Contact
               </h4>
               <div className="space-y-3">
@@ -477,7 +477,7 @@ const EatingDetails = () => {
           <div className="sticky top-4 space-y-6">
             {/* Menu Section */}
             <div className="bg-white rounded-lg shadow-sm p-4 max-h-96 overflow-y-auto">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Menu</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Menu</h3>
               {menuLoading ? (
                 <div className="space-y-4">
                   {[...Array(3)].map((_, index) => (
@@ -542,7 +542,7 @@ const EatingDetails = () => {
               )}
             </div>
             <div className="bg-white rounded-lg shadow-sm p-5">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
                 Reserve a Table
               </h3>
               <form className="space-y-4" onSubmit={handleRestaurantBooking}>

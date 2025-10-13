@@ -96,17 +96,17 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-5 bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="hidden lg:flex lg:col-span-2 bg-green-500 text-white flex-col justify-between p-8">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-6">
+      <div className="w-full max-w-3xl grid grid-cols-1 lg:grid-cols-5 bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="hidden lg:flex lg:col-span-2 bg-green-500 text-white flex-col justify-between p-6">
           <div>
-            <h2 className="text-3xl font-bold mb-4">Join Travooz</h2>
-            <p className="text-green-50 leading-relaxed">
+            <h2 className="text-lg font-bold mb-3">Join Travooz</h2>
+            <p className="text-green-50 leading-relaxed text-sm">
               Create your client account to save bookings, manage reservations,
               and enjoy personalised travel recommendations.
             </p>
           </div>
-          <div className="mt-12 text-sm text-green-100 space-y-2">
+          <div className="mt-8 text-xs text-green-100 space-y-1.5">
             <p>
               • Client role is automatically assigned and cannot be changed.
             </p>
@@ -115,12 +115,12 @@ const Register = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-3 p-8 sm:p-12">
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-800">
+        <div className="lg:col-span-3 p-4 sm:p-8">
+          <div className="mb-6">
+            <h1 className="text-xl font-bold text-gray-800">
               Create your account
             </h1>
-            <p className="text-gray-500 mt-2 text-sm">
+            <p className="text-gray-500 mt-1 text-sm">
               Already have an account?{" "}
               <Link
                 to="/sign-in"
@@ -131,8 +131,8 @@ const Register = () => {
             </p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full name
@@ -143,7 +143,7 @@ const Register = () => {
                   value={form.name}
                   onChange={handleChange}
                   placeholder="e.g. Jane Doe"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
                 />
               </div>
@@ -157,7 +157,7 @@ const Register = () => {
                   value={form.email}
                   onChange={handleChange}
                   placeholder="you@example.com"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
                 />
               </div>
@@ -171,7 +171,7 @@ const Register = () => {
                   value={form.phone}
                   onChange={handleChange}
                   placeholder="e.g. +250700000000"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
                 />
               </div>
@@ -183,7 +183,7 @@ const Register = () => {
                   name="gender"
                   value={form.gender}
                   onChange={handleChange}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
                 >
                   <option value="" disabled>
@@ -207,12 +207,12 @@ const Register = () => {
                 value={form.address}
                 onChange={handleChange}
                 placeholder="123 Main Street, Kigali"
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password
@@ -224,7 +224,7 @@ const Register = () => {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="Enter password"
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
                     required
                   />
                   <button
@@ -282,7 +282,7 @@ const Register = () => {
                     value={form.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirm password"
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
                     required
                   />
                   <button
@@ -334,13 +334,13 @@ const Register = () => {
             <input type="hidden" name="role" value="client" readOnly />
 
             {error && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-600 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-rose-50 border border-rose-200 text-rose-600 px-3 py-2 rounded-lg text-sm">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-green-50 border border-green-200 text-green-600 px-3 py-2 rounded-lg text-sm">
                 {success}
               </div>
             )}
@@ -348,7 +348,7 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+              className={`w-full py-2.5 px-4 rounded-lg font-semibold text-white transition-colors ${
                 loading
                   ? "bg-green-300 cursor-wait"
                   : "bg-green-500 hover:bg-green-600"

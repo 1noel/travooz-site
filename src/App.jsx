@@ -73,7 +73,7 @@ const AppContent = () => {
         <Route path="/sign-in" element={<Login />} />
       </Routes>
       <Whatsapp
-        phoneNumber="2348012345678"
+        phoneNumber="+250784214450"
         message="Hello! I have a question about Travooz."
       />
     </>
@@ -85,7 +85,7 @@ const App = () => {
     <AuthProvider>
       <CartProvider>
         <FilterProvider>
-          <div className="min-h-screen bg-gray-100">
+          <div className="min-h-screen bg-gray-50">
             <AppContent />
           </div>
         </FilterProvider>

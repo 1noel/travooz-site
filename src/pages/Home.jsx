@@ -14,7 +14,7 @@ const Home = () => {
   return (
     <main className="min-h-screen">
       <Categories />
-      <section className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5">
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5">
         {/* location */}
         <div className="">
           <Cities />
@@ -23,7 +23,7 @@ const Home = () => {
 
 
       {/* Holiday Rentals Promo Section */}
-      <section className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
         <div className="relative bg-gradient-to-r from-green-500 to-green-600 rounded-2xl overflow-hidden">
           <div className="px-6 md:px-8 py-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">

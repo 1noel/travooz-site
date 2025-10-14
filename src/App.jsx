@@ -26,7 +26,7 @@ import Register from "./pages/Auth/Register.jsx";
 import Login from "./pages/Auth/Login.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-
+import Footer from "./components/footer.jsx";
 import Whatsapp from "./components/Whatsapp";
 
 const AppContent = () => {
@@ -37,7 +37,7 @@ const AppContent = () => {
     <>
       <Header />
       {show && (
-        <section className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 mt-6">
+        <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 mt-6">
           <Filter />
         </section>
       )}
@@ -71,6 +71,7 @@ const AppContent = () => {
         phoneNumber="2348012345678"
         message="Hello! I have a question about Travooz."
       />
+      <Footer />
     </>
   );
 };
@@ -80,7 +81,7 @@ const App = () => {
     <AuthProvider>
       <CartProvider>
         <FilterProvider>
-          <div className="min-h-screen bg-gray-100">
+          <div className="min-h-screen bg-gray-50">
             <AppContent />
           </div>
         </FilterProvider>

@@ -44,7 +44,7 @@ const Blogs = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-12">
+      <div className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-12">
         <div className="text-center mb-12">
           <div className="h-12 bg-gray-200 rounded w-64 mx-auto mb-4 animate-pulse"></div>
           <div className="h-6 bg-gray-200 rounded w-96 mx-auto animate-pulse"></div>
@@ -66,7 +66,7 @@ const Blogs = () => {
   // Error state
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-12">
+      <div className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-12">
         <div className="text-center">
           <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
             <div className="w-12 h-12 bg-gray-300 rounded-lg"></div>
@@ -89,7 +89,7 @@ const Blogs = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6 md:py-10">
+    <div className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6 md:py-10">
       {/* Header */}
       <div className="text-center mb-10 md:mb-14">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">

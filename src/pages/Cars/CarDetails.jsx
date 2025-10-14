@@ -443,7 +443,7 @@ const CarDetails = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6">
+    <div className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-6">
       {/* Breadcrumb Navigation */}
       <nav className="mb-8 flex items-center space-x-3 text-sm">
         <button

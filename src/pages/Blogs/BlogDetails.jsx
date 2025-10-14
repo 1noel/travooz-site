@@ -106,7 +106,7 @@ const BlogDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10">
+      <div className="max-w-8xl mx-auto px-4 md:px-6 py-6 md:py-10">
         {/* Breadcrumb Navigation */}
         <nav className="mb-6 md:mb-8 flex items-center space-x-3 text-sm">
           <button

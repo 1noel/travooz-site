@@ -122,7 +122,7 @@ const Header = () => {
     <header className="bg-white text-black shadow-md sticky top-0 z-50">
       {/* Top Bar */}
       <div className="bg-green-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-10 text-sm">
             {/* Contact Information */}
             <div className="hidden md:flex items-center space-x-6">
@@ -179,7 +179,7 @@ const Header = () => {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0 w-32">

@@ -225,7 +225,7 @@ Contact: +250 780006775
   // Loading state
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="max-w-8xl mx-auto px-6 py-10">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
           <div className="space-y-4">
@@ -239,7 +239,7 @@ Contact: +250 780006775
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
+    <div className="max-w-8xl mx-auto px-6 py-10">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">

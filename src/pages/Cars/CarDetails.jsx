@@ -1,5 +1,3 @@
-// src/pages/Cars/CarDetails.jsx
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { carServices, transformCarData, formatPrice } from "../../api/cars";
@@ -16,10 +14,18 @@ const CarDetails = () => {
   const [selectedImage, setSelectedImage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState("");
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedDays, setSelectedDays] = useState("1 Day");
-  const [showDaysDropdown, setShowDaysDropdown] = useState(false);
+  const [pickupDate, setPickupDate] = useState("");
+  const [pickupTime, setPickupTime] = useState("10:00");
+  const [dropoffDate, setDropoffDate] = useState("");
+  const [dropoffTime, setDropoffTime] = useState("18:00");
+  const [pickupLocation, setPickupLocation] = useState(car?.location || "");
+  const [dropoffLocation, setDropoffLocation] = useState(car?.location || "");
+  const [specialRequests, setSpecialRequests] = useState("");
+  const [driverAge, setDriverAge] = useState("");
+  const [driverLicenseNumber, setDriverLicenseNumber] = useState("");
+  const [insuranceOption, setInsuranceOption] = useState("basic");
+  const [showPickupCalendar, setShowPickupCalendar] = useState(false);
+  const [showDropoffCalendar, setShowDropoffCalendar] = useState(false);
   const [toast, setToast] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -32,6 +38,32 @@ const CarDetails = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const calculateTotalDays = () => {
+    if (!pickupDate || !dropoffDate) return 1;
+    const pickup = new Date(pickupDate);
+    const dropoff = new Date(dropoffDate);
+    const diffTime = Math.abs(dropoff - pickup);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays || 1;
+  };
+
+  const calculateInsuranceCost = () => {
+    const days = calculateTotalDays();
+    const rates = {
+      basic: 2000,
+      premium: 5000,
+      comprehensive: 8000
+    };
+    return rates[insuranceOption] * days;
+  };
+
+  const calculateTotalAmount = () => {
+    const days = calculateTotalDays();
+    const dailyRate = car?.rates?.daily || 0;
+    const insuranceCost = calculateInsuranceCost();
+    return (dailyRate * days) + insuranceCost;
+  };
+
   const handleBookNow = () => {
     if (!isAuthenticated) {
       showToast("warning", "Please sign in to book a car");
@@ -39,15 +71,52 @@ const CarDetails = () => {
       return;
     }
 
+    // Validation
+    if (!pickupDate || !dropoffDate || !driverAge || !driverLicenseNumber) {
+      showToast("warning", "Please fill in all required fields");
+      return;
+    }
+
+    if (parseInt(driverAge) < 18) {
+      showToast("warning", "Driver must be at least 18 years old");
+      return;
+    }
+
+    if (new Date(pickupDate) >= new Date(dropoffDate)) {
+      showToast("warning", "Dropoff date must be after pickup date");
+      return;
+    }
+
     setShowBookingModal(true);
   };
 
-  const handleBookingConfirm = async (bookingData) => {
+  const handleBookingConfirm = async (additionalBookingData) => {
     try {
+      const bookingData = {
+        car_id: car.id,
+        pickup_date: pickupDate,
+        pickup_time: pickupTime,
+        dropoff_date: dropoffDate,
+        dropoff_time: dropoffTime,
+        daily_rate: car.rates.daily,
+        total_amount: calculateTotalAmount(),
+        security_deposit: car.securityDeposit || 20000,
+        pickup_location: pickupLocation,
+        dropoff_location: dropoffLocation,
+        special_requests: specialRequests,
+        driver_age: parseInt(driverAge),
+        driver_license_number: driverLicenseNumber,
+        insurance_option: insuranceOption,
+        insurance_cost: calculateInsuranceCost(),
+        status: "pending",
+        ...additionalBookingData
+      };
+
       const response = await carServices.bookCarRental(bookingData);
 
       // For now, show confirmation regardless of API response (until database is connected)
       console.log("Booking response:", response);
+      console.log("Complete booking data:", bookingData);
 
       // Close booking modal
       setShowBookingModal(false);
@@ -65,8 +134,28 @@ const CarDetails = () => {
       console.error("Booking error:", error);
 
       // Still show confirmation even if API fails (for testing without database)
+      const fallbackBookingData = {
+        car_id: car.id,
+        pickup_date: pickupDate,
+        pickup_time: pickupTime,
+        dropoff_date: dropoffDate,
+        dropoff_time: dropoffTime,
+        daily_rate: car.rates.daily,
+        total_amount: calculateTotalAmount(),
+        security_deposit: car.securityDeposit || 20000,
+        pickup_location: pickupLocation,
+        dropoff_location: dropoffLocation,
+        special_requests: specialRequests,
+        driver_age: parseInt(driverAge),
+        driver_license_number: driverLicenseNumber,
+        insurance_option: insuranceOption,
+        insurance_cost: calculateInsuranceCost(),
+        status: "pending",
+        ...additionalBookingData
+      };
+
       setShowBookingModal(false);
-      setConfirmedBooking(bookingData);
+      setConfirmedBooking(fallbackBookingData);
       setShowConfirmation(true);
       showToast(
         "success",
@@ -83,7 +172,7 @@ const CarDetails = () => {
   };
 
   // Calendar component
-  const CustomCalendar = () => {
+  const CustomCalendar = ({ onDateSelect, onClose, selectedDate }) => {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
@@ -116,8 +205,8 @@ const CarDetails = () => {
     const handleDateSelect = (day) => {
       const date = new Date(displayYear, displayMonth, day);
       const formattedDate = date.toLocaleDateString("en-CA"); // YYYY-MM-DD format
-      setSelectedDate(formattedDate);
-      setShowCalendar(false);
+      onDateSelect(formattedDate);
+      onClose();
     };
 
     const handlePrevMonth = () => {
@@ -238,15 +327,15 @@ const CarDetails = () => {
         {/* Footer */}
         <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
           <button
-            onClick={() => setShowCalendar(false)}
+            onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-sm font-medium"
           >
             Cancel
           </button>
           <button
             onClick={() => {
-              setSelectedDate("");
-              setShowCalendar(false);
+              onDateSelect("");
+              onClose();
             }}
             className="text-green-600 hover:text-green-700 text-sm font-medium"
           >
@@ -257,59 +346,7 @@ const CarDetails = () => {
     );
   };
 
-  // Custom Days Dropdown component
-  const CustomDaysDropdown = () => {
-    const dayOptions = [
-      { value: "1 Day", label: "1 Day" },
-      { value: "2 Days", label: "2 Days" },
-      { value: "3 Days", label: "3 Days" },
-      { value: "1 Week", label: "1 Week" },
-      { value: "2 Weeks", label: "2 Weeks" },
-      { value: "1 Month", label: "1 Month" },
-    ];
 
-    const handleDaySelect = (option) => {
-      setSelectedDays(option.value);
-      setShowDaysDropdown(false);
-    };
-
-    return (
-      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-2">
-        {dayOptions.map((option, index) => (
-          <button
-            key={option.value}
-            onClick={() => handleDaySelect(option)}
-            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-green-50 hover:text-green-600 transition-all duration-200 ${
-              selectedDays === option.value
-                ? "bg-green-50 text-green-600 font-medium"
-                : "text-gray-700"
-            } ${index === 0 ? "rounded-t-xl" : ""} ${
-              index === dayOptions.length - 1 ? "rounded-b-xl" : ""
-            }`}
-          >
-            <span className="font-medium">{option.label}</span>
-            {selectedDays === option.value && (
-              <span>
-                <svg
-                  className="w-5 h-5 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-    );
-  };
 
   useEffect(() => {
     const fetchCarData = async () => {
@@ -324,6 +361,10 @@ const CarDetails = () => {
           const transformedCar = transformCarData(carResponse.data);
           setCar(transformedCar);
           setSelectedImage(transformedCar.mainImage);
+          
+          // Set default locations
+          setPickupLocation(transformedCar.location || "");
+          setDropoffLocation(transformedCar.location || "");
 
           // Fetch all cars for related cars
           const allCarsResponse = await carServices.fetchCars();
@@ -411,14 +452,14 @@ const CarDetails = () => {
         >
           Home
         </button>
-        <span className="text-gray-400">/</span>
+        <span className="text-gray-400">{"/"}</span>
         <button
           onClick={() => navigate("/cars")}
           className="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-colors"
         >
           Cars
         </button>
-        <span className="text-gray-400">/</span>
+        <span className="text-gray-400">{"/"}</span>
         <span className="text-gray-600 font-medium truncate">
           {car.brand} {car.model}
         </span>
@@ -427,215 +468,399 @@ const CarDetails = () => {
       {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2">
           {/* Car Title */}
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-8">
             {car.brand} {car.model}
           </h1>
 
-          {/* Image Gallery */}
-          <div className="space-y-4">
+          {/* Main Image */}
+          <div className="mb-6">
             <img
               src={selectedImage}
               alt={`${car.brand} ${car.model}`}
-              className="w-full h-96 object-cover rounded-xl shadow-lg"
+              className="w-full h-64 md:h-80 lg:h-96 object-cover rounded-xl shadow-lg"
             />
-            {car.images && car.images.length > 1 && (
-              <div className="grid grid-cols-5 gap-3">
-                {car.images.slice(0, 5).map((img, index) => (
-                  <button
+          </div>
+
+          {/* Image Gallery */}
+          {car.images && car.images.length > 1 && (
+            <div className="mb-8">
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {car.images.map((img, index) => (
+                  <div
                     key={img.id}
-                    onClick={() => setSelectedImage(img.url)}
-                    className={`rounded-lg overflow-hidden border-2 ${
+                    className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                       selectedImage === img.url
-                        ? "border-green-500"
-                        : "border-transparent"
+                        ? "border-green-500 ring-2 ring-green-200"
+                        : "border-gray-200 hover:border-green-300"
                     }`}
+                    onClick={() => setSelectedImage(img.url)}
                   >
                     <img
                       src={img.url}
                       alt={`${car.brand} ${car.model} ${index + 1}`}
-                      className="w-full h-24 object-cover"
+                      className="w-20 h-16 md:w-24 md:h-20 object-cover"
                     />
-                  </button>
+                  </div>
                 ))}
               </div>
-            )}
-          </div>
-
-          {/* Details Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 space-y-8">
-            {/* About This Car */}
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                About This Car
-              </h3>
-              <p className="text-gray-700 leading-relaxed text-lg">
-                {car.description}
-              </p>
             </div>
-            {/* Car Details */}
-            <div>
-              <h4 className="text-xl font-bold text-gray-900 mb-4">
-                Car Details
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
-                <div className="flex flex-col">
-                  <span className="text-gray-500 text-xs uppercase mb-1">
-                    Location
-                  </span>
-                  <span className="font-semibold">{car.location}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-gray-500 text-xs uppercase mb-1">
-                    Year
-                  </span>
-                  <span className="font-semibold">{car.year}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-gray-500 text-xs uppercase mb-1">
-                    Seats
-                  </span>
-                  <span className="font-semibold">
-                    {car.seatCapacity} people
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-gray-500 text-xs uppercase mb-1">
-                    Transmission
-                  </span>
-                  <span className="font-semibold">{car.transmission}</span>
-                </div>
+          )}
+
+          {/* Tab Content */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            <div className="space-y-6">
+              {/* About This Car */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">
+                  About This Car
+                </h3>
+                <p className="text-gray-700 leading-relaxed text-sm">
+                  {car.description}
+                </p>
               </div>
-              {car.color && (
-                <div className="mt-4">
+
+              {/* Car Details */}
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 mb-4">
+                  Car Details
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
                   <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs uppercase mb-1">
-                      Color
+                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                      Location
                     </span>
-                    <span className="font-semibold">{car.color}</span>
+                    <span className="text-gray-900 font-semibold">
+                      {car.location}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                      Year
+                    </span>
+                    <span className="text-gray-900 font-semibold">
+                      {car.year}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                      Seats
+                    </span>
+                    <span className="text-gray-900 font-semibold">
+                      {car.seatCapacity} people
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                      Transmission
+                    </span>
+                    <span className="text-gray-900 font-semibold">
+                      {car.transmission}
+                    </span>
+                  </div>
+                </div>
+                {car.color && (
+                  <div className="mt-4">
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">
+                        Color
+                      </span>
+                      <span className="text-gray-900 font-semibold">
+                        {car.color}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Features */}
+              {car.features && Object.keys(car.features).length > 0 && (
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-6">
+                    Car Features
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(car.features)
+                      .filter(([, value]) => value === true)
+                      .map(([key]) => (
+                        <div
+                          key={key}
+                          className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <span className="text-gray-800 font-medium leading-relaxed capitalize">
+                            {key}
+                          </span>
+                        </div>
+                      ))}
                   </div>
                 </div>
               )}
             </div>
-            {/* Features */}
-            {car.features && Object.keys(car.features).length > 0 && (
-              <div>
-                <h4 className="text-xl font-bold text-gray-900 mb-6">
-                  Car Features
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(car.features)
-                    .filter(([, value]) => value === true)
-                    .map(([key]) => (
-                      <div
-                        key={key}
-                        className="p-4 bg-gray-50 border border-gray-200 rounded-lg"
-                      >
-                        <span className="font-medium capitalize">{key}</span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Booking Sidebar */}
         <div className="lg:col-span-1">
-          <div className="sticky top-24">
+          <div className="sticky top-4">
             <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-8">
               <div className="text-center mb-6">
                 <div className="bg-green-600 text-white p-4 rounded-xl mb-4">
-                  <span className="text-3xl font-bold">
-                    From {formatPrice(car.rates.daily, "$")}/day
+                  <span className="text-xl font-bold">
+                    {formatPrice(car.rates.daily, "RWF")}/day
                   </span>
-                  <div className="text-green-100 text-sm mt-1">per day</div>
                 </div>
               </div>
 
               <div className="space-y-6 mb-8">
-                <div className="relative">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Preferred Date
-                  </label>
+                {/* Pickup Date and Time */}
+                <div className="grid grid-cols-2 gap-4">
                   <div className="relative">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Pickup Date *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={
+                          pickupDate
+                            ? new Date(pickupDate).toLocaleDateString("en-US", {
+                                weekday: "short",
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })
+                            : ""
+                        }
+                        placeholder="Select pickup date"
+                        readOnly
+                        onClick={() => setShowPickupCalendar(!showPickupCalendar)}
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer text-sm"
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    </div>
+                    {showPickupCalendar && (
+                      <CustomCalendar
+                        onDateSelect={setPickupDate}
+                        onClose={() => setShowPickupCalendar(false)}
+                        selectedDate={pickupDate}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Pickup Time
+                    </label>
+                    <input
+                      type="time"
+                      value={pickupTime}
+                      onChange={(e) => setPickupTime(e.target.value)}
+                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Dropoff Date and Time */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Dropoff Date *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={
+                          dropoffDate
+                            ? new Date(dropoffDate).toLocaleDateString("en-US", {
+                                weekday: "short",
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })
+                            : ""
+                        }
+                        placeholder="Select dropoff date"
+                        readOnly
+                        onClick={() => setShowDropoffCalendar(!showDropoffCalendar)}
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer text-sm"
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    </div>
+                    {showDropoffCalendar && (
+                      <CustomCalendar
+                        onDateSelect={setDropoffDate}
+                        onClose={() => setShowDropoffCalendar(false)}
+                        selectedDate={dropoffDate}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Dropoff Time
+                    </label>
+                    <input
+                      type="time"
+                      value={dropoffTime}
+                      onChange={(e) => setDropoffTime(e.target.value)}
+                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Pickup and Dropoff Locations */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Pickup Location
+                    </label>
                     <input
                       type="text"
-                      value={
-                        selectedDate
-                          ? new Date(selectedDate).toLocaleDateString("en-US", {
-                              weekday: "short",
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : ""
-                      }
-                      placeholder="Select a date"
-                      readOnly
-                      onClick={() => setShowCalendar(!showCalendar)}
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                      value={pickupLocation}
+                      onChange={(e) => setPickupLocation(e.target.value)}
+                      placeholder="Pickup location"
+                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 text-sm"
                     />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        ></path>
-                      </svg>
-                    </div>
                   </div>
-                  {showCalendar && <CustomCalendar />}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Dropoff Location
+                    </label>
+                    <input
+                      type="text"
+                      value={dropoffLocation}
+                      onChange={(e) => setDropoffLocation(e.target.value)}
+                      placeholder="Dropoff location"
+                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 text-sm"
+                    />
+                  </div>
                 </div>
 
-                <div className="relative">
+                {/* Driver Information */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Driver Age *
+                    </label>
+                    <input
+                      type="number"
+                      min="18"
+                      max="99"
+                      value={driverAge}
+                      onChange={(e) => setDriverAge(e.target.value)}
+                      placeholder="Driver age"
+                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      License Number *
+                    </label>
+                    <input
+                      type="text"
+                      value={driverLicenseNumber}
+                      onChange={(e) => setDriverLicenseNumber(e.target.value)}
+                      placeholder="Driver license number"
+                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Insurance Options */}
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Number of Days
+                    Insurance Coverage
                   </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowDaysDropdown(!showDaysDropdown)}
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
-                    >
-                      <span className="font-medium">{selectedDays}</span>
-                      <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          showDaysDropdown ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M19 9l-7 7-7-7"
-                        ></path>
-                      </svg>
-                    </button>
-                    {showDaysDropdown && <CustomDaysDropdown />}
+                  <div className="space-y-3">
+                    <label className="flex items-center p-3 border-2 border-gray-200 rounded-xl hover:border-green-300 cursor-pointer transition-all">
+                      <input
+                        type="radio"
+                        name="insurance"
+                        value="basic"
+                        checked={insuranceOption === "basic"}
+                        onChange={(e) => setInsuranceOption(e.target.value)}
+                        className="mr-3 text-green-600"
+                      />
+                      <div>
+                        <div className="font-medium text-gray-800">Basic Coverage</div>
+                        <div className="text-sm text-gray-600">RWF 2,000/day - Basic liability coverage</div>
+                      </div>
+                    </label>
+                    <label className="flex items-center p-3 border-2 border-gray-200 rounded-xl hover:border-green-300 cursor-pointer transition-all">
+                      <input
+                        type="radio"
+                        name="insurance"
+                        value="premium"
+                        checked={insuranceOption === "premium"}
+                        onChange={(e) => setInsuranceOption(e.target.value)}
+                        className="mr-3 text-green-600"
+                      />
+                      <div>
+                        <div className="font-medium text-gray-800">Premium Coverage</div>
+                        <div className="text-sm text-gray-600">RWF 5,000/day - Comprehensive coverage</div>
+                      </div>
+                    </label>
+                    <label className="flex items-center p-3 border-2 border-gray-200 rounded-xl hover:border-green-300 cursor-pointer transition-all">
+                      <input
+                        type="radio"
+                        name="insurance"
+                        value="comprehensive"
+                        checked={insuranceOption === "comprehensive"}
+                        onChange={(e) => setInsuranceOption(e.target.value)}
+                        className="mr-3 text-green-600"
+                      />
+                      <div>
+                        <div className="font-medium text-gray-800">Comprehensive Coverage</div>
+                        <div className="text-sm text-gray-600">RWF 8,000/day - Full coverage with zero deductible</div>
+                      </div>
+                    </label>
                   </div>
                 </div>
 
+                {/* Special Requests */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Special Requests
                   </label>
                   <textarea
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 h-24 resize-none transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300"
-                    placeholder="Any special requirements or requests..."
-                  ></textarea>
+                    value={specialRequests}
+                    onChange={(e) => setSpecialRequests(e.target.value)}
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 h-20 resize-none transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-sm"
+                    placeholder="Child seat, GPS, additional driver, etc."
+                  />
                 </div>
+
+                {/* Booking Summary */}
+                {pickupDate && dropoffDate && (
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <h4 className="font-semibold text-gray-800 mb-3">Booking Summary</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Rental Duration:</span>
+                        <span className="font-medium">{calculateTotalDays()} days</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Daily Rate:</span>
+                        <span className="font-medium">{formatPrice(car.rates.daily, "RWF")}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Insurance Cost:</span>
+                        <span className="font-medium">RWF {calculateInsuranceCost().toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2 font-semibold text-base">
+                        <span>Total Amount:</span>
+                        <span className="text-green-600">RWF {calculateTotalAmount().toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -678,32 +903,37 @@ const CarDetails = () => {
 
       {/* Related Cars */}
       {relatedCars.length > 0 && (
-        <section className="mt-12 pt-8 border-t border-gray-200">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">
+        <section className="border-t border-gray-200 pt-8 md:pt-12">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8">
             Similar Cars
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
             {relatedCars.map((relatedCar) => (
               <article
                 key={relatedCar.id}
                 onClick={() => navigate(`/car/${relatedCar.id}`)}
-                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 hover:border-green-200 group"
               >
                 <img
                   src={relatedCar.mainImage}
                   alt={`${relatedCar.brand} ${relatedCar.model}`}
-                  className="w-full h-48 object-cover rounded-t-xl"
+                  className="w-full h-40 md:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="p-4">
-                  <h4 className="font-semibold text-gray-800">
+                <div className="p-4 md:p-6">
+                  <h4 className="font-semibold text-gray-900 mb-2 hover:text-green-600 transition-colors text-base md:text-lg group-hover:text-green-600">
                     {relatedCar.brand} {relatedCar.model}
                   </h4>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-gray-600 text-sm mb-3">
                     {relatedCar.year} • {relatedCar.seatCapacity} seats
                   </p>
-                  <p className="text-lg font-bold text-green-600 mt-2">
-                    {formatPrice(relatedCar.rates.daily)}/day
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-green-600">
+                      {formatPrice(relatedCar.rates.daily, "RWF")}/day
+                    </span>
+                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                      {relatedCar.category}
+                    </span>
+                  </div>
                 </div>
               </article>
             ))}
@@ -711,6 +941,7 @@ const CarDetails = () => {
         </section>
       )}
 
+      {/* Toast Notification */}
       {toast && (
         <Toast
           type={toast.type}
@@ -718,15 +949,19 @@ const CarDetails = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Car Booking Modal */}
       <BookingModal
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
         bookingType="car rental"
         itemName={`${car.brand} ${car.model}`}
         onConfirmBooking={handleBookingConfirm}
-        totalAmount={car.rates.daily}
-        currency="USD"
+        totalAmount={calculateTotalAmount()}
+        currency="RWF"
       />
+
+      {/* Booking Confirmation */}
       <BookingConfirmation
         isOpen={showConfirmation}
         onClose={handleConfirmationClose}

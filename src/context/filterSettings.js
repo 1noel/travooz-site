@@ -37,7 +37,7 @@ const ROUTE_FILTER_RULES = [
   {
     test: (path) => path.startsWith("/cars"),
     category: "carRental",
-    show: true,
+    show: false,
   },
   {
     test: (path) => path.startsWith("/restaurant/"),
@@ -47,12 +47,12 @@ const ROUTE_FILTER_RULES = [
   {
     test: (path) => path.startsWith("/eating-out"),
     category: "eatingOut",
-    show: true,
+    show: false,
   },
   {
     test: (path) => path.startsWith("/activities"),
     category: "activities",
-    show: true,
+    show: false,
   },
   {
     test: (path) => path.startsWith("/tour-package/"),
@@ -62,7 +62,7 @@ const ROUTE_FILTER_RULES = [
   {
     test: (path) => path.startsWith("/tour-packages"),
     category: "tourPackages",
-    show: true,
+    show: false,
   },
   {
     test: (path) => path.startsWith("/blogs"),

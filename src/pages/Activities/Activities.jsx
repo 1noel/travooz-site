@@ -387,14 +387,15 @@ const Activities = () => {
         </h1>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+      {/* Search and Filters - Hidden */}
+      <div className="hidden bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Search Activities
             </label>
+
             <div className="relative">
               <input
                 type="text"

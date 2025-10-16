@@ -182,23 +182,23 @@ const Header = () => {
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0 w-32">
+          <div className="flex-shrink-0 w-24 sm:w-32">
             <Link to="/" className="text-2xl font-bold tracking-wider">
-              <img src={logo} alt="Travooz Logo" />
+              <img src={logo} alt="Travooz Logo" className="h-8 sm:h-auto" />
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-2">
+          {/* Navigation - Responsive */}
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 flex-1 justify-center max-w-2xl">
             {loading ? (
               // Loading skeleton
               <>
                 {Array.from({ length: 4 }, (_, index) => (
-                  <div key={index} className="px-3 py-2 rounded-md bg-gray-200 animate-pulse h-9 w-24" />
+                  <div key={index} className="px-1.5 lg:px-2 py-1.5 rounded bg-gray-200 animate-pulse h-7 w-12 lg:w-20" />
                 ))}
               </>
             ) : (
-              // Categories
+              // Categories - Responsive display
               categories.slice(0, 6).map((category) => {
                 const { filterKey } = resolveCategoryConfig(category.name);
                 const isActive = filterKey && filterKey === activeCategory;
@@ -207,7 +207,7 @@ const Header = () => {
                   <button
                     key={category.id}
                     onClick={() => handleCategoryClick(category.name)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-1 px-1.5 lg:px-2 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap ${
                       isActive
                         ? "bg-green-100 text-green-700"
                         : "text-gray-700 hover:bg-green-50 hover:text-green-600"
@@ -215,21 +215,24 @@ const Header = () => {
                     title={category.description}
                   >
                     <i className={`${category.icon} text-xs`}></i>
-                    <span>{category.name}</span>
+                    <span className="hidden lg:inline text-xs">{category.name}</span>
+                    <span className="lg:hidden text-xs">
+                      {category.name.length > 6 ? category.name.substring(0, 6) + '...' : category.name}
+                    </span>
                   </button>
                 );
               })
             )}
           </nav>
 
-          {/* Desktop User Actions */}
-          <div className="hidden lg:flex items-center space-x-4">
+          {/* User Actions - Responsive */}
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
             <Link
               to="/cart"
-              className="relative flex items-center gap-2 px-3 py-2 rounded-md hover:bg-green-600 transition-colors"
+              className="relative flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-md hover:bg-green-600 transition-colors"
             >
               <i className="fa fa-shopping-cart"></i>
-              <span>Cart</span>
+              <span className="hidden lg:inline">Cart</span>
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white text-xs font-bold">
                   {cartCount}
@@ -237,14 +240,14 @@ const Header = () => {
               )}
             </Link>
 
-            <div className="w-px h-6 bg-green-400"></div>
+            <div className="w-px h-6 bg-green-400 hidden lg:block"></div>
 
             {isAuthenticated ? (
               <div className="relative group">
-                <button className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-green-600 transition-colors">
+                <button className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-md hover:bg-green-600 transition-colors">
                   <i className="fa fa-user-circle"></i>
-                  <span>{user?.name || "Account"}</span>
-                  <i className="fa fa-chevron-down text-xs opacity-70"></i>
+                  <span className="hidden lg:inline">{user?.name || "Account"}</span>
+                  <i className="fa fa-chevron-down text-xs opacity-70 hidden lg:inline"></i>
                 </button>
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 invisible group-hover:visible">
                   <div className="px-4 py-2 text-sm text-gray-700">
@@ -264,16 +267,17 @@ const Header = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 lg:space-x-2">
                 <Link
                   to="/sign-in"
-                  className="px-4 py-2 rounded-md text-sm font-medium hover:bg-green-600 transition-colors"
+                  className="px-2 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium hover:bg-green-600 transition-colors"
                 >
-                  Sign in
+                  <span className="lg:hidden">In</span>
+                  <span className="hidden lg:inline">Sign in</span>
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-white text-green-500 px-4 py-2 rounded-md text-sm font-medium hover:bg-green-100 transition-colors"
+                  className="bg-white text-green-500 px-2 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium hover:bg-green-100 transition-colors"
                 >
                   Register
                 </Link>
@@ -282,18 +286,18 @@ const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center">
+          <div className="md:hidden flex items-center">
             <Link to="/cart" className="relative mr-4">
               <i className="fa fa-shopping-cart text-xl"></i>
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-green-500 text-xs font-bold">
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
                   {cartCount}
                 </span>
               )}
             </Link>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-green-600 focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-black hover:bg-gray-100 focus:outline-none"
             >
               <i
                 className={`fa ${
@@ -305,17 +309,24 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {/* Categories in mobile menu */}
+      {/* Small Screen Categories - Horizontal Scroll */}
+      <div className="md:hidden bg-white border-t border-gray-100">
+        <div className="px-4 py-3">
+          <div 
+            className="flex overflow-x-auto space-x-3" 
+            style={{
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitScrollbar: { display: 'none' }
+            }}
+          >
             {loading ? (
-              <div className="flex flex-col space-y-2">
-                {Array.from({ length: 4 }, (_, index) => (
-                  <div key={index} className="px-3 py-2 rounded-md bg-gray-200 animate-pulse h-10" />
+              // Loading skeleton
+              <>
+                {Array.from({ length: 6 }, (_, index) => (
+                  <div key={index} className="flex-shrink-0 w-16 h-12 bg-gray-200 animate-pulse rounded-md" />
                 ))}
-              </div>
+              </>
             ) : (
               categories.map((category) => {
                 const { filterKey } = resolveCategoryConfig(category.name);
@@ -325,62 +336,126 @@ const Header = () => {
                   <button
                     key={category.id}
                     onClick={() => handleCategoryClick(category.name)}
-                    className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                    className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-12 rounded-md text-xs font-medium transition-colors ${
                       isActive
-                        ? "bg-green-600 text-white"
-                        : "text-white hover:bg-green-600"
+                        ? "bg-green-500 text-white shadow-md"
+                        : "bg-gray-50 text-gray-600 hover:bg-green-50 hover:text-green-600 border border-gray-200"
                     }`}
+                    title={category.description}
                   >
-                    <i className={`${category.icon} w-5`}></i>
-                    <span>{category.name}</span>
+                    <i className={`${category.icon} text-sm mb-0.5`}></i>
+                    <span className="leading-tight text-center px-0.5 text-xs">
+                      {category.name.length > 8 ? 
+                        category.name.split(' ').map(word => word.substring(0, 3)).join(' ') : 
+                        category.name
+                      }
+                    </span>
                   </button>
                 );
               })
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-gray-50 border-t">
+          <div className="px-4 pt-4 pb-3 space-y-2">
+            {/* Categories in mobile menu */}
+            {loading ? (
+              <div className="flex flex-col space-y-2">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <div key={index} className="px-3 py-2 rounded-md bg-gray-200 animate-pulse h-10" />
+                ))}
+              </div>
+            ) : (
+              <>
+                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
+                  Categories
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map((category) => {
+                    const { filterKey } = resolveCategoryConfig(category.name);
+                    const isActive = filterKey && filterKey === activeCategory;
+                    
+                    return (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategoryClick(category.name)}
+                        className={`flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
+                          isActive
+                            ? "bg-green-500 text-white shadow-md"
+                            : "bg-white text-gray-700 hover:bg-green-50 hover:text-green-600 border border-gray-200"
+                        }`}
+                      >
+                        <i className={`${category.icon} text-base flex-shrink-0`}></i>
+                        <span className="leading-tight">{category.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
             
-            <div className="border-t border-green-400 mt-4 pt-4">
-              <NavLink to="/blogs" onClick={() => setIsMobileMenuOpen(false)}>
-                <i className="fa fa-newspaper w-5"></i>
+            <div className="border-t border-gray-200 mt-4 pt-4">
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
+                More
+              </h3>
+              <button
+                onClick={() => {
+                  navigate('/blogs');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-600 bg-white border border-gray-200"
+              >
+                <i className="fa fa-newspaper text-base"></i>
                 <span>Travel Blogs</span>
-              </NavLink>
+              </button>
             </div>
           </div>
-          <div className="pt-4 pb-3 border-t border-green-400">
+          <div className="pt-4 pb-4 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 px-4">
+              Account
+            </h3>
             {isAuthenticated ? (
-              <div className="px-2 space-y-2">
-                <div className="flex items-center px-3 mb-3">
-                  <i className="fa fa-user-circle text-2xl mr-3"></i>
+              <div className="px-4 space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                  <i className="fa fa-user-circle text-2xl text-green-500"></i>
                   <div>
-                    <div className="text-base font-medium text-white">
+                    <div className="text-base font-medium text-gray-900">
                       {user?.name || "Account"}
                     </div>
-                    <div className="text-sm font-medium text-green-200">
+                    <div className="text-sm text-gray-500 truncate">
                       {user?.email}
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-green-600"
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 bg-white border border-gray-200"
                 >
-                  Sign Out
+                  <i className="fa fa-sign-out-alt text-base"></i>
+                  <span>Sign Out</span>
                 </button>
               </div>
             ) : (
-              <div className="px-2 space-y-2">
+              <div className="px-4 space-y-3">
                 <Link
                   to="/sign-in"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-green-600"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-white bg-green-500 hover:bg-green-600"
                 >
-                  Sign in
+                  <i className="fa fa-sign-in-alt"></i>
+                  <span>Sign In</span>
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block bg-white text-green-500 px-3 py-2 rounded-md text-base font-medium text-center"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-green-600 bg-white border-2 border-green-500 hover:bg-green-50"
                 >
-                  Register
+                  <i className="fa fa-user-plus"></i>
+                  <span>Register</span>
                 </Link>
               </div>
             )}

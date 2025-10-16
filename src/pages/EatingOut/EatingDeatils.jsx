@@ -617,13 +617,13 @@ const EatingDetails = () => {
 
                           {/* Menu Item Details */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-semibold text-gray-800 text-base leading-tight">
+                            <div className="flex justify-between capitalize   items-start mb-2">
+                              <h4 className="font-semibold text-gray-800 text-base lowercase  leading-tight">
                                 {item.name}
                               </h4>
                             </div>
                             
-                            <p className="text-gray-600 text-sm leading-relaxed mb-3 line-clamp-2">
+                            <p className="text-gray-900 text-sm leading-relaxed mb-3 line-clamp-2">
                               {item.description || "Delicious dish prepared with care and quality ingredients."}
                             </p>
                             

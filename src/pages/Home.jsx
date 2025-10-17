@@ -13,6 +13,25 @@ const Home = () => {
     navigate("/hotels");
   };
 
+  const banners = [
+    {
+      imageUrl:
+        "https://i.pinimg.com/1200x/b5/24/85/b52485be31f7b08774a0578d5dbcefc5.jpg",
+      title: "Plan Your Next Getaway",
+      description: "Discover amazing places at unbeatable prices.",
+      buttonText: "Explore Now",
+      buttonLink: "/",
+    },
+    {
+      imageUrl:
+        "https://africanrocksafaris.com/wp-content/uploads/2022/05/Nyungwe-Canopy-Walk.jpg",
+      title: "New Adventures Await",
+      description: "Find unique experiences and create lasting memories.",
+      buttonText: "Discover More",
+      buttonLink: "/",
+    },
+  ];
+
   return (
     <main className="min-h-screen">
       <Categories />
@@ -117,13 +136,7 @@ const Home = () => {
 
       {/* Ad Banner Section */}
       <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
-        <AdBanner
-          imageUrl="https://i.pinimg.com/1200x/b5/24/85/b52485be31f7b08774a0578d5dbcefc5.jpg"
-          title="Plan Your Next Getaway"
-          description="Discover amazing places at unbeatable prices."
-          buttonText="Explore Now"
-          buttonLink="/deals"
-        />
+        <AdBanner banners={banners} />
       </section>
 
       {/* Travel Deals Section */}

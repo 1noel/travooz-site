@@ -3,21 +3,24 @@ import React from "react";
 const deals = [
   {
     id: 1,
-    imageUrl: "/images/msnz.jpg",
+    imageUrl:
+      "https://i.pinimg.com/1200x/29/c6/d9/29c6d9f0c66cbefe2dfd664176627428.jpg",
     title: "Weekend in Musanze",
     description: "Explore the stunning volcanoes and serene lakes.",
     price: "$250",
   },
   {
     id: 2,
-    imageUrl: "/images/gisenyi.jpg",
+    imageUrl:
+      "https://i.pinimg.com/1200x/b1/52/e4/b152e45ff0e47a68a068c3d84c6084e1.jpg",
     title: "Beach Getaway in Rubavu",
     description: "Relax on the shores of Lake Kivu.",
     price: "$180",
   },
   {
     id: 3,
-    imageUrl: "/images/mesuim.jpg",
+    imageUrl:
+      "https://i.pinimg.com/1200x/27/9f/6b/279f6bf7ace4157f01170daf9f1b2cb2.jpg",
     title: "Cultural Tour in Huye",
     description: "Discover the history and culture of Rwanda.",
     price: "$150",

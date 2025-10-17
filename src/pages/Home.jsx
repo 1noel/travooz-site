@@ -118,7 +118,7 @@ const Home = () => {
       {/* Ad Banner Section */}
       <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
         <AdBanner
-          imageUrl="/images/radsn.jpg"
+          imageUrl="https://i.pinimg.com/1200x/b5/24/85/b52485be31f7b08774a0578d5dbcefc5.jpg"
           title="Plan Your Next Getaway"
           description="Discover amazing places at unbeatable prices."
           buttonText="Explore Now"

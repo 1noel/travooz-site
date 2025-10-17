@@ -6,6 +6,7 @@ import Hotels from "./hotels/Hotels";
 import AdBanner from "../components/AdBanner";
 import TravelDeals from "../components/TravelDeals";
 import SuggestionCards from "../components/SuggestionCards";
+import DownloadApp from "../components/DownloadApp";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -144,6 +145,9 @@ const Home = () => {
       <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
         <AdBanner banners={banners} />
       </section>
+
+      {/* Download App Section */}
+      <DownloadApp />
 
       {/* Travel Deals Section */}
       <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">

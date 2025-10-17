@@ -1,8 +1,36 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-const AdBanner = ({ imageUrl, title, description, buttonText, buttonLink }) => {
+const AdBanner = ({ banners }) => {
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [isSliding, setIsSliding] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsSliding(true);
+      setTimeout(() => {
+        setCurrentBannerIndex((prevIndex) =>
+          prevIndex === banners.length - 1 ? 0 : prevIndex + 1
+        );
+        setIsSliding(false);
+      }, 500); // slide out duration
+    }, 10000); // 10-second cycle
+
+    return () => clearInterval(interval);
+  }, [banners.length]);
+
+  if (!banners || banners.length === 0) {
+    return null;
+  }
+
+  const { imageUrl, title, description, buttonText, buttonLink } =
+    banners[currentBannerIndex];
+
   return (
-    <div className="relative bg-white rounded-2xl shadow-lg overflow-hidden group">
+    <div
+      className={`relative bg-white rounded-2xl shadow-lg overflow-hidden group ${
+        isSliding ? "animate-slideOut" : "animate-slideIn"
+      }`}
+    >
       <img
         src={imageUrl}
         alt={title}

@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import Categories from "../components/Categories";
 import Cities from "../components/Cities";
 import Hotels from "./hotels/Hotels";
+import AdBanner from "../components/AdBanner";
+import TravelDeals from "../components/TravelDeals";
 
 const Home = () => {
   const navigate = useNavigate();
 
   const handleHomestaysClick = () => {
-    navigate('/hotels');
+    navigate("/hotels");
   };
 
   return (
@@ -21,6 +23,9 @@ const Home = () => {
         </div>
       </section>
 
+      <div>
+        <Hotels />
+      </div>
 
       {/* Holiday Rentals Promo Section */}
       <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
@@ -32,7 +37,7 @@ const Home = () => {
                 <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 leading-tight">
                   Want to feel at home on your next adventure?
                 </h2>
-                <button 
+                <button
                   onClick={handleHomestaysClick}
                   className="bg-white text-green-600 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold text-base transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
@@ -46,7 +51,7 @@ const Home = () => {
                   {/* Background shapes */}
                   <div className="absolute top-0 right-0 w-24 h-24 bg-white bg-opacity-20 rounded-full"></div>
                   <div className="absolute bottom-2 left-2 w-12 h-12 bg-yellow-400 bg-opacity-30 rounded-full"></div>
-                  
+
                   {/* Main illustration container */}
                   <div className="relative bg-white bg-opacity-10 rounded-2xl p-6 backdrop-blur-sm">
                     {/* Chair illustration */}
@@ -59,12 +64,12 @@ const Home = () => {
                           <div className="w-3/4 h-0.5 bg-yellow-500 rounded-full mt-1.5 mx-auto"></div>
                         </div>
                       </div>
-                      
+
                       {/* Chair seat */}
                       <div className="w-20 h-5 bg-yellow-400 rounded-lg mx-auto -mt-1.5 relative">
                         <div className="absolute inset-0.5 bg-yellow-300 rounded-md"></div>
                       </div>
-                      
+
                       {/* Chair legs */}
                       <div className="flex justify-between w-20 mx-auto mt-0.5">
                         <div className="w-0.5 h-6 bg-gray-700 rounded-full"></div>
@@ -109,11 +114,22 @@ const Home = () => {
           </div>
         </div>
       </section>
-      
-      <div>
-        <Hotels />
-      </div>
 
+      {/* Ad Banner Section */}
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+        <AdBanner
+          imageUrl="https://i.pinimg.com/1200x/b5/24/85/b52485be31f7b08774a0578d5dbcefc5.jpg"
+          title="Plan Your Next Getaway"
+          description="Discover amazing places at unbeatable prices."
+          buttonText="Explore Now"
+          buttonLink="/deals"
+        />
+      </section>
+
+      {/* Travel Deals Section */}
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+        <TravelDeals />
+      </section>
     </main>
   );
 };

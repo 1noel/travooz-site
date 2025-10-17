@@ -5,6 +5,7 @@ import Cities from "../components/Cities";
 import Hotels from "./hotels/Hotels";
 import AdBanner from "../components/AdBanner";
 import TravelDeals from "../components/TravelDeals";
+import SuggestionCards from "../components/SuggestionCards";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const Home = () => {
       title: "Plan Your Next Getaway",
       description: "Discover amazing places at unbeatable prices.",
       buttonText: "Explore Now",
-      buttonLink: "/",
+      buttonLink: "/deals",
     },
     {
       imageUrl:
@@ -28,7 +29,7 @@ const Home = () => {
       title: "New Adventures Await",
       description: "Find unique experiences and create lasting memories.",
       buttonText: "Discover More",
-      buttonLink: "/",
+      buttonLink: "/activities",
     },
   ];
 
@@ -40,6 +41,11 @@ const Home = () => {
         <div className="">
           <Cities />
         </div>
+      </section>
+
+      {/* Suggestion Cards Section */}
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+        <SuggestionCards />
       </section>
 
       <div>

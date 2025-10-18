@@ -205,6 +205,12 @@ const getInitialCalendarState = (dateLike) => {
   };
 };
 
+const getInitialDate = (offset = 0) => {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return formatDateForStorage(date);
+};
+
 const Filter = () => {
   const { activeCategory, applyFilters, clearFilters } = useFilterContext();
 
@@ -232,8 +238,8 @@ const Filter = () => {
     isLoading: isLoadingLocations,
     isEnabled: isLocationSuggestionsEnabled,
   } = useLocationSuggestions(activeCategory);
-  const [checkInValue, setCheckInValue] = useState("");
-  const [checkOutValue, setCheckOutValue] = useState("");
+  const [checkInValue, setCheckInValue] = useState(() => getInitialDate(0));
+  const [checkOutValue, setCheckOutValue] = useState(() => getInitialDate(1));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [calendarState, setCalendarState] = useState(() =>
     getInitialCalendarState()
@@ -242,6 +248,7 @@ const Filter = () => {
   const [hoveredDate, setHoveredDate] = useState(null);
   const [activeDateField, setActiveDateField] = useState(null);
   const filterRef = useRef(null);
+  const initialFiltersRef = useRef({});
 
   const isCheckInDateField = config.checkInFieldType === "date";
   const isCheckOutDateField = config.checkOutFieldType === "date";
@@ -271,14 +278,36 @@ const Filter = () => {
     setShowAdultsDropdown(false);
     setShowDatePicker(false);
     setShowLocationDropdown(false);
-    setCheckInValue("");
-    setCheckOutValue("");
     setLocationInputValue("");
     setTempRange({ start: null, end: null });
     setHoveredDate(null);
     setActiveDateField(null);
     setCalendarState(getInitialCalendarState());
+
+    if (config.key === "eatingOut") {
+      setCheckInValue(getInitialDate(0));
+      setCheckOutValue("");
+    } else {
+      setCheckInValue(getInitialDate(0));
+      setCheckOutValue(getInitialDate(1));
+    }
+
+    initialFiltersRef.current = {
+      destination: "",
+      checkIn: getInitialDate(0),
+      checkOut: config.key === "eatingOut" ? "" : getInitialDate(1),
+      guests: config.dropdownDefault ?? config.dropdownOptions?.[0] ?? "",
+    };
   }, [config.key]);
+
+  const isFilterModified = useMemo(() => {
+    return (
+      locationInputValue !== initialFiltersRef.current.destination ||
+      checkInValue !== initialFiltersRef.current.checkIn ||
+      checkOutValue !== initialFiltersRef.current.checkOut ||
+      selectedAdults !== initialFiltersRef.current.guests
+    );
+  }, [locationInputValue, checkInValue, checkOutValue, selectedAdults]);
 
   useEffect(() => {
     if (!showDatePicker) {
@@ -973,12 +1002,7 @@ const Filter = () => {
         </div>
       </div>
 
-      {/* Clear Filters Button - Show when any filter has a value */}
-      {(locationInputValue ||
-        checkInValue ||
-        checkOutValue ||
-        selectedAdults !==
-          (config.dropdownDefault ?? config.dropdownOptions?.[0] ?? "")) && (
+      {isFilterModified && (
         <div className="mt-4 text-center">
           <button
             type="button"

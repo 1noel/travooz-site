@@ -101,7 +101,7 @@ const EatingDetails = () => {
       // If clicking on a different item, show controls for this item and hide others
       setActiveMenuItem(itemId);
       // Set initial quantity if not already set
-      if (!menuItemQuantities.hasOwnProperty(itemId)) {
+      if (!Object.prototype.hasOwnProperty.call(menuItemQuantities, itemId)) {
         updateItemQuantity(itemId, 1);
       }
     }

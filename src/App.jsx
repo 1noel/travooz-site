@@ -4,6 +4,7 @@ import React from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Hotels from "./pages/hotels/Hotels";
+import AvailableStays from "./pages/hotels/AvailableStays"; // Import the new component
 import Header from "./components/Header";
 import HotelDetails from "./pages/hotels/HotelDetails";
 import Eating from "./pages/EatingOut/Eating";
@@ -44,6 +45,7 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/hotels" element={<Hotels />} />
+        <Route path="/available-stays" element={<AvailableStays />} />
         <Route path="/hotel/:id" element={<HotelDetails />} />
         <Route path="/eating-out" element={<Eating />} />
         <Route path="/restaurant/:id" element={<EatingDetails />} />

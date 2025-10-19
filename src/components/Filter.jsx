@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useFilterContext } from "../context/useFilterContext";
 import { useLocationSuggestions } from "../hooks/useLocationSuggestions";
 import Toast from "./Toast";
+import { useNavigate } from "react-router-dom";
 
 const FILTER_CONFIGS = {
   restStay: {
@@ -213,27 +214,24 @@ const getInitialDate = (offset = 0) => {
 
 const Filter = () => {
   const { activeCategory, applyFilters, clearFilters } = useFilterContext();
+  const navigate = useNavigate();
 
   const config = useMemo(
     () => FILTER_CONFIGS[activeCategory] ?? FILTER_CONFIGS.default,
     [activeCategory]
   );
 
-  const initialValues = useMemo(() => {
-    const checkOut = config.key === "eatingOut" ? "" : getInitialDate(1);
-    return {
-      destination: "",
-      checkIn: getInitialDate(0),
-      checkOut: checkOut,
-      guests: config.dropdownDefault ?? config.dropdownOptions?.[0] ?? "",
-    };
-  }, [config]);
-
-  const [selectedAdults, setSelectedAdults] = useState(initialValues.guests);
-  const [showAdultsDropdown, setShowAdultsDropdown] = useState(false);
-  const [locationInputValue, setLocationInputValue] = useState(
-    initialValues.destination
+  const dropdownOptions = useMemo(
+    () =>
+      config.dropdownOptions?.map((label) => ({ value: label, label })) ?? [],
+    [config.dropdownOptions]
   );
+
+  const [selectedAdults, setSelectedAdults] = useState(
+    config.dropdownDefault ?? config.dropdownOptions?.[0] ?? ""
+  );
+  const [showAdultsDropdown, setShowAdultsDropdown] = useState(false);
+  const [locationInputValue, setLocationInputValue] = useState("");
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [toast, setToast] = useState(null);
@@ -242,8 +240,8 @@ const Filter = () => {
     isLoading: isLoadingLocations,
     isEnabled: isLocationSuggestionsEnabled,
   } = useLocationSuggestions(activeCategory);
-  const [checkInValue, setCheckInValue] = useState(initialValues.checkIn);
-  const [checkOutValue, setCheckOutValue] = useState(initialValues.checkOut);
+  const [checkInValue, setCheckInValue] = useState(() => getInitialDate(0));
+  const [checkOutValue, setCheckOutValue] = useState(() => getInitialDate(1));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [calendarState, setCalendarState] = useState(() =>
     getInitialCalendarState()
@@ -252,6 +250,7 @@ const Filter = () => {
   const [hoveredDate, setHoveredDate] = useState(null);
   const [activeDateField, setActiveDateField] = useState(null);
   const filterRef = useRef(null);
+  const initialFiltersRef = useRef({});
 
   const isCheckInDateField = config.checkInFieldType === "date";
   const isCheckOutDateField = config.checkOutFieldType === "date";
@@ -273,29 +272,44 @@ const Filter = () => {
   }, [isLocationSuggestionsEnabled, locationInputValue, locationSuggestions]);
 
   useEffect(() => {
-    setLocationInputValue(initialValues.destination);
-    setCheckInValue(initialValues.checkIn);
-    setCheckOutValue(initialValues.checkOut);
-    setSelectedAdults(initialValues.guests);
+    const fallback = config.dropdownOptions?.[0] ?? "";
+    setSelectedAdults(config.dropdownDefault ?? fallback);
+  }, [config.dropdownDefault, config.dropdownOptions]);
+
+  useEffect(() => {
     setShowAdultsDropdown(false);
     setShowDatePicker(false);
     setShowLocationDropdown(false);
-  }, [initialValues]);
+    setLocationInputValue("");
+    setTempRange({ start: null, end: null });
+    setHoveredDate(null);
+    setActiveDateField(null);
+    setCalendarState(getInitialCalendarState());
+
+    if (config.key === "eatingOut") {
+      setCheckInValue(getInitialDate(0));
+      setCheckOutValue("");
+    } else {
+      setCheckInValue(getInitialDate(0));
+      setCheckOutValue(getInitialDate(1));
+    }
+
+    initialFiltersRef.current = {
+      destination: "",
+      checkIn: getInitialDate(0),
+      checkOut: config.key === "eatingOut" ? "" : getInitialDate(1),
+      guests: config.dropdownDefault ?? config.dropdownOptions?.[0] ?? "",
+    };
+  }, [config.dropdownDefault, config.dropdownOptions, config.key]);
 
   const isFilterModified = useMemo(() => {
     return (
-      locationInputValue !== initialValues.destination ||
-      checkInValue !== initialValues.checkIn ||
-      checkOutValue !== initialValues.checkOut ||
-      selectedAdults !== initialValues.guests
+      locationInputValue !== initialFiltersRef.current.destination ||
+      checkInValue !== initialFiltersRef.current.checkIn ||
+      checkOutValue !== initialFiltersRef.current.checkOut ||
+      selectedAdults !== initialFiltersRef.current.guests
     );
-  }, [
-    locationInputValue,
-    checkInValue,
-    checkOutValue,
-    selectedAdults,
-    initialValues,
-  ]);
+  }, [locationInputValue, checkInValue, checkOutValue, selectedAdults]);
 
   useEffect(() => {
     if (!showDatePicker) {
@@ -762,24 +776,24 @@ const Filter = () => {
 
   const CustomAdultsDropdown = () => (
     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-2">
-      {config.dropdownOptions.map((option, index) => (
+      {dropdownOptions.map((option, index) => (
         <button
-          key={option}
+          key={option.value}
           type="button"
           onClick={() => {
-            setSelectedAdults(option);
+            setSelectedAdults(option.value);
             setShowAdultsDropdown(false);
           }}
           className={`w-full px-4 py-3 text-left hover:bg-green-50 hover:text-green-600 transition-all duration-200 ${
-            selectedAdults === option
+            selectedAdults === option.value
               ? "bg-green-50 text-green-600 font-medium"
               : "text-gray-700"
           } ${index === 0 ? "rounded-t-lg" : ""} ${
-            index === config.dropdownOptions.length - 1 ? "rounded-b-lg" : ""
+            index === dropdownOptions.length - 1 ? "rounded-b-lg" : ""
           }`}
         >
-          <span className="font-medium">{option}</span>
-          {selectedAdults === option && (
+          <span className="font-medium">{option.label}</span>
+          {selectedAdults === option.value && (
             <span className="float-right">
               <svg
                 className="w-4 h-4 text-green-600"
@@ -802,15 +816,11 @@ const Filter = () => {
   );
 
   const handleSearch = async () => {
-    if (!locationInputValue) {
-      setToast({
-        message: "Please select a destination before searching.",
-        type: "warning",
-      });
+    if (activeCategory === "restStay") {
+      navigate("/available-stays");
       return;
     }
 
-    // Create the new filter values
     const newFilters = {
       destination: locationInputValue,
       checkIn: checkInValue,
@@ -820,13 +830,9 @@ const Filter = () => {
 
     setIsSearching(true);
 
-    // Simulate searching with a brief delay for loading state
     setTimeout(() => {
-      // Apply the filters - this will update both filterValues and appliedFilters
       applyFilters(newFilters);
       setIsSearching(false);
-
-      // Toast will be shown by the results page based on found items
     }, 600);
   };
 
@@ -835,14 +841,14 @@ const Filter = () => {
   };
 
   const handleClearFilters = () => {
-    // Clear local state
-    setLocationInputValue(initialValues.destination);
-    setCheckInValue(initialValues.checkIn);
-    setCheckOutValue(initialValues.checkOut);
-    setSelectedAdults(initialValues.guests);
+    setLocationInputValue("");
+    setCheckInValue("");
+    setCheckOutValue("");
+    setSelectedAdults(
+      config.dropdownDefault ?? config.dropdownOptions?.[0] ?? ""
+    );
     setTempRange({ start: null, end: null });
 
-    // Clear context filters
     clearFilters();
   };
 
@@ -953,7 +959,9 @@ const Filter = () => {
               />
             </svg>
           </button>
-          {showAdultsDropdown && <CustomAdultsDropdown />}
+          {showAdultsDropdown && dropdownOptions.length > 0 && (
+            <CustomAdultsDropdown />
+          )}
         </div>
 
         <div className="filter-field flex items-end">

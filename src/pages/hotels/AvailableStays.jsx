@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { homestayServices, transformHomestayData } from "../../api/homestays";
 import { HotelList } from "../../components/HotelList";
 
 const AvailableStays = () => {
+  const location = useLocation();
   const [allHotels, setAllHotels] = useState([]);
   const [filteredHotels, setFilteredHotels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,6 +14,9 @@ const AvailableStays = () => {
     name: "",
     location: "",
   });
+
+  // Extract search parameters from the navigation state
+  const searchParams = location.state || {};
 
   useEffect(() => {
     const loadHotels = async () => {
@@ -34,7 +39,7 @@ const AvailableStays = () => {
           .filter(Boolean);
 
         setAllHotels(transformedHomestays);
-        setFilteredHotels(transformedHomestays);
+        setFilteredHotels(transformedHomestays); // Initially show all
       } catch (err) {
         console.error("Error loading homestays:", err);
         setError("Failed to load homestays");
@@ -67,13 +72,11 @@ const AvailableStays = () => {
     }
 
     setFilteredHotels(hotelsToFilter);
-    setShowFilters(false); // Automatically close the filter panel
   };
 
   const clearFilters = () => {
     setFilters({ name: "", location: "" });
     setFilteredHotels(allHotels);
-    setShowFilters(false); // Automatically close the filter panel
   };
 
   if (loading) {
@@ -120,7 +123,16 @@ const AvailableStays = () => {
   return (
     <div className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20">
       {showFilters && (
-        <div className="bg-white p-4 rounded-xl shadow-lg mb-6 border border-gray-200">
+        <div className="bg-white p-4 rounded-xl shadow-lg mb-6 border border-gray-200 transition-all duration-300 ease-in-out">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Filters</h3>
+            <button
+              onClick={() => setShowFilters(false)}
+              className="text-gray-500 hover:text-gray-800"
+            >
+              <i className="fa fa-times"></i>
+            </button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
@@ -168,6 +180,7 @@ const AvailableStays = () => {
       <HotelList
         apiData={filteredHotels}
         onFilterToggle={() => setShowFilters(!showFilters)}
+        searchParams={searchParams}
       />
     </div>
   );

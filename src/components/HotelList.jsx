@@ -28,13 +28,18 @@ function getAvailableAmenities(hotel) {
   return amenities;
 }
 
-function HotelCard({ hotel, view }) {
+function HotelCard({ hotel, view, searchParams }) {
   const navigate = useNavigate();
   const availableAmenities = getAvailableAmenities(hotel);
   const mainImage = hotel.mainImage || "/placeholder.svg";
 
   const handleCardClick = () => {
-    navigate(`/hotel/${hotel.id}`);
+    navigate(`/hotel/${hotel.id}`, {
+      state: {
+        from: "available-stays",
+        ...searchParams,
+      },
+    });
   };
 
   if (view === "list") {
@@ -88,11 +93,6 @@ function HotelCard({ hotel, view }) {
                 <div className="text-sm text-gray-600 mt-auto">
                   <span className="font-medium">Phone:</span> {hotel.phone}
                 </div>
-              </div>
-              <div className="flex flex-row md:flex-col items-end justify-between md:justify-start gap-2 flex-shrink-0">
-                <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold w-full md:w-auto">
-                  See availability
-                </button>
               </div>
             </div>
           </div>
@@ -151,16 +151,13 @@ function HotelCard({ hotel, view }) {
             <span className="font-medium">Contact:</span>
             <div className="text-xs">{hotel.phone}</div>
           </div>
-          <button className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-sm font-semibold">
-            View details
-          </button>
         </div>
       </div>
     </div>
   );
 }
 
-export function HotelList({ apiData, onFilterToggle }) {
+export function HotelList({ apiData, onFilterToggle, searchParams }) {
   const [view, setView] = useState("list");
   const hotels = apiData || [];
 
@@ -220,7 +217,12 @@ export function HotelList({ apiData, onFilterToggle }) {
             }
           >
             {hotels.map((hotel) => (
-              <HotelCard key={hotel.id} hotel={hotel} view={view} />
+              <HotelCard
+                key={hotel.id}
+                hotel={hotel}
+                view={view}
+                searchParams={searchParams}
+              />
             ))}
           </div>
         </>

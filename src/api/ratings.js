@@ -127,6 +127,18 @@ export const ratingsService = {
         }
       );
 
+      // Gracefully handle 401 Unauthorized without throwing an error
+      if (response.status === 401) {
+        console.warn(
+          "Unauthorized: Cannot fetch ratings without authentication."
+        );
+        return {
+          success: false,
+          error: "Unauthorized",
+          data: { ratings: [], averageRating: 0, totalReviews: 0 },
+        };
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -161,6 +173,18 @@ export const ratingsService = {
           headers: buildHeaders(),
         }
       );
+
+      // Gracefully handle 401 Unauthorized
+      if (response.status === 401) {
+        console.warn(
+          "Unauthorized: Cannot fetch ratings without authentication."
+        );
+        return {
+          success: false,
+          error: "Unauthorized",
+          data: { ratings: [], averageRating: 0, totalReviews: 0 },
+        };
+      }
 
       const data = await response.json();
 

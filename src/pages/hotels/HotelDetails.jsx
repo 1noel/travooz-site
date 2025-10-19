@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   homestayServices,
   transformHomestayData,
@@ -15,6 +15,8 @@ import { useAuth } from "../../context/useAuth";
 const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,6 +41,20 @@ const HotelDetails = () => {
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
 
+  const showBookingSection = location.state?.from !== "available-stays";
+
+  useEffect(() => {
+    if (location.state?.checkIn) {
+      setSelectedCheckIn(location.state.checkIn);
+    }
+    if (location.state?.checkOut) {
+      setSelectedCheckOut(location.state.checkOut);
+    }
+    if (location.state?.guests) {
+      setSelectedGuests(location.state.guests);
+    }
+  }, [location.state]);
+
   const showToast = (type, message) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
@@ -62,7 +78,6 @@ const HotelDetails = () => {
 
       if (response.success) {
         showToast("success", "Thank you for your rating!");
-        // Update local rating state
         setHotelRating((prev) => ({
           averageRating: response.data.averageRating || prev.averageRating,
           totalReviews: prev.totalReviews + 1,
@@ -90,7 +105,6 @@ const HotelDetails = () => {
     setAvailabilityResults(null);
 
     try {
-      // Check availability for all rooms
       const availabilityChecks = hotel.rooms.map(async (room) => {
         try {
           const response = await homestayServices.checkRoomAvailability({
@@ -765,167 +779,174 @@ const HotelDetails = () => {
             )}
           </div>
 
-          <div className="w-full lg:w-[360px] xl:w-[400px]">
-            <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg w-full lg:sticky lg:top-24">
-              <h3 className="text-xl font-semibold mb-6 text-center lg:text-left">
-                Quick Booking
-              </h3>
-              <div className="space-y-6">
-                <div className="relative">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Check-in
-                  </label>
+          {/* Booking Sidebar - Conditionally Rendered */}
+          {showBookingSection && (
+            <div className="w-full lg:w-[360px] xl:w-[400px]">
+              <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg w-full lg:sticky lg:top-24">
+                <h3 className="text-xl font-semibold mb-6 text-center lg:text-left">
+                  Quick Booking
+                </h3>
+                <div className="space-y-6">
                   <div className="relative">
-                    <input
-                      type="text"
-                      value={
-                        selectedCheckIn
-                          ? new Date(selectedCheckIn).toLocaleDateString(
-                              "en-US",
-                              {
-                                weekday: "short",
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              }
-                            )
-                          : ""
-                      }
-                      placeholder="Select check-in date"
-                      readOnly
-                      onClick={() =>
-                        setShowCheckInCalendar(!showCheckInCalendar)
-                      }
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Check-in
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={
+                          selectedCheckIn
+                            ? new Date(selectedCheckIn).toLocaleDateString(
+                                "en-US",
+                                {
+                                  weekday: "short",
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )
+                            : ""
+                        }
+                        placeholder="Select check-in date"
+                        readOnly
+                        onClick={() =>
+                          setShowCheckInCalendar(!showCheckInCalendar)
+                        }
+                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          ></path>
+                        </svg>
+                      </div>
+                    </div>
+                    {showCheckInCalendar && (
+                      <CustomCalendar
+                        onDateSelect={setSelectedCheckIn}
+                        onClose={() => setShowCheckInCalendar(false)}
+                      />
+                    )}
+                  </div>
+                  <div className="relative">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Check-out
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={
+                          selectedCheckOut
+                            ? new Date(selectedCheckOut).toLocaleDateString(
+                                "en-US",
+                                {
+                                  weekday: "short",
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )
+                            : ""
+                        }
+                        placeholder="Select check-out date"
+                        readOnly
+                        onClick={() =>
+                          setShowCheckOutCalendar(!showCheckOutCalendar)
+                        }
+                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          ></path>
+                        </svg>
+                      </div>
+                    </div>
+                    {showCheckOutCalendar && (
+                      <CustomCalendar
+                        onDateSelect={setSelectedCheckOut}
+                        onClose={() => setShowCheckOutCalendar(false)}
+                      />
+                    )}
+                  </div>
+                  <div className="relative">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Guests
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowGuestsDropdown(!showGuestsDropdown)
+                        }
+                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        ></path>
-                      </svg>
+                        <span className="font-medium">{selectedGuests}</span>
+                        <svg
+                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                            showGuestsDropdown ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 9l-7 7-7-7"
+                          ></path>
+                        </svg>
+                      </button>
+                      {showGuestsDropdown && <CustomGuestsDropdown />}
                     </div>
                   </div>
-                  {showCheckInCalendar && (
-                    <CustomCalendar
-                      onDateSelect={setSelectedCheckIn}
-                      onClose={() => setShowCheckInCalendar(false)}
-                    />
-                  )}
-                </div>
-                <div className="relative">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Check-out
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={
-                        selectedCheckOut
-                          ? new Date(selectedCheckOut).toLocaleDateString(
-                              "en-US",
-                              {
-                                weekday: "short",
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              }
-                            )
-                          : ""
-                      }
-                      placeholder="Select check-out date"
-                      readOnly
-                      onClick={() =>
-                        setShowCheckOutCalendar(!showCheckOutCalendar)
-                      }
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        ></path>
-                      </svg>
+                  <button
+                    onClick={handleCheckHotelAvailability}
+                    disabled={checkingAvailability}
+                    className={`w-full py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${
+                      checkingAvailability
+                        ? "bg-green-400 cursor-wait"
+                        : "bg-green-600 hover:bg-green-700 transform hover:-translate-y-0.5"
+                    } text-white`}
+                  >
+                    {checkingAvailability
+                      ? "Checking..."
+                      : "Check Availability"}
+                  </button>
+                  {availabilityResults && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-semibold text-gray-900 mb-2">
+                        Availability Results:
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        {availabilityResults.available} of{" "}
+                        {availabilityResults.total} room(s) available
+                      </p>
                     </div>
-                  </div>
-                  {showCheckOutCalendar && (
-                    <CustomCalendar
-                      onDateSelect={setSelectedCheckOut}
-                      onClose={() => setShowCheckOutCalendar(false)}
-                    />
                   )}
                 </div>
-                <div className="relative">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Guests
-                  </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowGuestsDropdown(!showGuestsDropdown)}
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
-                    >
-                      <span className="font-medium">{selectedGuests}</span>
-                      <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          showGuestsDropdown ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M19 9l-7 7-7-7"
-                        ></path>
-                      </svg>
-                    </button>
-                    {showGuestsDropdown && <CustomGuestsDropdown />}
-                  </div>
-                </div>
-                <button
-                  onClick={handleCheckHotelAvailability}
-                  disabled={checkingAvailability}
-                  className={`w-full py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${
-                    checkingAvailability
-                      ? "bg-green-400 cursor-wait"
-                      : "bg-green-600 hover:bg-green-700 transform hover:-translate-y-0.5"
-                  } text-white`}
-                >
-                  {checkingAvailability ? "Checking..." : "Check Availability"}
-                </button>
-                {availabilityResults && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-semibold text-gray-900 mb-2">
-                      Availability Results:
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      {availabilityResults.available} of{" "}
-                      {availabilityResults.total} room(s) available
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="mt-6">
@@ -1046,11 +1067,19 @@ const HotelDetails = () => {
                             key={`${stat.label}-${index}`}
                             className="text-xs text-gray-500"
                           >
-                            <i className={`fa ${stat.icon} mr-1 text-green-600`}></i>
+                            <i
+                              className={`fa ${stat.icon} mr-1 text-green-600`}
+                            ></i>
                             {stat.label}
                           </span>
                         ))}
                       </div>
+                    )}
+
+                    {remainingAmenitiesCount > 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        +{remainingAmenitiesCount} more amenities
+                      </p>
                     )}
 
                     {room.price && (
@@ -1122,6 +1151,14 @@ const HotelDetails = () => {
             </div>
           );
         })()}
+      </div>
+
+      <div className="mt-12">
+        <RatingDisplay
+          averageRating={hotelRating.averageRating}
+          totalReviews={hotelRating.totalReviews}
+          onRateClick={handleRateClick}
+        />
       </div>
 
       {/* Toast Notification */}

@@ -817,7 +817,13 @@ const Filter = () => {
 
   const handleSearch = async () => {
     if (activeCategory === "restStay") {
-      navigate("/available-stays");
+      navigate("/available-stays", {
+        state: {
+          checkIn: checkInValue,
+          checkOut: checkOutValue,
+          guests: selectedAdults,
+        },
+      });
       return;
     }
 

@@ -221,17 +221,27 @@ const Filter = () => {
     [activeCategory]
   );
 
+  const initialValues = useMemo(
+    () => ({
+      destination: "",
+      checkIn: getInitialDate(0),
+      checkOut: config.key === "eatingOut" ? "" : getInitialDate(1),
+      guests: config.dropdownDefault ?? config.dropdownOptions?.[0] ?? "",
+    }),
+    [config.key, config.dropdownDefault, config.dropdownOptions]
+  );
+
   const dropdownOptions = useMemo(
     () =>
       config.dropdownOptions?.map((label) => ({ value: label, label })) ?? [],
     [config.dropdownOptions]
   );
 
-  const [selectedAdults, setSelectedAdults] = useState(
-    config.dropdownDefault ?? config.dropdownOptions?.[0] ?? ""
-  );
+  const [selectedAdults, setSelectedAdults] = useState(initialValues.guests);
   const [showAdultsDropdown, setShowAdultsDropdown] = useState(false);
-  const [locationInputValue, setLocationInputValue] = useState("");
+  const [locationInputValue, setLocationInputValue] = useState(
+    initialValues.destination
+  );
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [toast, setToast] = useState(null);
@@ -240,8 +250,8 @@ const Filter = () => {
     isLoading: isLoadingLocations,
     isEnabled: isLocationSuggestionsEnabled,
   } = useLocationSuggestions(activeCategory);
-  const [checkInValue, setCheckInValue] = useState(() => getInitialDate(0));
-  const [checkOutValue, setCheckOutValue] = useState(() => getInitialDate(1));
+  const [checkInValue, setCheckInValue] = useState(initialValues.checkIn);
+  const [checkOutValue, setCheckOutValue] = useState(initialValues.checkOut);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [calendarState, setCalendarState] = useState(() =>
     getInitialCalendarState()
@@ -250,7 +260,21 @@ const Filter = () => {
   const [hoveredDate, setHoveredDate] = useState(null);
   const [activeDateField, setActiveDateField] = useState(null);
   const filterRef = useRef(null);
-  const initialFiltersRef = useRef({});
+
+  const isFilterModified = useMemo(() => {
+    return (
+      locationInputValue !== initialValues.destination ||
+      checkInValue !== initialValues.checkIn ||
+      checkOutValue !== initialValues.checkOut ||
+      selectedAdults !== initialValues.guests
+    );
+  }, [
+    locationInputValue,
+    checkInValue,
+    checkOutValue,
+    selectedAdults,
+    initialValues,
+  ]);
 
   const isCheckInDateField = config.checkInFieldType === "date";
   const isCheckOutDateField = config.checkOutFieldType === "date";
@@ -270,56 +294,6 @@ const Filter = () => {
       name.toLowerCase().includes(normalizedQuery)
     );
   }, [isLocationSuggestionsEnabled, locationInputValue, locationSuggestions]);
-
-  useEffect(() => {
-    const fallback = config.dropdownOptions?.[0] ?? "";
-    setSelectedAdults(config.dropdownDefault ?? fallback);
-  }, [config.dropdownDefault, config.dropdownOptions]);
-
-  useEffect(() => {
-    setShowAdultsDropdown(false);
-    setShowDatePicker(false);
-    setShowLocationDropdown(false);
-    setLocationInputValue("");
-    setTempRange({ start: null, end: null });
-    setHoveredDate(null);
-    setActiveDateField(null);
-    setCalendarState(getInitialCalendarState());
-
-    if (config.key === "eatingOut") {
-      setCheckInValue(getInitialDate(0));
-      setCheckOutValue("");
-    } else {
-      setCheckInValue(getInitialDate(0));
-      setCheckOutValue(getInitialDate(1));
-    }
-
-    initialFiltersRef.current = {
-      destination: "",
-      checkIn: getInitialDate(0),
-      checkOut: config.key === "eatingOut" ? "" : getInitialDate(1),
-      guests: config.dropdownDefault ?? config.dropdownOptions?.[0] ?? "",
-    };
-  }, [config.dropdownDefault, config.dropdownOptions, config.key]);
-
-  const isFilterModified = useMemo(() => {
-    return (
-      locationInputValue !== initialFiltersRef.current.destination ||
-      checkInValue !== initialFiltersRef.current.checkIn ||
-      checkOutValue !== initialFiltersRef.current.checkOut ||
-      selectedAdults !== initialFiltersRef.current.guests
-    );
-  }, [locationInputValue, checkInValue, checkOutValue, selectedAdults]);
-
-  useEffect(() => {
-    if (!showDatePicker) {
-      setTempRange({
-        start: parseInputDate(checkInValue),
-        end: parseInputDate(checkOutValue),
-      });
-      setHoveredDate(null);
-    }
-  }, [showDatePicker, checkInValue, checkOutValue]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -847,14 +821,10 @@ const Filter = () => {
   };
 
   const handleClearFilters = () => {
-    setLocationInputValue("");
-    setCheckInValue("");
-    setCheckOutValue("");
-    setSelectedAdults(
-      config.dropdownDefault ?? config.dropdownOptions?.[0] ?? ""
-    );
-    setTempRange({ start: null, end: null });
-
+    setLocationInputValue(initialValues.destination);
+    setCheckInValue(initialValues.checkIn);
+    setCheckOutValue(initialValues.checkOut);
+    setSelectedAdults(initialValues.guests);
     clearFilters();
   };
 

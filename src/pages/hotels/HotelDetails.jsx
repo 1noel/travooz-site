@@ -15,18 +15,24 @@ import { useAuth } from "../../context/useAuth";
 const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation(); // Get location object to access state
 
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [roomsMessage, setRoomsMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState("");
-  const [selectedCheckIn, setSelectedCheckIn] = useState("");
+  const [selectedCheckIn, setSelectedCheckIn] = useState(
+    location.state?.checkIn || ""
+  );
   const [showCheckInCalendar, setShowCheckInCalendar] = useState(false);
-  const [selectedCheckOut, setSelectedCheckOut] = useState("");
+  const [selectedCheckOut, setSelectedCheckOut] = useState(
+    location.state?.checkOut || ""
+  );
   const [showCheckOutCalendar, setShowCheckOutCalendar] = useState(false);
-  const [selectedGuests, setSelectedGuests] = useState("1 Guest");
+  const [selectedGuests, setSelectedGuests] = useState(
+    location.state?.guests || "1 Guest"
+  );
   const [showGuestsDropdown, setShowGuestsDropdown] = useState(false);
   const [roomActionState, setRoomActionState] = useState({});
   const [toast, setToast] = useState(null);
@@ -41,19 +47,8 @@ const HotelDetails = () => {
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
 
+  // Determine if the booking section should be shown
   const showBookingSection = location.state?.from !== "available-stays";
-
-  useEffect(() => {
-    if (location.state?.checkIn) {
-      setSelectedCheckIn(location.state.checkIn);
-    }
-    if (location.state?.checkOut) {
-      setSelectedCheckOut(location.state.checkOut);
-    }
-    if (location.state?.guests) {
-      setSelectedGuests(location.state.guests);
-    }
-  }, [location.state]);
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -78,6 +73,7 @@ const HotelDetails = () => {
 
       if (response.success) {
         showToast("success", "Thank you for your rating!");
+        // Update local rating state
         setHotelRating((prev) => ({
           averageRating: response.data.averageRating || prev.averageRating,
           totalReviews: prev.totalReviews + 1,
@@ -105,6 +101,7 @@ const HotelDetails = () => {
     setAvailabilityResults(null);
 
     try {
+      // Check availability for all rooms
       const availabilityChecks = hotel.rooms.map(async (room) => {
         try {
           const response = await homestayServices.checkRoomAvailability({

@@ -90,7 +90,8 @@ const Hotels = () => {
   }, []);
 
   const handleHotelClick = (hotel) => {
-    navigate(`/hotel/${hotel.id}`);
+    // Navigate without special state, or with a different one
+    navigate(`/hotel/${hotel.id}`, { state: { from: "hotels" } });
   };
 
   const handleCategoryClick = (category) => {
@@ -233,9 +234,7 @@ const Hotels = () => {
               <p className="text-xs text-gray-600">
                 <i className="fa fa-location-dot"></i> {hotel.location}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {hotel.category}
-              </p>
+              <p className="text-xs text-gray-500 mt-1">{hotel.category}</p>
               <div className="flex items-center gap-2 mt-2">
                 {hotel.stars && (
                   <div className="flex">
@@ -250,9 +249,7 @@ const Hotels = () => {
                   </div>
                 )}
                 {hotel.phone && (
-                  <span className="text-xs text-gray-500">
-                    {hotel.phone}
-                  </span>
+                  <span className="text-xs text-gray-500">{hotel.phone}</span>
                 )}
               </div>
             </div>

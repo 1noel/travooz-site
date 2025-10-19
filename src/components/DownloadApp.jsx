@@ -10,8 +10,8 @@ const DownloadApp = () => {
               Your Travel Companion, On the Go
             </h2>
             <p className="text-lg md:text-xl text-gray-600 mb-10 text-pretty">
-              Book flights, hotels, cars, and activities with exclusive deals,
-              all in the Travooz app. Your next adventure is just a tap away.
+              Book hotels, cars, and activities with exclusive deals, all in the
+              Travooz app. Your next adventure is just a tap away.
             </p>
 
             <ul className="space-y-5 mb-12 text-left max-w-md mx-auto lg:mx-0">
@@ -32,7 +32,7 @@ const DownloadApp = () => {
                   </svg>
                 </div>
                 <span className="text-gray-700 text-lg leading-relaxed">
-                  Real-time flight and booking updates
+                  Real-time booking updates
                 </span>
               </li>
               <li className="flex items-start gap-4">

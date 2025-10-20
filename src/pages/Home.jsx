@@ -12,6 +12,7 @@ import TrendingSpots from "../components/TrendingSpots";
 import TopRated from "../components/TopRated";
 import NearbyGems from "../components/NearbyGems";
 import FeaturedListings from "../components/FeaturedListings";
+import ClosingStatement from "../components/ClosingStatement";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -177,6 +178,11 @@ const Home = () => {
       {/* Travel Deals Section */}
       <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
         <TravelDeals />
+      </section>
+
+      {/* Closing Statement Section */}
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+        <ClosingStatement />
       </section>
     </main>
   );

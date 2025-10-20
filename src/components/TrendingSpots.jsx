@@ -5,21 +5,21 @@ const spots = [
   {
     id: 1,
     imageUrl:
-      "https://www.safaribookings.com/blog/wp-content/uploads/2018/02/Akagera-National-Park-1.jpg",
+      "https://www.bwindinationalparkuganda.com/wp-content/uploads/2024/04/5-top-safari-activities-in-Akagera-national-park-.jpg",
     title: "Akagera National Park",
     description: "Experience a true African safari.",
   },
   {
     id: 2,
     imageUrl:
-      "https://www.travelandleisure.com/thmb/JdyZeJChh_52hSH3aI31a_3X- M=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/kigali-rwanda-KIGALI0122-8356f5e94b6343a497a0f62243d67189.jpg",
+      "https://www.achieveglobalsafaris.com/wp-content/uploads/2019/09/Kigali-City-Business-Center.jpg",
     title: "Kigali",
     description: "Explore the vibrant capital city.",
   },
   {
     id: 3,
     imageUrl:
-      "https://media.cntraveler.com/photos/5a70a31652e7b1541f531278/16:9/w_2560%2Cc_limit/Lake-Kivu__2018_GettyImages-528732298.jpg",
+      "https://labaafrica.com/wp-content/uploads/2022/12/lake-kivu-islands-1024x683.jpg",
     title: "Lake Kivu",
     description: "Relax by the stunning shores.",
   },
@@ -33,16 +33,17 @@ const TrendingSpots = () => {
         {spots.map((spot) => (
           <div
             key={spot.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-2 transition-transform duration-300"
+            className="relative rounded-lg overflow-hidden group transform hover:-translate-y-2 transition-transform duration-300"
           >
             <img
               src={spot.imageUrl}
               alt={spot.title}
-              className="w-full h-48 object-cover"
+              className="w-full h-80 object-cover"
             />
-            <div className="p-4">
-              <h3 className="text-xl font-bold">{spot.title}</h3>
-              <p className="text-gray-600">{spot.description}</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 p-6 text-white">
+              <h3 className="text-2xl font-bold">{spot.title}</h3>
+              <p className="text-lg">{spot.description}</p>
             </div>
           </div>
         ))}

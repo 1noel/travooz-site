@@ -5,7 +5,7 @@ const items = [
   {
     id: 1,
     imageUrl:
-      "https://media-cdn.tripadvisor.com/media/photo-s/1a/b8/b9/d8/kigali-marriott-hotel.jpg",
+      "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2b/a7/ee/dc/caption.jpg?w=700&h=-1&s=1",
     title: "Kigali Marriott Hotel",
     rating: 4.5,
     reviews: 1500,
@@ -13,7 +13,7 @@ const items = [
   {
     id: 2,
     imageUrl:
-      "https://cf.bstatic.com/xdata/images/hotel/max1024x768/271811867.jpg?k=b6f3b00a3e218520d200445480c5982e043b318e8113f8add0c768997f77d7fb&o=&hp=1",
+      "https://yellowzebrasafaris.com/media/38724/pool-loungers-the-retreat-kigali-rwanda.jpg?anchor=center&mode=crop&width=2048&height=1024&format=jpg&rnd=131871981880000000",
     title: "The Retreat",
     rating: 4.8,
     reviews: 800,
@@ -21,7 +21,7 @@ const items = [
   {
     id: 3,
     imageUrl:
-      "https://q-xx.bstatic.com/xdata/images/hotel/max1024x768/48498303.jpg?k=33c3a4ae333a3f65b83962b109e952f1b637ae3b94a82868ae1c5b4f62025f82&o=",
+      "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1c/f5/ae/a3/heaven-restaurant-boutique.jpg?w=1200&h=-1&s=1",
     title: "Heaven Restaurant & Boutique Hotel",
     rating: 4.6,
     reviews: 1200,
@@ -46,12 +46,20 @@ const TopRated = () => {
             <div className="p-4">
               <h3 className="text-xl font-bold">{item.title}</h3>
               <div className="flex items-center mt-2">
-                <span className="text-yellow-500">
-                  {"★".repeat(Math.round(item.rating))}
-                </span>
-                <span className="text-gray-400">
-                  {"★".repeat(5 - Math.round(item.rating))}
-                </span>
+                <div className="flex text-yellow-500">
+                  {[...Array(5)].map((_, i) => (
+                    <span
+                      key={i}
+                      className={
+                        i < Math.round(item.rating)
+                          ? "text-yellow-500"
+                          : "text-gray-300"
+                      }
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
                 <span className="text-gray-600 ml-2">
                   {item.rating} ({item.reviews} reviews)
                 </span>

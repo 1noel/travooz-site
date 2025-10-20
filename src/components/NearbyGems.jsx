@@ -5,20 +5,21 @@ const gems = [
   {
     id: 1,
     imageUrl:
-      "https://i0.wp.com/artsandculture.google.com/asset/the-canopy-walkway-in-nyungwe-forest-national-park-rebero/igF3XoMAgYp6tA",
+      "https://www.visitingrwanda.com/wp-content/uploads/2023/05/nyungwe-canopy.jpg",
     title: "Nyungwe Canopy Walk",
     description: "A thrilling walk above the rainforest.",
   },
   {
     id: 2,
     imageUrl:
-      "https://www.andbeyond.com/wp-content/uploads/sites/5/Akagera-Game-Drive-Feature.jpg",
+      "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2d/34/fa/c2/caption.jpg?w=700&h=-1&s=1",
     title: "Akagera National Park",
     description: "Spot the Big Five in this beautiful park.",
   },
   {
     id: 3,
-    imageUrl: "https://live.staticflickr.com/3777/12331165485_9169a8b851_b.jpg",
+    imageUrl:
+      "https://archaeology-travel.com/cdn-cgi/image/quality=90,format=auto,onerror=redirect,metadata=none/wp-content/uploads/2023/10/nyanza-kings-palace.jpg",
     title: "King's Palace Museum",
     description: "Discover Rwanda's royal history.",
   },
@@ -32,16 +33,17 @@ const NearbyGems = () => {
         {gems.map((gem) => (
           <div
             key={gem.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-2 transition-transform duration-300"
+            className="relative rounded-lg overflow-hidden group transform hover:-translate-y-2 transition-transform duration-300"
           >
             <img
               src={gem.imageUrl}
               alt={gem.title}
-              className="w-full h-48 object-cover"
+              className="w-full h-80 object-cover"
             />
-            <div className="p-4">
-              <h3 className="text-xl font-bold">{gem.title}</h3>
-              <p className="text-gray-600">{gem.description}</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 p-6 text-white">
+              <h3 className="text-2xl font-bold">{gem.title}</h3>
+              <p className="text-lg">{gem.description}</p>
             </div>
           </div>
         ))}

@@ -5,21 +5,21 @@ const listings = [
   {
     id: 1,
     imageUrl:
-      "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/18/61/89/3f/nyungwe-house.jpg?w=1200&h=-1&s=1",
+      "https://www.jeniktours.com/wp-content/uploads/2022/02/one-only-nyungwe-house.jpg",
     title: "One&Only Nyungwe House",
     category: "Luxury Lodge",
   },
   {
     id: 2,
     imageUrl:
-      "https://www.volcanoessafaris.com/wp-content/uploads/2013/11/Virunga-Lodge-1-1.jpg",
+      "https://www.volcanoesparkrwanda.org/wp-content/uploads/2017/09/Virunga-Lodge.jpg",
     title: "Virunga Lodge",
     category: "Eco Lodge",
   },
   {
     id: 3,
     imageUrl:
-      "https://www.sabyinyo.com/wp-content/uploads/2018/10/sabyinyo-silverback-lodge-from-air-1200x800.jpg",
+      "https://www.astepahead.es/wp-content/uploads/2000/06/Sabyinyo-15-869x580.jpg",
     title: "Sabyinyo Silverback Lodge",
     category: "Mountain Lodge",
   },

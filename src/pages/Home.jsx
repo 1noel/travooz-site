@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Categories from "../components/Categories";
@@ -7,6 +8,11 @@ import AdBanner from "../components/AdBanner";
 import TravelDeals from "../components/TravelDeals";
 import SuggestionCards from "../components/SuggestionCards";
 import DownloadApp from "../components/DownloadApp";
+import TrendingSpots from "../components/TrendingSpots";
+import TopRated from "../components/TopRated";
+import NearbyGems from "../components/NearbyGems";
+import FeaturedListings from "../components/FeaturedListings";
+import ClosingStatement from "../components/ClosingStatement";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -149,9 +155,34 @@ const Home = () => {
       {/* Download App Section */}
       <DownloadApp />
 
+      {/* Trending Spots Section */}
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+        <TrendingSpots />
+      </section>
+
+      {/* Top Rated Section */}
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+        <TopRated />
+      </section>
+
+      {/* Nearby Gems Section */}
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+        <NearbyGems />
+      </section>
+
+      {/* Featured Listings Section */}
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+        <FeaturedListings />
+      </section>
+
       {/* Travel Deals Section */}
       <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
         <TravelDeals />
+      </section>
+
+      {/* Closing Statement Section */}
+      <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 py-8">
+        <ClosingStatement />
       </section>
     </main>
   );

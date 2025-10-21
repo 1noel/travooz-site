@@ -31,7 +31,7 @@ const items = [
 const TopRated = () => {
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4">Top Rated</h2>
+      <h2 className="text-xl font-semibold mb-4">Top Rated</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map((item) => (
           <div
@@ -44,7 +44,7 @@ const TopRated = () => {
               className="w-full h-48 object-cover"
             />
             <div className="p-4">
-              <h3 className="text-xl font-bold">{item.title}</h3>
+              <h3 className="font-semibold">{item.title}</h3>
               <div className="flex items-center mt-2">
                 <div className="flex text-yellow-500">
                   {[...Array(5)].map((_, i) => (
@@ -60,7 +60,7 @@ const TopRated = () => {
                     </span>
                   ))}
                 </div>
-                <span className="text-gray-600 ml-2">
+                <span className="text-xs text-gray-600 ml-2">
                   {item.rating} ({item.reviews} reviews)
                 </span>
               </div>

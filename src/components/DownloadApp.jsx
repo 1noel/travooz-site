@@ -9,10 +9,10 @@ const DownloadApp = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left Column: Text Content */}
           <div className="text-center lg:text-left">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 text-balance">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 text-balance">
               Your Travel Companion, On the Go
             </h2>
-            <p className="text-lg md:text-xl text-gray-600 mb-10 text-pretty">
+            <p className="text-sm text-gray-600 mb-10 text-pretty">
               Book hotels, cars, and activities with exclusive deals, all in the
               Travooz app. Your next adventure is just a tap away.
             </p>
@@ -34,7 +34,7 @@ const DownloadApp = () => {
                     />
                   </svg>
                 </div>
-                <span className="text-gray-700 text-lg leading-relaxed">
+                <span className="text-gray-700 text-sm leading-relaxed">
                   Real-time booking updates
                 </span>
               </li>
@@ -54,7 +54,7 @@ const DownloadApp = () => {
                     />
                   </svg>
                 </div>
-                <span className="text-gray-700 text-lg leading-relaxed">
+                <span className="text-gray-700 text-sm leading-relaxed">
                   Exclusive app-only deals and discounts
                 </span>
               </li>
@@ -74,7 +74,7 @@ const DownloadApp = () => {
                     />
                   </svg>
                 </div>
-                <span className="text-gray-700 text-lg leading-relaxed">
+                <span className="text-gray-700 text-sm leading-relaxed">
                   Easy and secure booking process
                 </span>
               </li>
@@ -109,12 +109,12 @@ const DownloadApp = () => {
               <img
                 src={phone}
                 alt="Travooz App Interface"
-                className="relative w-full max-w-md h-auto drop-shadow-2xl rounded-3xl"
+                className="relative w-full max-w-md h-auto drop-shadow-xl rounded-3xl"
               />
             </div>
 
-            <div className="flex items-center gap-6 bg-white p-8 rounded-2xl shadow-xl border-2 border-green-500/20">
-              <div className="bg-white p-3 rounded-xl border-1 border-green-500">
+            <div className="flex items-center gap-6 bg-white p-8 rounded-2xl">
+              <div className="bg-white p-3 rounded-xl">
                 <img
                   src="https://i.pinimg.com/736x/8e/69/33/8e69334a7f90319b49a2d42b61ddf15d.jpg"
                   alt="QR Code for app download"
@@ -122,10 +122,10 @@ const DownloadApp = () => {
                 />
               </div>
               <div>
-                <p className="font-bold text-gray-900 mb-2 text-lg">
+                <p className="font-bold text-gray-900 mb-2 text-sm">
                   Scan to Download
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs text-gray-600">
                   Available on iOS & Android
                 </p>
               </div>

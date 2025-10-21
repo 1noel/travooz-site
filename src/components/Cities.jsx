@@ -1,4 +1,9 @@
 import React from "react";
+import kgl from "../assets/images/kgl.jpg";
+import msnz from "../assets/images/msnz.jpg";
+import gisenyi from "../assets/images/gisenyi.jpg";
+import mesuim from "../assets/images/mesuim.jpg";
+import chant from "../assets/images/chant.jpg";
 
 // Custom CSS to hide scrollbar
 const scrollbarStyle = `
@@ -13,23 +18,23 @@ const scrollbarStyle = `
 
 const Cities = () => {
   const City = [
-    { id: 1, name: "Kigali", image: "src/assets/images/kgl.jpg", place: 100 },
-    { id: 2, name: "Musanze", image: "src/assets/images/msnz.jpg", place: 45 },
+    { id: 1, name: "Kigali", image: kgl, place: 100 },
+    { id: 2, name: "Musanze", image: msnz, place: 45 },
     {
       id: 3,
       name: "Rubavu",
-      image: "src/assets/images/gisenyi.jpg",
+      image: gisenyi,
       place: 67,
     },
-    { id: 5, name: "Huye", image: "src/assets/images/mesuim.jpg", place: 52 },
-    { id: 4, name: "Karongi", image: "src/assets/images/chant.jpg", place: 38 },
-    { id: 6, name: "Nyanza", image: "src/assets/images/mesuim.jpg", place: 29 },
+    { id: 5, name: "Huye", image: mesuim, place: 52 },
+    { id: 4, name: "Karongi", image: chant, place: 38 },
+    { id: 6, name: "Nyanza", image: mesuim, place: 29 },
   ];
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyle }} />
-      <h2 className="text-lg md:text-xl lg:text-2xl font-semibold mb-4">
+      <h2 className="text-xl font-semibold mb-4">
         Untold Rwanda
       </h2>
       <div className="overflow-x-auto scrollbar-hide">
@@ -45,10 +50,10 @@ const Cities = () => {
                 className="w-full h-40 md:h-48 lg:h-52 object-cover"
               />
               <div className="p-3 md:p-4">
-                <h3 className="text-base md:text-lg font-semibold text-gray-800">
+                <h3 className="font-semibold text-gray-800">
                   {city.name}
                 </h3>
-                <p className="text-xs md:text-sm text-gray-600 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   {city.place} places
                 </p>
               </div>

@@ -28,7 +28,7 @@ const listings = [
 const FeaturedListings = () => {
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4">Featured Listings</h2>
+      <h2 className="text-xl font-semibold mb-4">Featured Listings</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {listings.map((listing) => (
           <div
@@ -41,8 +41,8 @@ const FeaturedListings = () => {
               className="w-full h-48 object-cover"
             />
             <div className="p-4">
-              <h3 className="text-xl font-bold">{listing.title}</h3>
-              <p className="text-gray-600">{listing.category}</p>
+              <h3 className="font-semibold">{listing.title}</h3>
+              <p className="text-xs text-gray-600">{listing.category}</p>
             </div>
           </div>
         ))}

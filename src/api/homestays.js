@@ -5,12 +5,12 @@ export const homestayServices = {
   // Fetch all homestays
   fetchHomestays: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/homestays`);
+      const response = await fetch(`https://travoozapp.com/api/homestays`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const homestays = await response.json();
-      return { data: homestays, success: true };
+      const result = await response.json();
+      return { data: result.homestays, success: true };
     } catch (error) {
       console.error("Error fetching homestays:", error);
       return { data: [], success: false, error: error.message };
@@ -20,12 +20,14 @@ export const homestayServices = {
   // Get single homestay by ID
   getHomestayById: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/homestays`);
+      const response = await fetch(`https://travoozapp.com/api/homestays`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const homestays = await response.json();
-      const homestay = homestays.find((h) => h.homestay_id === parseInt(id));
+      const result = await response.json();
+      const homestay = result.homestays.find(
+        (h) => h.homestay_id === parseInt(id)
+      );
 
       if (!homestay) {
         throw new Error("Homestay not found");
@@ -49,15 +51,16 @@ export const homestayServices = {
     }
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/rooms?homestay_id=${homestayId}`
-      );
+      const response = await fetch(`https://travoozapp.com/api/rooms`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const rooms = await response.json();
+      const result = await response.json();
+      const rooms = result.data.rooms.filter(
+        (room) => room.homestay_id === parseInt(homestayId)
+      );
       return { data: rooms, success: true };
     } catch (error) {
       console.error("Error fetching rooms:", error);
@@ -229,69 +232,13 @@ const normalizeStatusLabel = (status) => {
   return toTitleCase(normalized.replace(/[._-]+/g, " "));
 };
 
-const normalizeAmenities = (amenities) => {
-  if (!amenities) return [];
-
-  if (Array.isArray(amenities)) {
-    return amenities
-      .map((amenity) => {
-        if (typeof amenity === "string") {
-          return amenity.trim();
-        }
-        if (amenity && typeof amenity === "object") {
-          if (amenity.label) return amenity.label.toString().trim();
-          if (amenity.name) return amenity.name.toString().trim();
-        }
-        return null;
-      })
-      .filter(Boolean);
-  }
-
-  if (typeof amenities === "string") {
-    return amenities
-      .split(/[;,|•]/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  if (typeof amenities === "object") {
-    return Object.entries(amenities)
-      .filter(([, value]) => value === true || value === 1)
-      .map(([key]) =>
-        toTitleCase(
-          key
-            .toString()
-            .replace(/([A-Z])/g, " $1")
-            .replace(/[._-]+/g, " ")
-            .trim()
-        )
-      )
-      .filter(Boolean);
-  }
-
-  return [];
-};
-
 // Transform homestay data for frontend use
 export const transformHomestayData = (homestay) => {
   if (!homestay) return null;
 
-  // Get the main image (first image or ordered image)
-  const mainImage =
-    homestay.images && homestay.images.length > 0
-      ? `${API_BASE_URL}/${homestay.images[0].image_path}`
-      : "/images/default-hotel.jpg";
-
-  // Transform all images
-  const images = homestay.images
-    ? homestay.images
-        .sort((a, b) => a.image_order - b.image_order)
-        .map((img) => ({
-          id: img.image_id,
-          url: `${API_BASE_URL}/${img.image_path}`,
-          order: img.image_order,
-        }))
-    : [];
+  // Since the new API doesn't provide images, we'll use a placeholder.
+  const mainImage = "/images/radsn.jpg"; // Using an existing image as placeholder
+  const images = []; // No images from the new API
 
   // Determine category based on subcategory_id
   const getHomestayCategory = (subcategoryId) => {
@@ -310,10 +257,15 @@ export const transformHomestayData = (homestay) => {
     name: homestay.name,
     description: homestay.description,
     shortDescription: createShortDescription(homestay.description),
-    location: homestay.location,
+    location: homestay.address || "Location not specified", // Use address and provide fallback
     mainImage,
-    images: images.map((img) => img.url),
+    images: images,
+    stars: homestay.star_rating,
     category: getHomestayCategory(homestay.subcategory_id),
+    cancellationPolicy: homestay.cancellation_policy,
+    childPolicy: homestay.child_policy,
+    petPolicy: homestay.pet_policy,
+    email: homestay.email,
     features: {
       freeWifi: homestay.free_wifi,
       parking: homestay.parking_available,
@@ -359,53 +311,29 @@ export const transformHomestayData = (homestay) => {
 export const transformRoomData = (room) => {
   if (!room) return null;
 
-  const images = room.images
-    ? [...room.images]
-        .sort((a, b) => (a.image_order ?? 0) - (b.image_order ?? 0))
-        .map((img) => ({
-          id: img.image_id ?? img.id,
-          url: `${API_BASE_URL}/${img.image_path}`,
-          order: img.image_order ?? 0,
-        }))
-    : [];
+  // No images from the new API, so we use placeholders
+  const mainImage = "/images/rm1.jpg"; // Using an existing room image as placeholder
 
-  const mainImage = images[0]?.url || "/images/default-room.jpg";
-
-  const priceValue = room.price ?? room.price_per_night ?? room.base_price;
-
-  const normalizedAmenities = normalizeAmenities(room.amenities);
-  const normalizedStatus = normalizeStatusLabel(
-    room.status ?? room.status_label
-  );
+  const priceValue = room.price_per_night;
+  const normalizedStatus = normalizeStatusLabel(room.status);
 
   const transformedRoom = {
-    id: room.room_id ?? room.id,
-    name: room.name ?? "Room",
-    description: room.description ?? "",
-    shortDescription: createShortDescription(room.description ?? ""),
+    id: room.room_id,
+    name: room.room_type_name || `Room ${room.room_number}`,
+    description: room.room_type_description || "",
+    shortDescription: createShortDescription(room.room_type_description || ""),
     price: priceValue !== undefined ? parseFloat(priceValue) : null,
     currency: normalizeCurrencyCode(room.currency),
-    capacity: room.capacity ?? room.max_guests ?? null,
-    amenities: normalizedAmenities,
+    capacity: room.max_people,
+    amenities: [], // No amenities data in the new API
     mainImage,
     image: mainImage,
-    images: images.map((img) => img.url),
-    rawImages: images,
+    images: [],
+    rawImages: [],
     status: normalizedStatus,
-    statusRaw: room.status ?? room.status_label ?? null,
+    statusRaw: room.status,
+    size: room.size_sqm,
   };
-
-  if (room.size) {
-    transformedRoom.size = room.size;
-  }
-
-  if (room.beds) {
-    transformedRoom.beds = room.beds;
-  }
-
-  if (room.status) {
-    transformedRoom.status = room.status;
-  }
 
   return transformedRoom;
 };

@@ -410,6 +410,11 @@ const HotelDetails = () => {
   };
 
   const handleBookRoom = async (room) => {
+    if (room.status === "Occupied") {
+      showToast("warning", "This room is currently occupied.");
+      return;
+    }
+
     if (!ensureDatesSelected()) {
       showToast("warning", "Please select check-in and check-out dates first");
       return;
@@ -947,10 +952,28 @@ const HotelDetails = () => {
         </div>
 
         <div className="mt-6">
-          <p className="text-sm text-gray-600 mb-4">
-            <i className="fa fa-location-dot text-green-500"></i>{" "}
-            {hotel.location}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+            <p className="text-sm text-gray-600 flex items-center gap-2">
+              <i className="fa fa-location-dot text-green-500"></i>
+              {hotel.location}
+            </p>
+            {(hotel.phone || hotel.email) && (
+              <div className="flex items-center gap-4">
+                {hotel.phone && (
+                  <p className="text-sm text-gray-600 flex items-center gap-2">
+                    <i className="fa fa-phone text-green-500"></i>
+                    {hotel.phone}
+                  </p>
+                )}
+                {hotel.email && (
+                  <p className="text-sm text-gray-600 flex items-center gap-2">
+                    <i className="fa fa-envelope text-green-500"></i>
+                    {hotel.email}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Rating */}
           <div className="flex items-center gap-4 mb-4">
@@ -981,6 +1004,33 @@ const HotelDetails = () => {
               <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                 {hotel.description}
               </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Policies Section */}
+      <div className="mb-12">
+        <h3 className="text-xl font-semibold mb-4">Hotel Policies</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {hotel.cancellationPolicy && (
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h4 className="font-bold mb-2">Cancellation Policy</h4>
+              <p className="text-sm text-gray-600">
+                {hotel.cancellationPolicy}
+              </p>
+            </div>
+          )}
+          {hotel.childPolicy && (
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h4 className="font-bold mb-2">Child Policy</h4>
+              <p className="text-sm text-gray-600">{hotel.childPolicy}</p>
+            </div>
+          )}
+          {hotel.petPolicy && (
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h4 className="font-bold mb-2">Pet Policy</h4>
+              <p className="text-sm text-gray-600">{hotel.petPolicy}</p>
             </div>
           )}
         </div>

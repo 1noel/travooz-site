@@ -34,12 +34,30 @@ const AvailableStays = () => {
           return;
         }
 
-        const transformedHomestays = homestaysResponse.data
+        let transformedHomestays = homestaysResponse.data
           .map((homestay) => transformHomestayData(homestay))
           .filter(Boolean);
 
+        // Filter by searchParams if present
+        if (searchParams) {
+          const { checkIn, checkOut, guests, destination } = searchParams;
+          // Example: filter by destination (location), guests, dates
+          if (destination) {
+            transformedHomestays = transformedHomestays.filter((hotel) =>
+              hotel.location && hotel.location.toLowerCase().includes(destination.toLowerCase())
+            );
+          }
+          if (guests) {
+            // If hotel has a maxGuests property, filter by it
+            transformedHomestays = transformedHomestays.filter((hotel) =>
+              !hotel.maxGuests || parseInt(guests) <= hotel.maxGuests
+            );
+          }
+          // You can add date filtering if hotel has availability dates
+        }
+
         setAllHotels(transformedHomestays);
-        setFilteredHotels(transformedHomestays); // Initially show all
+        setFilteredHotels(transformedHomestays);
       } catch (err) {
         console.error("Error loading homestays:", err);
         setError("Failed to load homestays");
@@ -49,7 +67,7 @@ const AvailableStays = () => {
     };
 
     loadHotels();
-  }, []);
+  }, [searchParams]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -177,11 +195,17 @@ const AvailableStays = () => {
           </div>
         </div>
       )}
-      <HotelList
-        apiData={filteredHotels}
-        onFilterToggle={() => setShowFilters(!showFilters)}
-        searchParams={searchParams}
-      />
+      {filteredHotels.length === 0 && !loading && !error ? (
+        <div className="text-center py-10 text-gray-500">
+          <p>No stays found matching your search.</p>
+        </div>
+      ) : (
+        <HotelList
+          apiData={filteredHotels}
+          onFilterToggle={() => setShowFilters(!showFilters)}
+          searchParams={searchParams}
+        />
+      )}
     </div>
   );
 };

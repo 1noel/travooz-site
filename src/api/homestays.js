@@ -40,7 +40,7 @@ export const homestayServices = {
     }
   },
 
-  // Fetch rooms for a specific homestay
+  // Fetch room types for a specific homestay (new API structure)
   fetchRoomsByHomestayId: async (homestayId) => {
     if (!homestayId) {
       return {
@@ -52,16 +52,15 @@ export const homestayServices = {
 
     try {
       const response = await fetch(`https://travoozapp.com/api/rooms`);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const result = await response.json();
-      const rooms = result.data.rooms.filter(
-        (room) => room.homestay_id === parseInt(homestayId)
+      // Use room_types array and filter by homestay_id
+      const roomTypes = (result.data.room_types || []).filter(
+        (roomType) => roomType.homestay_id === parseInt(homestayId)
       );
-      return { data: rooms, success: true };
+      return { data: roomTypes, success: true };
     } catch (error) {
       console.error("Error fetching rooms:", error);
       return { data: [], success: false, error: error.message };
@@ -308,34 +307,42 @@ export const transformHomestayData = (homestay) => {
   return transformedData;
 };
 
-export const transformRoomData = (room) => {
-  if (!room) return null;
+export const transformRoomData = (roomType) => {
+  if (!roomType) return null;
 
-  // No images from the new API, so we use placeholders
-  const mainImage = "/images/rm1.jpg"; // Using an existing room image as placeholder
+  // Build image URLs from images array (if present)
+  const images = Array.isArray(roomType.images)
+    ? roomType.images.map((img) =>
+        img.image_path ? `https://travoozapp.com/${img.image_path}` : null
+      ).filter(Boolean)
+    : [];
+  const mainImage = images[0] || "/images/rm1.jpg";
 
-  const priceValue = room.price_per_night;
-  const normalizedStatus = normalizeStatusLabel(room.status);
-
-  const transformedRoom = {
-    id: room.room_id,
-    name: room.room_type_name || `Room ${room.room_number}`,
-    description: room.room_type_description || "",
-    shortDescription: createShortDescription(room.room_type_description || ""),
-    price: priceValue !== undefined ? parseFloat(priceValue) : null,
-    currency: normalizeCurrencyCode(room.currency),
-    capacity: room.max_people,
-    amenities: [], // No amenities data in the new API
+  return {
+    id: roomType.room_type_id,
+    name: roomType.room_type || `Room Type ${roomType.room_type_id}`,
+    description: roomType.description || "",
+    shortDescription: createShortDescription(roomType.description || ""),
+    price: roomType.base_price !== undefined ? parseFloat(roomType.base_price) : null,
+    currency: normalizeCurrencyCode(roomType.currency),
+    capacity: roomType.max_occupancy,
+    size: roomType.size_sqm,
     mainImage,
     image: mainImage,
-    images: [],
-    rawImages: [],
-    status: normalizedStatus,
-    statusRaw: room.status,
-    size: room.size_sqm,
+    images,
+    rawImages: images,
+    status: null, // No status in new API for room type
+    statusRaw: null,
+    totalItems: roomType.total_items,
+    availableCount: roomType.available_count,
+    occupiedCount: roomType.occupied_count,
+    reservedCount: roomType.reserved_count,
+    maintenanceCount: roomType.maintenance_count,
+    outOfOrderCount: roomType.out_of_order_count,
+    cleaningCount: roomType.cleaning_count,
+    homestayId: roomType.homestay_id,
+    homestayName: roomType.homestay_name,
   };
-
-  return transformedRoom;
 };
 
 export default homestayServices;

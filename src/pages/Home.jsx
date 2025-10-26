@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Categories from "../components/Categories";
 import Cities from "../components/Cities";
@@ -12,6 +12,7 @@ import TrendingSpots from "../components/TrendingSpots";
 import TopRated from "../components/TopRated";
 import NearbyGems from "../components/NearbyGems";
 import FeaturedListings from "../components/FeaturedListings";
+import Filter from "../components/Filter";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -39,11 +40,13 @@ const Home = () => {
     },
   ];
 
+
   return (
     <main className="min-h-screen">
       <Categories />
+
+      {/* location */}
       <section className="max-w-8xl mx-auto px-6 md:px-10 lg:px-16 xl:px-20 space-y-5">
-        {/* location */}
         <div className="">
           <Cities />
         </div>

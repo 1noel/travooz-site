@@ -294,23 +294,30 @@ const TourPackageDetails = () => {
             location: pkg.location,
             groupSize: `${pkg.min_people}-${pkg.max_people} people`,
             mainImage: pkg.images?.find((img) => img.image_type === "main")
-              ? `https://travooz.kadgroupltd.com/${
-                  pkg.images.find((img) => img.image_type === "main").image_path
+              ? `https://pre.travoozapp.com${
+                  pkg.images.find((img) => img.image_type === "main").image_path.startsWith("/")
+                    ? pkg.images.find((img) => img.image_type === "main").image_path
+                    : "/" + pkg.images.find((img) => img.image_type === "main").image_path
                 }`
               : "/images/kgl.jpg",
             images: pkg.images
               ? [
                   pkg.images.find((img) => img.image_type === "main")
-                    ? `https://travooz.kadgroupltd.com/${
-                        pkg.images.find((img) => img.image_type === "main")
-                          .image_path
+                    ? `https://pre.travoozapp.com${
+                        pkg.images.find((img) => img.image_type === "main").image_path.startsWith("/")
+                          ? pkg.images.find((img) => img.image_type === "main").image_path
+                          : "/" + pkg.images.find((img) => img.image_type === "main").image_path
                       }`
                     : "/images/kgl.jpg",
                   ...pkg.images
                     .filter((img) => img.image_type === "gallery")
                     .map(
                       (img) =>
-                        `https://travooz.kadgroupltd.com/${img.image_path}`
+                        `https://pre.travoozapp.com${
+                          img.image_path.startsWith("/")
+                            ? img.image_path
+                            : "/" + img.image_path
+                        }`
                     ),
                 ]
               : ["/images/kgl.jpg"],

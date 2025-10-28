@@ -4,13 +4,15 @@ import {
   homestayServices,
   transformHomestayData,
   transformRoomData,
+  transformAvailableRoom,
 } from "../../api/homestays";
-import { useCart } from "../../context/useCart";
+// import { useCart } from "../../context/useCart";
 import Toast from "../../components/Toast";
 import RatingModal from "../../components/RatingModal";
 import RatingDisplay from "../../components/RatingDisplay";
 import { ratingsService } from "../../api/ratings";
 import { useAuth } from "../../context/useAuth";
+// RoomTypeInfo no longer shown inline; navigating to a dedicated page instead
 
 const HotelDetails = () => {
   const { id } = useParams();
@@ -22,33 +24,20 @@ const HotelDetails = () => {
   const [error, setError] = useState(null);
   const [roomsMessage, setRoomsMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState("");
-  const [selectedCheckIn, setSelectedCheckIn] = useState(
-    location.state?.checkIn || ""
-  );
-  const [showCheckInCalendar, setShowCheckInCalendar] = useState(false);
-  const [selectedCheckOut, setSelectedCheckOut] = useState(
-    location.state?.checkOut || ""
-  );
-  const [showCheckOutCalendar, setShowCheckOutCalendar] = useState(false);
-  const [selectedGuests, setSelectedGuests] = useState(
-    location.state?.guests || "1 Guest"
-  );
-  const [showGuestsDropdown, setShowGuestsDropdown] = useState(false);
-  const [roomActionState, setRoomActionState] = useState({});
+  const [selectedCheckIn] = useState(location.state?.checkIn || "");
+  const [selectedCheckOut] = useState(location.state?.checkOut || "");
+  const [selectedGuests] = useState(location.state?.guests || "");
   const [toast, setToast] = useState(null);
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
-  const [availabilityResults, setAvailabilityResults] = useState(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hotelRating, setHotelRating] = useState({
     averageRating: 0,
     totalReviews: 0,
   });
 
-  const { addItem } = useCart();
+  // Cart actions not used on this page anymore
   const { isAuthenticated } = useAuth();
 
-  // Determine if the booking section should be shown
-  const showBookingSection = location.state?.from !== "available-stays";
+  // Quick booking section removed per requirements
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -86,377 +75,13 @@ const HotelDetails = () => {
     }
   };
 
-  const handleCheckHotelAvailability = async () => {
-    if (!selectedCheckIn || !selectedCheckOut) {
-      showToast("warning", "Please select check-in and check-out dates");
-      return;
-    }
+  // Availability check and quick booking UI removed
 
-    if (!hotel.rooms || hotel.rooms.length === 0) {
-      showToast("warning", "No rooms available at this time");
-      return;
-    }
+  // Calendar UI removed
 
-    setCheckingAvailability(true);
-    setAvailabilityResults(null);
+  // Guests dropdown removed
 
-    try {
-      // Check availability for all rooms
-      const availabilityChecks = hotel.rooms.map(async (room) => {
-        try {
-          const response = await homestayServices.checkRoomAvailability({
-            roomId: room.id,
-            checkIn: selectedCheckIn,
-            checkOut: selectedCheckOut,
-            guests: parseGuestsCount(),
-          });
-          return {
-            room,
-            available: response.success,
-            message: response.data?.message || "",
-          };
-        } catch {
-          return {
-            room,
-            available: false,
-            message: "Unable to check availability",
-          };
-        }
-      });
-
-      const results = await Promise.all(availabilityChecks);
-      const availableRooms = results.filter((r) => r.available);
-
-      setAvailabilityResults({
-        total: results.length,
-        available: availableRooms.length,
-        rooms: results,
-      });
-
-      if (availableRooms.length > 0) {
-        showToast(
-          "success",
-          `${availableRooms.length} room(s) available for your dates!`
-        );
-      } else {
-        showToast("warning", "No rooms available for the selected dates");
-      }
-    } catch {
-      showToast("error", "Failed to check availability. Please try again.");
-    } finally {
-      setCheckingAvailability(false);
-    }
-  };
-
-  // Calendar component for check-in/check-out
-  const CustomCalendar = ({ onDateSelect, onClose }) => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const [displayMonth, setDisplayMonth] = useState(currentMonth);
-    const [displayYear, setDisplayYear] = useState(currentYear);
-
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-
-    const getDaysInMonth = (month, year) => {
-      return new Date(year, month + 1, 0).getDate();
-    };
-
-    const getFirstDayOfMonth = (month, year) => {
-      return new Date(year, month, 1).getDay();
-    };
-
-    const handleDateSelect = (day) => {
-      const date = new Date(displayYear, displayMonth, day);
-      const formattedDate = date.toLocaleDateString("en-CA"); // YYYY-MM-DD format
-      onDateSelect(formattedDate);
-      onClose();
-    };
-
-    const handlePrevMonth = () => {
-      if (displayMonth === 0) {
-        setDisplayMonth(11);
-        setDisplayYear(displayYear - 1);
-      } else {
-        setDisplayMonth(displayMonth - 1);
-      }
-    };
-
-    const handleNextMonth = () => {
-      if (displayMonth === 11) {
-        setDisplayMonth(0);
-        setDisplayYear(displayYear + 1);
-      } else {
-        setDisplayMonth(displayMonth + 1);
-      }
-    };
-
-    const daysInMonth = getDaysInMonth(displayMonth, displayYear);
-    const firstDay = getFirstDayOfMonth(displayMonth, displayYear);
-    const days = [];
-
-    // Empty cells for days before the first day of the month
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-10"></div>);
-    }
-
-    // Days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isToday =
-        day === today.getDate() &&
-        displayMonth === currentMonth &&
-        displayYear === currentYear;
-      const isPast =
-        new Date(displayYear, displayMonth, day) <
-        new Date(currentYear, currentMonth, today.getDate());
-
-      days.push(
-        <button
-          key={day}
-          onClick={() => !isPast && handleDateSelect(day)}
-          disabled={isPast}
-          className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200 ${
-            isToday
-              ? "bg-green-600 text-white shadow-lg"
-              : isPast
-              ? "text-gray-300 cursor-not-allowed"
-              : "text-gray-700 hover:bg-green-100 hover:text-green-600"
-          }`}
-        >
-          {day}
-        </button>
-      );
-    }
-
-    return (
-      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4">
-        {/* Calendar Header */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={handlePrevMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg
-              className="w-5 h-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <h3 className="text-lg font-semibold text-gray-800">
-            {monthNames[displayMonth]} {displayYear}
-          </h3>
-          <button
-            onClick={handleNextMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg
-              className="w-5 h-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Days of Week */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-            <div
-              key={day}
-              className="h-8 flex items-center justify-center text-xs font-medium text-gray-500"
-            >
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar Days */}
-        <div className="grid grid-cols-7 gap-1">{days}</div>
-
-        {/* Footer */}
-        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-sm font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              onDateSelect("");
-              onClose();
-            }}
-            className="text-green-600 hover:text-green-700 text-sm font-medium"
-          >
-            Clear
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // Custom Guests Dropdown component
-  const CustomGuestsDropdown = () => {
-    const guestOptions = [
-      { value: "1 Guest", label: "1 Guest" },
-      { value: "2 Guests", label: "2 Guests" },
-      { value: "3 Guests", label: "3 Guests" },
-      { value: "4+ Guests", label: "4+ Guests" },
-    ];
-
-    const handleGuestSelect = (option) => {
-      setSelectedGuests(option.value);
-      setShowGuestsDropdown(false);
-    };
-
-    return (
-      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-2">
-        {guestOptions.map((option, index) => (
-          <button
-            key={option.value}
-            onClick={() => handleGuestSelect(option)}
-            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-green-50 hover:text-green-600 transition-all duration-200 ${
-              selectedGuests === option.value
-                ? "bg-green-50 text-green-600 font-medium"
-                : "text-gray-700"
-            } ${index === 0 ? "rounded-t-xl" : ""} ${
-              index === guestOptions.length - 1 ? "rounded-b-xl" : ""
-            }`}
-          >
-            <span className="font-medium">{option.label}</span>
-            {selectedGuests === option.value && (
-              <span>
-                <svg
-                  className="w-5 h-5 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-    );
-  };
-
-  const updateRoomState = (roomId, updates) => {
-    setRoomActionState((previous) => ({
-      ...previous,
-      [roomId]: {
-        ...(previous[roomId] ?? {}),
-        ...updates,
-      },
-    }));
-  };
-
-  const parseGuestsCount = () => {
-    const numeric = parseInt(selectedGuests, 10);
-    if (Number.isNaN(numeric) || numeric <= 0) {
-      return 1;
-    }
-    return numeric;
-  };
-
-  const formatDateForMetadata = (date) => {
-    if (!date) return "";
-    try {
-      return new Date(date).toLocaleDateString();
-    } catch {
-      return date;
-    }
-  };
-
-  const ensureDatesSelected = () => {
-    if (!selectedCheckIn || !selectedCheckOut) {
-      return false;
-    }
-    return true;
-  };
-
-  const handleBookRoom = async (room) => {
-    if (room.status === "Occupied") {
-      showToast("warning", "This room is currently occupied.");
-      return;
-    }
-
-    if (!ensureDatesSelected()) {
-      showToast("warning", "Please select check-in and check-out dates first");
-      return;
-    }
-
-    updateRoomState(room.id, {
-      bookingLoading: true,
-    });
-
-    try {
-      const bookingReference = `ROOM-${room.id}-${Date.now()}`;
-      const generatedId = bookingReference;
-
-      addItem({
-        id: generatedId,
-        type: "room",
-        name: `${hotel.name} • ${room.name}`,
-        price: room.price,
-        currency: room.currency || "RWF",
-        metadata: {
-          checkIn: formatDateForMetadata(selectedCheckIn),
-          checkOut: formatDateForMetadata(selectedCheckOut),
-          guests: parseGuestsCount(),
-          reference: bookingReference,
-        },
-      });
-
-      updateRoomState(room.id, {
-        bookingLoading: false,
-      });
-
-      showToast("success", "Room added to cart successfully!");
-    } catch (error) {
-      updateRoomState(room.id, {
-        bookingLoading: false,
-      });
-      showToast(
-        "error",
-        error.message || "Failed to add to cart. Please try again."
-      );
-    }
-  };
+  // Inline booking and details have been removed; navigation to a dedicated page instead
 
   useEffect(() => {
     const fetchHotelDetails = async () => {
@@ -464,12 +89,10 @@ const HotelDetails = () => {
         setLoading(true);
         setError(null);
 
-        const [homestayResponse, roomsResponse, ratingsResponse] =
-          await Promise.all([
-            homestayServices.getHomestayById(id),
-            homestayServices.fetchRoomsByHomestayId(id),
-            ratingsService.getHomestayRatings(id),
-          ]);
+        const [homestayResponse, ratingsResponse] = await Promise.all([
+          homestayServices.getHomestayById(id),
+          ratingsService.getHomestayRatings(id),
+        ]);
 
         if (homestayResponse.success && homestayResponse.data) {
           const transformedHomestay = transformHomestayData(
@@ -479,16 +102,44 @@ const HotelDetails = () => {
           let rooms = [];
           let roomsNotice = "";
 
-          if (roomsResponse.success && Array.isArray(roomsResponse.data)) {
-            rooms = roomsResponse.data
-              .map((room) => transformRoomData(room))
-              .filter(Boolean);
-
-            if (rooms.length === 0) {
-              roomsNotice = "Rooms are not available right now.";
+          // If dates/guests provided from search, use available-rooms endpoint
+          const hasCriteria = Boolean(selectedCheckIn && selectedCheckOut);
+          if (hasCriteria) {
+            const guestsNum =
+              (selectedGuests || "").toString().match(/\d+/)?.[0] ||
+              selectedGuests ||
+              1;
+            const availRes = await homestayServices.searchAvailableRooms({
+              homestayId: id,
+              startDate: selectedCheckIn,
+              endDate: selectedCheckOut,
+              guests: guestsNum,
+            });
+            if (availRes.success) {
+              rooms = (availRes.data || [])
+                .map((item) => transformAvailableRoom(item))
+                .filter(Boolean);
+              if (rooms.length === 0) {
+                roomsNotice = "No rooms available for your selected dates.";
+              }
+            } else {
+              roomsNotice = availRes.error || "Failed to load available rooms.";
             }
           } else {
-            roomsNotice = "Rooms are not available right now.";
+            // Fallback: show room types (not availability filtered)
+            const roomsResponse = await homestayServices.fetchRoomsByHomestayId(
+              id
+            );
+            if (roomsResponse.success && Array.isArray(roomsResponse.data)) {
+              rooms = roomsResponse.data
+                .map((room) => transformRoomData(room))
+                .filter(Boolean);
+              if (rooms.length === 0) {
+                roomsNotice = "Rooms are not available right now.";
+              }
+            } else {
+              roomsNotice = "Rooms are not available right now.";
+            }
           }
 
           const combinedHotel = {
@@ -530,7 +181,7 @@ const HotelDetails = () => {
     };
 
     fetchHotelDetails();
-  }, [id]);
+  }, [id, selectedCheckIn, selectedCheckOut, selectedGuests]);
 
   // Only show amenities/features that exist in the API response
   const getAvailableAmenities = (hotel) => {
@@ -781,174 +432,7 @@ const HotelDetails = () => {
             )}
           </div>
 
-          {/* Booking Sidebar - Conditionally Rendered */}
-          {showBookingSection && (
-            <div className="w-full lg:w-[360px] xl:w-[400px]">
-              <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg w-full lg:sticky lg:top-24">
-                <h3 className="text-xl font-semibold mb-6 text-center lg:text-left">
-                  Quick Booking
-                </h3>
-                <div className="space-y-6">
-                  <div className="relative">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Check-in
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={
-                          selectedCheckIn
-                            ? new Date(selectedCheckIn).toLocaleDateString(
-                                "en-US",
-                                {
-                                  weekday: "short",
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )
-                            : ""
-                        }
-                        placeholder="Select check-in date"
-                        readOnly
-                        onClick={() =>
-                          setShowCheckInCalendar(!showCheckInCalendar)
-                        }
-                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-                    {showCheckInCalendar && (
-                      <CustomCalendar
-                        onDateSelect={setSelectedCheckIn}
-                        onClose={() => setShowCheckInCalendar(false)}
-                      />
-                    )}
-                  </div>
-                  <div className="relative">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Check-out
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={
-                          selectedCheckOut
-                            ? new Date(selectedCheckOut).toLocaleDateString(
-                                "en-US",
-                                {
-                                  weekday: "short",
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )
-                            : ""
-                        }
-                        placeholder="Select check-out date"
-                        readOnly
-                        onClick={() =>
-                          setShowCheckOutCalendar(!showCheckOutCalendar)
-                        }
-                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-700 bg-white shadow-sm hover:border-gray-300 cursor-pointer"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-                    {showCheckOutCalendar && (
-                      <CustomCalendar
-                        onDateSelect={setSelectedCheckOut}
-                        onClose={() => setShowCheckOutCalendar(false)}
-                      />
-                    )}
-                  </div>
-                  <div className="relative">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Guests
-                    </label>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowGuestsDropdown(!showGuestsDropdown)
-                        }
-                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white text-gray-700 shadow-sm hover:border-gray-300 text-left flex items-center justify-between"
-                      >
-                        <span className="font-medium">{selectedGuests}</span>
-                        <svg
-                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                            showGuestsDropdown ? "rotate-180" : ""
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M19 9l-7 7-7-7"
-                          ></path>
-                        </svg>
-                      </button>
-                      {showGuestsDropdown && <CustomGuestsDropdown />}
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleCheckHotelAvailability}
-                    disabled={checkingAvailability}
-                    className={`w-full py-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${
-                      checkingAvailability
-                        ? "bg-green-400 cursor-wait"
-                        : "bg-green-600 hover:bg-green-700 transform hover:-translate-y-0.5"
-                    } text-white`}
-                  >
-                    {checkingAvailability
-                      ? "Checking..."
-                      : "Check Availability"}
-                  </button>
-                  {availabilityResults && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-semibold text-gray-900 mb-2">
-                        Availability Results:
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        {availabilityResults.available} of{" "}
-                        {availabilityResults.total} room(s) available
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Quick Booking section removed */}
         </div>
 
         <div className="mt-6">
@@ -1047,11 +531,11 @@ const HotelDetails = () => {
           )}
         </div>
 
+        {/* Grouped-by-room-type view removed, restoring original flat grid */}
+
         {hotel.rooms && hotel.rooms.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {hotel.rooms.map((room) => {
-              const roomState = roomActionState[room.id] ?? {};
-              const { bookingLoading } = roomState;
               const stats = [];
 
               if (room.size) {
@@ -1083,6 +567,35 @@ const HotelDetails = () => {
                 <div
                   key={room.id}
                   className="overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white cursor-pointer rounded"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    navigate(`/room-type/${room.id}`, {
+                      state: {
+                        hotelId: hotel.id,
+                        hotelName: hotel.name,
+                        roomName: room.name,
+                        checkIn: selectedCheckIn || "",
+                        checkOut: selectedCheckOut || "",
+                        guests: selectedGuests || "",
+                      },
+                    })
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/room-type/${room.id}`, {
+                        state: {
+                          hotelId: hotel.id,
+                          hotelName: hotel.name,
+                          roomName: room.name,
+                          checkIn: selectedCheckIn || "",
+                          checkOut: selectedCheckOut || "",
+                          guests: selectedGuests || "",
+                        },
+                      });
+                    }
+                  }}
                 >
                   <img
                     src={room.mainImage || room.image}
@@ -1143,21 +656,10 @@ const HotelDetails = () => {
                         </span>
                       </p>
                     )}
+
+                    {/* Click the card to view room type details on a dedicated page */}
                   </div>
-                  <div className="px-4 py-2 border-t border-gray-100">
-                    <button
-                      type="button"
-                      onClick={() => handleBookRoom(room)}
-                      disabled={bookingLoading}
-                      className={`w-full px-3 py-2 rounded-lg font-medium text-xs transition-colors ${
-                        bookingLoading
-                          ? "bg-green-200 text-white cursor-wait"
-                          : "bg-green-500 hover:bg-green-600 text-white"
-                      }`}
-                    >
-                      {bookingLoading ? "Booking..." : "Book"}
-                    </button>
-                  </div>
+                  {/* Book button removed as per requirements */}
                 </div>
               );
             })}

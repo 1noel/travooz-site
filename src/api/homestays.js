@@ -188,6 +188,118 @@ export const homestayServices = {
       };
     }
   },
+
+  // Fetch room type availability details (per-room-type)
+  getRoomTypeAvailability: async ({ roomTypeId, startDate, endDate }) => {
+    if (!roomTypeId) {
+      return { success: false, error: "roomTypeId is required" };
+    }
+    if (!startDate || !endDate) {
+      return { success: false, error: "startDate and endDate are required" };
+    }
+
+    try {
+      const params = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate,
+      });
+      const endpoint = `https://travoozapp.com/api/room-availability/room/${roomTypeId}?${params.toString()}`;
+      const res = await fetch(endpoint);
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        const message =
+          json?.message || "Failed to fetch room type availability";
+        throw new Error(message);
+      }
+      return { success: true, data: json?.data ?? json };
+    } catch (error) {
+      console.error("Error fetching room type availability:", error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Search available hotels for a date range and optional location/guests
+  searchAvailableHotels: async ({ locationId, startDate, endDate, guests }) => {
+    try {
+      // If we don't have a locationId yet, fall back to general homestays list
+      if (!locationId) {
+        const fallback = await homestayServices.fetchHomestays();
+        if (fallback.success) {
+          return { success: true, data: fallback.data };
+        }
+        return {
+          success: false,
+          error: fallback.error || "Failed to load hotels",
+          data: [],
+        };
+      }
+
+      const params = new URLSearchParams();
+      if (locationId) params.append("location_id", String(locationId));
+      if (startDate) params.append("start_date", startDate);
+      if (endDate) params.append("end_date", endDate);
+      if (guests) params.append("guests", String(guests));
+
+      const endpoint = `https://travoozapp.com/api/room-availability/available-hotels?${params.toString()}`;
+      const res = await fetch(endpoint);
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        const message = json?.message || "Failed to fetch available hotels";
+        // Graceful fallback when backend requires location_id
+        if (/location id is required/i.test(message)) {
+          const fb = await homestayServices.fetchHomestays();
+          if (fb.success) {
+            return { success: true, data: fb.data };
+          }
+        }
+        throw new Error(message);
+      }
+      // Some endpoints return {success, data}, others direct; normalize
+      const payload = json?.data?.hotels ?? json?.data ?? json;
+      const hotels = Array.isArray(payload?.hotels)
+        ? payload.hotels
+        : Array.isArray(payload)
+        ? payload
+        : [];
+      return { success: true, data: hotels };
+    } catch (error) {
+      console.error("Error fetching available hotels:", error);
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  // Get available rooms for a given homestay and date range
+  searchAvailableRooms: async ({
+    homestayId,
+    startDate,
+    endDate,
+    guests,
+    roomTypeId,
+  }) => {
+    try {
+      const params = new URLSearchParams();
+      if (homestayId) params.append("homestay_id", String(homestayId));
+      if (startDate) params.append("start_date", startDate);
+      if (endDate) params.append("end_date", endDate);
+      if (guests) params.append("guests", String(guests));
+      if (roomTypeId && roomTypeId !== "all")
+        params.append("room_type_id", String(roomTypeId));
+
+      const endpoint = `https://travoozapp.com/api/room-availability/available-rooms?${params.toString()}`;
+      const res = await fetch(endpoint);
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        const message = json?.message || "Failed to fetch available rooms";
+        throw new Error(message);
+      }
+      const payload = json?.data?.available_rooms ?? json?.data ?? json;
+      const rooms = Array.isArray(payload) ? payload : [];
+      return { success: true, data: rooms };
+    } catch (error) {
+      console.error("Error fetching available rooms:", error);
+      return { success: false, error: error.message, data: [] };
+    }
+  },
 };
 
 const createShortDescription = (text, maxLength = 140) => {
@@ -213,22 +325,6 @@ const normalizeCurrencyCode = (currency) => {
   }
 
   return normalized;
-};
-
-const toTitleCase = (value) =>
-  value
-    .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-
-const normalizeStatusLabel = (status) => {
-  if (!status) return null;
-
-  const normalized = status.toString().trim();
-  if (!normalized) return null;
-
-  return toTitleCase(normalized.replace(/[._-]+/g, " "));
 };
 
 // Transform homestay data for frontend use
@@ -307,14 +403,172 @@ export const transformHomestayData = (homestay) => {
   return transformedData;
 };
 
+// Transform a hotel item from available-hotels endpoint to the frontend shape
+export const transformAvailableHotel = (hotel) => {
+  if (!hotel) return null;
+
+  const images = Array.isArray(hotel.images)
+    ? hotel.images
+        .map((img) =>
+          img?.image_path ? `https://travoozapp.com/${img.image_path}` : null
+        )
+        .filter(Boolean)
+    : [];
+  const mainImage = images[0] || "/images/radsn.jpg";
+
+  const features = {
+    freeWifi: Boolean(hotel.free_wifi),
+    parking: Boolean(hotel.parking_available),
+    swimmingPool: Boolean(hotel.swimming_pool),
+    restaurant: Boolean(hotel.restaurant),
+    breakfastIncluded: Boolean(hotel.breakfast_included),
+  };
+
+  const shortDescription = createShortDescription(hotel.description, 160);
+
+  return {
+    id: hotel.homestay_id,
+    vendorId: hotel.vendor_id,
+    name: hotel.homestay_name || hotel.name,
+    description: hotel.description || "",
+    shortDescription,
+    location: hotel.location_name || hotel.address || "",
+    mainImage,
+    images,
+    stars: hotel.star_rating,
+    features,
+    priceFrom: hotel.price_from ? parseFloat(hotel.price_from) : null,
+    currency: "RWF",
+    availableRoomsCount: hotel.available_rooms_count,
+    maxOccupancy: hotel.max_occupancy,
+    phone: hotel.phone || "",
+    slug: (hotel.homestay_name || hotel.name || "hotel")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, ""),
+  };
+};
+
+// Transform available-rooms items to our room card shape
+export const transformAvailableRoom = (item) => {
+  if (!item) return null;
+
+  // Try to derive images
+  const images = Array.isArray(item.images)
+    ? item.images
+        .map((img) =>
+          img?.image_path ? `https://travoozapp.com/${img.image_path}` : null
+        )
+        .filter(Boolean)
+    : [];
+  const mainImage = images[0] || "/images/rm1.jpg";
+
+  // Normalize likely fields
+  const id =
+    item.room_type_id ||
+    item.id ||
+    item.inventory_id ||
+    Math.random().toString(36).slice(2);
+  const name = item.room_type || item.name || "Room";
+  const price =
+    item.base_price != null
+      ? parseFloat(item.base_price)
+      : item.price != null
+      ? parseFloat(item.price)
+      : null;
+  const currency = normalizeCurrencyCode(item.currency || "RWF");
+  const capacity = item.max_occupancy || item.capacity;
+  const size = item.size_sqm || item.size;
+
+  return {
+    id,
+    name,
+    description: item.description || "",
+    shortDescription: createShortDescription(item.description || ""),
+    price,
+    currency,
+    capacity,
+    size,
+    mainImage,
+    image: mainImage,
+    images,
+    status: "available",
+    homestayId: item.homestay_id,
+    homestayName: item.homestay_name,
+  };
+};
+
+// Group available rooms by room type with counts and room numbers
+export const transformAvailableRoomsGrouped = (items) => {
+  const list = Array.isArray(items) ? items : [];
+  const map = new Map();
+
+  for (const it of list) {
+    const rtId = it?.room_type_id || it?.roomTypeId || it?.room_type?.id;
+    const key = rtId != null ? String(rtId) : `unknown-${it?.room_type || ""}`;
+    const name =
+      it?.room_type || it?.roomTypeName || it?.room_type_name || "Room";
+    const roomNumber = it?.room_number ?? it?.roomNumber ?? null;
+    const inventoryId = it?.inventory_id ?? it?.id ?? null;
+    const price =
+      it?.base_price != null
+        ? parseFloat(it.base_price)
+        : it?.price != null
+        ? parseFloat(it.price)
+        : null;
+    const currency = normalizeCurrencyCode(it?.currency || "RWF");
+    const capacity = it?.max_occupancy ?? it?.capacity ?? null;
+    const size = it?.size_sqm ?? it?.size ?? null;
+
+    const images = Array.isArray(it?.images)
+      ? it.images
+          .map((img) =>
+            img?.image_path ? `https://travoozapp.com/${img.image_path}` : null
+          )
+          .filter(Boolean)
+      : [];
+
+    if (!map.has(key)) {
+      map.set(key, {
+        roomTypeId: rtId ?? key,
+        roomTypeName: name,
+        basePrice: price,
+        currency,
+        capacity,
+        size,
+        images,
+        mainImage: images[0] || "/images/rm1.jpg",
+        availableRooms: [],
+        availableCount: 0,
+      });
+    }
+
+    const group = map.get(key);
+    if (inventoryId || roomNumber) {
+      group.availableRooms.push({ inventoryId, roomNumber });
+    }
+    group.availableCount = group.availableRooms.length;
+    // Prefer the lowest price as basePrice
+    if (price != null) {
+      if (group.basePrice == null || price < group.basePrice) {
+        group.basePrice = price;
+      }
+    }
+  }
+
+  return Array.from(map.values());
+};
+
 export const transformRoomData = (roomType) => {
   if (!roomType) return null;
 
   // Build image URLs from images array (if present)
   const images = Array.isArray(roomType.images)
-    ? roomType.images.map((img) =>
-        img.image_path ? `https://travoozapp.com/${img.image_path}` : null
-      ).filter(Boolean)
+    ? roomType.images
+        .map((img) =>
+          img.image_path ? `https://travoozapp.com/${img.image_path}` : null
+        )
+        .filter(Boolean)
     : [];
   const mainImage = images[0] || "/images/rm1.jpg";
 
@@ -323,7 +577,10 @@ export const transformRoomData = (roomType) => {
     name: roomType.room_type || `Room Type ${roomType.room_type_id}`,
     description: roomType.description || "",
     shortDescription: createShortDescription(roomType.description || ""),
-    price: roomType.base_price !== undefined ? parseFloat(roomType.base_price) : null,
+    price:
+      roomType.base_price !== undefined
+        ? parseFloat(roomType.base_price)
+        : null,
     currency: normalizeCurrencyCode(roomType.currency),
     capacity: roomType.max_occupancy,
     size: roomType.size_sqm,

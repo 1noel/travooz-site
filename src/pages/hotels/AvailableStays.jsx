@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { homestayServices, transformHomestayData } from "../../api/homestays";
+import {
+  homestayServices,
+  transformHomestayData,
+  transformAvailableHotel,
+} from "../../api/homestays";
 import { HotelList } from "../../components/HotelList";
 
 const AvailableStays = () => {
@@ -16,16 +20,41 @@ const AvailableStays = () => {
   });
 
   // Extract search parameters from the navigation state
-  const searchParams = location.state || {};
+  const searchParams = React.useMemo(
+    () => location.state || {},
+    [location.state]
+  );
 
   useEffect(() => {
     const loadHotels = async () => {
       try {
         setLoading(true);
         setError(null);
+        const { checkIn, checkOut, guests } = searchParams || {};
 
+        // If we have search criteria from the landing filter, use the new endpoint
+        if (checkIn && checkOut && guests) {
+          const availRes = await homestayServices.searchAvailableHotels({
+            startDate: checkIn,
+            endDate: checkOut,
+            guests: (guests || "").toString().match(/\d+/)?.[0] || guests,
+          });
+
+          if (!availRes.success) {
+            setError(availRes.error || "Failed to load available hotels");
+            return;
+          }
+
+          const hotels = (availRes.data || [])
+            .map((h) => transformAvailableHotel(h))
+            .filter(Boolean);
+          setAllHotels(hotels);
+          setFilteredHotels(hotels);
+          return;
+        }
+
+        // Fallback: legacy list of homestays when no search criteria provided
         const homestaysResponse = await homestayServices.fetchHomestays();
-
         if (
           !homestaysResponse?.success ||
           !Array.isArray(homestaysResponse.data)
@@ -33,29 +62,9 @@ const AvailableStays = () => {
           setError("Failed to load homestays");
           return;
         }
-
-        let transformedHomestays = homestaysResponse.data
+        const transformedHomestays = homestaysResponse.data
           .map((homestay) => transformHomestayData(homestay))
           .filter(Boolean);
-
-        // Filter by searchParams if present
-        if (searchParams) {
-          const { checkIn, checkOut, guests, destination } = searchParams;
-          // Example: filter by destination (location), guests, dates
-          if (destination) {
-            transformedHomestays = transformedHomestays.filter((hotel) =>
-              hotel.location && hotel.location.toLowerCase().includes(destination.toLowerCase())
-            );
-          }
-          if (guests) {
-            // If hotel has a maxGuests property, filter by it
-            transformedHomestays = transformedHomestays.filter((hotel) =>
-              !hotel.maxGuests || parseInt(guests) <= hotel.maxGuests
-            );
-          }
-          // You can add date filtering if hotel has availability dates
-        }
-
         setAllHotels(transformedHomestays);
         setFilteredHotels(transformedHomestays);
       } catch (err) {

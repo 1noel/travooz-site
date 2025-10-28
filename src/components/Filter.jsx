@@ -793,6 +793,7 @@ const Filter = () => {
     if (activeCategory === "restStay") {
       navigate("/available-stays", {
         state: {
+          destination: locationInputValue,
           checkIn: checkInValue,
           checkOut: checkOutValue,
           guests: selectedAdults,

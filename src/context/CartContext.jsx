@@ -86,6 +86,21 @@ export const CartProvider = ({ children }) => {
     );
   };
 
+  const updateItemMetadata = (itemId, type, metadataPatch) => {
+    if (!itemId || !metadataPatch || typeof metadataPatch !== "object") return;
+    setItems((previous) =>
+      previous.map((item) => {
+        if (item.id === itemId && (!type || item.type === type)) {
+          return {
+            ...item,
+            metadata: { ...item.metadata, ...metadataPatch },
+          };
+        }
+        return item;
+      })
+    );
+  };
+
   const clearCart = () => setItems([]);
 
   const cartCount = useMemo(
@@ -98,7 +113,14 @@ export const CartProvider = ({ children }) => {
   );
 
   const value = useMemo(
-    () => ({ items, addItem, removeItem, clearCart, cartCount }),
+    () => ({
+      items,
+      addItem,
+      removeItem,
+      clearCart,
+      cartCount,
+      updateItemMetadata,
+    }),
     [items, cartCount]
   );
 

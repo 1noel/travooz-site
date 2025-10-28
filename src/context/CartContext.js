@@ -6,4 +6,5 @@ export const CartContext = createContext({
   removeItem: () => {},
   clearCart: () => {},
   cartCount: 0,
+  updateItemMetadata: () => {},
 });

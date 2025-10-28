@@ -7,6 +7,7 @@ import Hotels from "./pages/hotels/Hotels";
 import AvailableStays from "./pages/hotels/AvailableStays"; // Import the new component
 import Header from "./components/Header";
 import HotelDetails from "./pages/hotels/HotelDetails";
+import RoomTypeDetails from "./pages/hotels/RoomTypeDetails";
 import Eating from "./pages/EatingOut/Eating";
 import EatingDetails from "./pages/EatingOut/EatingDeatils";
 import Activities from "./pages/Activities/Activities";
@@ -47,6 +48,7 @@ const AppContent = () => {
         <Route path="/hotels" element={<Hotels />} />
         <Route path="/available-stays" element={<AvailableStays />} />
         <Route path="/hotel/:id" element={<HotelDetails />} />
+        <Route path="/room-type/:roomTypeId" element={<RoomTypeDetails />} />
         <Route path="/eating-out" element={<Eating />} />
         <Route path="/restaurant/:id" element={<EatingDetails />} />
         <Route path="/activities" element={<Activities />} />

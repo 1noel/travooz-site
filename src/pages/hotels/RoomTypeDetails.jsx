@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import RoomTypeInfo from "../../components/RoomTypeInfo";
@@ -122,10 +123,12 @@ const RoomTypeDetails = () => {
     // Prefill dates if passed from previous page and auto-submit
     const ci = fromState.checkIn ? toISODate(fromState.checkIn) : "";
     const co = fromState.checkOut ? toISODate(fromState.checkOut) : "";
+    console.log("RoomTypeDetails - Received dates:", { ci, co, fromState });
     if (ci) setCheckIn(ci);
     if (co) setCheckOut(co);
     if (ci && co) {
       setSubmitted(true);
+      setShowAvailabilityModal(true); // Auto-open modal when dates provided
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

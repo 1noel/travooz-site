@@ -4,6 +4,7 @@ import { homestayServices } from "../api/homestays";
 /**
  * RoomTypeInfo
  * Displays detailed info and availability for a specific room type within a date range.
+ * Uses ONLY real API data - refreshes every 15 seconds for live updates.
  *
  * Props:
  * - roomTypeId: number|string (required)
@@ -18,12 +19,11 @@ const RoomTypeInfo = ({
   endDate,
   onAddToCart,
   onBookNow,
-  bookedInventoryIds = [], // inventory_ids that were just booked in this session
-  bookedRoomNumbers = [], // room numbers that were just booked in this session
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
+  const [lastFetched, setLastFetched] = useState(null);
 
   const hasDates = Boolean(startDate && endDate);
 
@@ -53,93 +53,65 @@ const RoomTypeInfo = ({
     }
   };
 
-  // Real-time optimistic updates for booked rooms
-  const bookedSet = useMemo(
-    () =>
-      new Set(
-        Array.isArray(bookedInventoryIds)
-          ? bookedInventoryIds.map((v) => String(v))
-          : []
-      ),
-    [bookedInventoryIds]
-  );
-
-  const bookedRoomNumberSet = useMemo(
-    () =>
-      new Set(
-        Array.isArray(bookedRoomNumbers)
-          ? bookedRoomNumbers.map((v) => String(v))
-          : []
-      ),
-    [bookedRoomNumbers]
-  );
-
-  // Use only confirmed/booked values from parent/broadcasts
-  const allBookedInventorySet = bookedSet;
-  const allBookedRoomNumberSet = bookedRoomNumberSet;
-
+  // Use ONLY real API data - no UI overlays
   const derivedRoomDetails = useMemo(() => {
     if (!Array.isArray(data?.room_details)) return [];
-    return data.room_details.map((rd) => {
-      if (
-        allBookedInventorySet.has(String(rd.inventory_id)) ||
-        allBookedRoomNumberSet.has(String(rd.room_number))
-      ) {
-        return {
-          ...rd,
-          is_available: false,
-          current_status:
-            rd.current_status === "occupied" ? rd.current_status : "occupied",
-          // Reflect booking dates for just-booked rooms
-          check_in_date: rd.check_in_date || startDate,
-          check_out_date: rd.check_out_date || endDate,
-        };
-      }
-      return rd;
-    });
-  }, [data, allBookedInventorySet, allBookedRoomNumberSet, startDate, endDate]);
+    // Return API data as-is, no modifications
+    return data.room_details;
+  }, [data]);
 
   const availability = useMemo(() => {
-    if (!Array.isArray(derivedRoomDetails) || derivedRoomDetails.length === 0) {
-      return data?.availability_summary || {};
-    }
-    const total = derivedRoomDetails.length;
-    const availableRooms = derivedRoomDetails.filter(
-      (rd) => rd.is_available
-    ).length;
-    const occupiedRooms = total - availableRooms;
-    return {
-      ...(data?.availability_summary || {}),
-      total_rooms: total,
-      available_rooms: availableRooms,
-      occupied_rooms: occupiedRooms,
-    };
-  }, [derivedRoomDetails, data]);
+    // Use API availability summary directly
+    return data?.availability_summary || {};
+  }, [data]);
 
   useEffect(() => {
     let cancelled = false;
-    const fetchData = async () => {
+    let pollInterval = null;
+
+    const fetchData = async (isPolling = false) => {
       if (!roomTypeId || !hasDates) return;
-      setLoading(true);
-      setError(null);
-      setData(null);
+
+      // Only show loading on initial fetch, not during polling
+      if (!isPolling) {
+        setLoading(true);
+        setError(null);
+        setData(null);
+      }
+
       const res = await homestayServices.getRoomTypeAvailability({
         roomTypeId,
         startDate,
         endDate,
       });
+
       if (cancelled) return;
+
       if (res.success) {
         setData(res.data);
+        setLastFetched(new Date().toISOString());
       } else {
         setError(res.error || "Failed to load room availability");
       }
-      setLoading(false);
+
+      if (!isPolling) {
+        setLoading(false);
+      }
     };
 
-    fetchData();
+    // Initial fetch
+    fetchData(false);
+
+    // Poll API every 15 seconds for real-time updates
+    pollInterval = setInterval(() => {
+      fetchData(true);
+    }, 15000); // 15 seconds
+
     return () => {
       cancelled = true;
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
     };
   }, [roomTypeId, startDate, endDate, hasDates]);
 
@@ -252,31 +224,48 @@ const RoomTypeInfo = ({
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Summary Row */}
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${
-              availability.available_rooms > 0
-                ? "bg-green-50 text-green-700 border-green-200"
-                : "bg-red-50 text-red-600 border-red-200"
-            }`}
-          >
-            {availability.available_rooms > 0 ? "Available" : "Not Available"}
-          </span>
-          {availability.total_rooms != null && (
-            <span className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-700 border border-gray-200">
-              Total: {availability.total_rooms}
+        {/* Summary Row with Live Status */}
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${
+                availability.available_rooms > 0
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-red-50 text-red-600 border-red-200"
+              }`}
+            >
+              {availability.available_rooms > 0 ? "Available" : "Not Available"}
             </span>
-          )}
-          {availability.available_rooms != null && (
-            <span className="px-3 py-1.5 rounded-full text-sm bg-green-50 text-green-700 border border-green-200">
-              Available: {availability.available_rooms}
-            </span>
-          )}
-          {availability.occupied_rooms != null && (
-            <span className="px-3 py-1.5 rounded-full text-sm bg-amber-50 text-amber-700 border border-amber-200">
-              Occupied: {availability.occupied_rooms}
-            </span>
+            {availability.total_rooms != null && (
+              <span className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-700 border border-gray-200">
+                Total: {availability.total_rooms}
+              </span>
+            )}
+            {availability.available_rooms != null && (
+              <span className="px-3 py-1.5 rounded-full text-sm bg-green-50 text-green-700 border border-green-200">
+                Available: {availability.available_rooms}
+              </span>
+            )}
+            {availability.occupied_rooms != null && (
+              <span className="px-3 py-1.5 rounded-full text-sm bg-amber-50 text-amber-700 border border-amber-200">
+                Occupied: {availability.occupied_rooms}
+              </span>
+            )}
+          </div>
+
+          {/* Live Update Indicator */}
+          {lastFetched && (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span>
+                Live updates • Last refreshed:{" "}
+                {new Date(lastFetched).toLocaleTimeString()}
+              </span>
+              <span className="text-gray-400">• Auto-refreshes every 15s</span>
+            </div>
           )}
         </div>
 
@@ -399,10 +388,10 @@ const RoomTypeInfo = ({
                           {rd.room_status || "—"}
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-600">
-                          {rd.check_in_date || "—"}
+                          {rd.check_in_date || startDate || "—"}
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-600">
-                          {rd.check_out_date || "—"}
+                          {rd.check_out_date || endDate || "—"}
                         </td>
                         <td className="px-4 py-4">
                           {rd.is_available ? (

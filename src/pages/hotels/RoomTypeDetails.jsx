@@ -59,6 +59,7 @@ const RoomTypeDetails = () => {
   const [guestInfo, setGuestInfo] = useState(null);
   const [bookedInventoryIds, setBookedInventoryIds] = useState([]);
   const [bookedRoomNumbers, setBookedRoomNumbers] = useState([]);
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
 
   // Persist and restore recent bookings so coming back to this page shows occupied
   const STORAGE_KEY = "travooz-recent-bookings";
@@ -136,6 +137,25 @@ const RoomTypeDetails = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomTypeId, checkIn, checkOut, submitted]);
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape" && showAvailabilityModal) {
+        setShowAvailabilityModal(false);
+      }
+    };
+
+    if (showAvailabilityModal) {
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
+    };
+  }, [showAvailabilityModal]);
+
   // Listen for global booking events (e.g., booked via cart) and update local state
   useEffect(() => {
     const handleBooked = (e) => {
@@ -187,6 +207,7 @@ const RoomTypeDetails = () => {
     if (!checkIn || !checkOut) return;
     if (dateError) return;
     setSubmitted(true);
+    setShowAvailabilityModal(true);
   };
 
   const showToast = (message, type = "success") => setToast({ message, type });
@@ -346,18 +367,58 @@ const RoomTypeDetails = () => {
         </form>
       )}
 
-      {/* Results */}
-      {submitted && checkIn && checkOut && !dateError && (
-        <RoomTypeInfo
-          roomTypeId={roomTypeId}
-          startDate={checkIn}
-          endDate={checkOut}
-          onAddToCart={handleAddToCart}
-          onBookNow={handleBookNow}
-          bookedInventoryIds={bookedInventoryIds}
-          bookedRoomNumbers={bookedRoomNumbers}
-        />
-      )}
+      {/* Availability Modal with Blur */}
+      {showAvailabilityModal &&
+        submitted &&
+        checkIn &&
+        checkOut &&
+        !dateError && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowAvailabilityModal(false)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Room Availability
+                </h2>
+                <button
+                  onClick={() => setShowAvailabilityModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <RoomTypeInfo
+                  roomTypeId={roomTypeId}
+                  startDate={checkIn}
+                  endDate={checkOut}
+                  onAddToCart={handleAddToCart}
+                  onBookNow={handleBookNow}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
       <BookingModal
         isOpen={showPayment}

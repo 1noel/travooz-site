@@ -1,18 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { homestayServices } from "../api/homestays";
-
-/**
- * RoomTypeInfo
- * Displays detailed info and availability for a specific room type within a date range.
- * Uses ONLY real API data - refreshes every 15 seconds for live updates.
- *
- * Props:
- * - roomTypeId: number|string (required)
- * - startDate: string YYYY-MM-DD (required)
- * - endDate: string YYYY-MM-DD (required)
- * - onAddToCart?: function(cartItem)
- * - onBookNow?: function(cartItem)
- */
 const RoomTypeInfo = ({
   roomTypeId,
   startDate,
@@ -53,11 +40,16 @@ const RoomTypeInfo = ({
     }
   };
 
-  // Use ONLY real API data - no UI overlays
+  // Filter rooms by status - only show rooms with current_status === "available"
   const derivedRoomDetails = useMemo(() => {
     if (!Array.isArray(data?.room_details)) return [];
-    // Return API data as-is, no modifications
-    return data.room_details;
+    
+    // Show only rooms with status "available" (case-insensitive)
+    const filtered = data.room_details.filter(
+      (room) => room.current_status?.toLowerCase() === "available"
+    );
+    
+    return filtered;
   }, [data]);
 
   const availability = useMemo(() => {

@@ -4,7 +4,6 @@ import {
   homestayServices,
   transformHomestayData,
   transformRoomData,
-  transformAvailableRoom,
 } from "../../api/homestays";
 // import { useCart } from "../../context/useCart";
 import Toast from "../../components/Toast";
@@ -102,31 +101,53 @@ const HotelDetails = () => {
           let rooms = [];
           let roomsNotice = "";
 
-          // If dates/guests provided from search, use available-rooms endpoint
+          // If dates/guests provided from search, check each room type's availability
           const hasCriteria = Boolean(selectedCheckIn && selectedCheckOut);
           if (hasCriteria) {
-            const guestsNum =
-              (selectedGuests || "").toString().match(/\d+/)?.[0] ||
-              selectedGuests ||
-              1;
-            const availRes = await homestayServices.searchAvailableRooms({
-              homestayId: id,
-              startDate: selectedCheckIn,
-              endDate: selectedCheckOut,
-              guests: guestsNum,
-            });
-            if (availRes.success) {
-              rooms = (availRes.data || [])
-                .map((item) => transformAvailableRoom(item))
+            // First, get all room types for this hotel
+            const roomsResponse = await homestayServices.fetchRoomsByHomestayId(
+              id
+            );
+
+            if (roomsResponse.success && Array.isArray(roomsResponse.data)) {
+              const allRoomTypes = roomsResponse.data
+                .map((room) => transformRoomData(room))
                 .filter(Boolean);
+
+              // Check availability for each room type
+              const roomsWithAvailability = [];
+
+              for (const roomType of allRoomTypes) {
+                // Check if this specific room type has available rooms
+                const availabilityRes =
+                  await homestayServices.getRoomTypeAvailability({
+                    roomTypeId: roomType.id,
+                    startDate: selectedCheckIn,
+                    endDate: selectedCheckOut,
+                  });
+
+                if (availabilityRes.success && availabilityRes.data) {
+                  const availabilityData = availabilityRes.data;
+                  const availableCount =
+                    availabilityData.availability_summary?.available_rooms || 0;
+
+                  // Only include room types that have at least 1 available room
+                  if (availableCount > 0) {
+                    roomsWithAvailability.push(roomType);
+                  }
+                }
+              }
+
+              rooms = roomsWithAvailability;
+
               if (rooms.length === 0) {
                 roomsNotice = "No rooms available for your selected dates.";
               }
             } else {
-              roomsNotice = availRes.error || "Failed to load available rooms.";
+              roomsNotice = "Rooms are not available right now.";
             }
           } else {
-            // Fallback: show room types (not availability filtered)
+            // Fallback: show all room types (not availability filtered)
             const roomsResponse = await homestayServices.fetchRoomsByHomestayId(
               id
             );

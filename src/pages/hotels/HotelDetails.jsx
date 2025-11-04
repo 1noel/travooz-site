@@ -117,15 +117,21 @@ const HotelDetails = () => {
               // Check availability for each room type
               const roomsWithAvailability = [];
 
-              for (const roomType of allRoomTypes) {
-                // Check if this specific room type has available rooms
-                const availabilityRes =
-                  await homestayServices.getRoomTypeAvailability({
-                    roomTypeId: roomType.id,
-                    startDate: selectedCheckIn,
-                    endDate: selectedCheckOut,
-                  });
+              // Parallelize availability checks for all room types
+              const availabilityPromises = allRoomTypes.map((roomType) =>
+                homestayServices.getRoomTypeAvailability({
+                  roomTypeId: roomType.id,
+                  startDate: selectedCheckIn,
+                  endDate: selectedCheckOut,
+                }).then((availabilityRes) => ({
+                  roomType,
+                  availabilityRes,
+                }))
+              );
 
+              const availabilityResults = await Promise.all(availabilityPromises);
+
+              for (const { roomType, availabilityRes } of availabilityResults) {
                 if (availabilityRes.success && availabilityRes.data) {
                   const availabilityData = availabilityRes.data;
                   const availableCount =

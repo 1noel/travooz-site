@@ -99,12 +99,12 @@ const GuestInfoModal = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              First name
+              Full Name
             </label>
             <input
               type="text"
-              name="firstName"
-              value={values.firstName}
+              name="fullName"
+              value={values.fullName}
               onChange={handleChange}
               className={`w-full border-2 rounded-xl px-4 py-2.5 focus:outline-none focus:border-green-500 ${
                 errors.firstName ? "border-red-300" : "border-gray-200"
@@ -147,7 +147,7 @@ const GuestInfoModal = ({
               className={`w-full border-2 rounded-xl px-4 py-2.5 focus:outline-none focus:border-green-500 ${
                 errors.phone ? "border-red-300" : "border-gray-200"
               }`}
-              placeholder="07xxxxxxxx"
+              placeholder="+2507xxxxxxxx"
             />
             {errors.phone && (
               <p className="mt-1 text-xs text-red-600">{errors.phone}</p>

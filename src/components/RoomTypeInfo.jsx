@@ -12,8 +12,14 @@ const RoomTypeInfo = ({
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
   const [lastFetched, setLastFetched] = useState(null);
-  const [clientBookedInventoryIds, setClientBookedInventoryIds] = useState([]);
+  const [clientBookedInventoryIds, setClientBookedInventoryIds] = useState([]); // all holds (cart or paid)
   const [clientBookedRoomNumbers, setClientBookedRoomNumbers] = useState([]);
+  const [clientCartHeldInventoryIds, setClientCartHeldInventoryIds] = useState(
+    []
+  ); // subset for cart holds
+  const [clientCartHeldRoomNumbers, setClientCartHeldRoomNumbers] = useState(
+    []
+  );
 
   const hasDates = Boolean(startDate && endDate);
 
@@ -43,42 +49,44 @@ const RoomTypeInfo = ({
     }
   };
 
-  // Filter rooms by status - only show rooms with current_status === "available"
-  // Also respect client-side booked rooms for immediate feedback
+  // Build room list: keep API-available rooms, but mark those held in-cart as occupied (fake) without affecting summary counts
   const derivedRoomDetails = useMemo(() => {
     if (!Array.isArray(data?.room_details)) return [];
 
-    // Show only rooms with status "available" (case-insensitive)
-    // AND not in client-side booked list (optimistic UI)
-    const filtered = data.room_details.filter((room) => {
-      const isApiAvailable = room.current_status?.toLowerCase() === "available";
-      const isClientBooked =
-        clientBookedInventoryIds.includes(room.inventory_id) ||
-        clientBookedRoomNumbers.includes(room.room_number);
-
-      return isApiAvailable && !isClientBooked;
-    });
-
-    return filtered;
-  }, [data, clientBookedInventoryIds, clientBookedRoomNumbers]);
+    return data.room_details
+      .filter((room) => room.current_status?.toLowerCase() === "available")
+      .map((room) => {
+        const invStr =
+          room.inventory_id != null ? String(room.inventory_id) : "";
+        const numStr = room.room_number != null ? String(room.room_number) : "";
+        const isClientBooked =
+          clientBookedInventoryIds.includes(invStr) ||
+          clientBookedRoomNumbers.includes(numStr);
+        const isCartHeld =
+          clientCartHeldInventoryIds.includes(invStr) ||
+          clientCartHeldRoomNumbers.includes(numStr);
+        if (!isClientBooked) return room;
+        // Mark as held/occupied locally, but don't change top summary
+        return {
+          ...room,
+          current_status: "occupied",
+          is_available: false,
+          __clientHeld: true,
+          __clientCartHeld: isCartHeld,
+        };
+      });
+  }, [
+    data,
+    clientBookedInventoryIds,
+    clientBookedRoomNumbers,
+    clientCartHeldInventoryIds,
+    clientCartHeldRoomNumbers,
+  ]);
 
   const availability = useMemo(() => {
-    // Use API availability summary, adjusted for client-side bookings
-    const apiSummary = data?.availability_summary || {};
-    const clientBookedCount = new Set([
-      ...clientBookedInventoryIds,
-      ...clientBookedRoomNumbers,
-    ]).size;
-
-    return {
-      ...apiSummary,
-      available_rooms: Math.max(
-        0,
-        (apiSummary.available_rooms || 0) - clientBookedCount
-      ),
-      occupied_rooms: (apiSummary.occupied_rooms || 0) + clientBookedCount,
-    };
-  }, [data, clientBookedInventoryIds, clientBookedRoomNumbers]);
+    // Show API-provided summary as-is; client-side holds shouldn't change these numbers
+    return data?.availability_summary || {};
+  }, [data]);
 
   useEffect(() => {
     let cancelled = false;
@@ -173,16 +181,43 @@ const RoomTypeInfo = ({
 
   // Listen for booking events to provide immediate UI feedback
   useEffect(() => {
+    // Initialize from session holds (resets on refresh)
+    try {
+      const globalHolds = (window.__travoozSessionHolds ||= {
+        inventoryIds: new Set(),
+        roomNumbers: new Set(),
+      });
+      setClientBookedInventoryIds(
+        Array.from(globalHolds.inventoryIds).map(String)
+      );
+      setClientBookedRoomNumbers(
+        Array.from(globalHolds.roomNumbers).map(String)
+      );
+      const cartHolds = (window.__travoozSessionCartHolds ||= {
+        inventoryIds: new Set(),
+        roomNumbers: new Set(),
+      });
+      setClientCartHeldInventoryIds(
+        Array.from(cartHolds.inventoryIds).map(String)
+      );
+      setClientCartHeldRoomNumbers(
+        Array.from(cartHolds.roomNumbers).map(String)
+      );
+    } catch {
+      // ignore
+    }
+
     const handleBooked = (e) => {
       try {
         const ids = Array.isArray(e?.detail?.inventoryIds)
-          ? e.detail.inventoryIds
+          ? e.detail.inventoryIds.map((x) => String(x))
           : [];
         const nums = Array.isArray(e?.detail?.roomNumbers)
-          ? e.detail.roomNumbers
+          ? e.detail.roomNumbers.map((x) => String(x))
           : [];
 
         if (ids.length > 0 || nums.length > 0) {
+          // Update local state
           setClientBookedInventoryIds((prev) => {
             const set = new Set(prev);
             ids.forEach((id) => set.add(id));
@@ -193,6 +228,57 @@ const RoomTypeInfo = ({
             nums.forEach((n) => set.add(n));
             return Array.from(set);
           });
+          // Update global session holds
+          try {
+            const gh = (window.__travoozSessionHolds ||= {
+              inventoryIds: new Set(),
+              roomNumbers: new Set(),
+            });
+            ids.forEach((id) => gh.inventoryIds.add(String(id)));
+            nums.forEach((n) => gh.roomNumbers.add(String(n)));
+          } catch {
+            // ignore
+          }
+          // If the event came from cart, track in cart-only holds (for badge)
+          try {
+            if (e?.detail?.source === "cart") {
+              const ch = (window.__travoozSessionCartHolds ||= {
+                inventoryIds: new Set(),
+                roomNumbers: new Set(),
+              });
+              setClientCartHeldInventoryIds((prev) => {
+                const set = new Set(prev);
+                ids.forEach((id) => set.add(id));
+                return Array.from(set);
+              });
+              setClientCartHeldRoomNumbers((prev) => {
+                const set = new Set(prev);
+                nums.forEach((n) => set.add(n));
+                return Array.from(set);
+              });
+              ids.forEach((id) => ch.inventoryIds.add(String(id)));
+              nums.forEach((n) => ch.roomNumbers.add(String(n)));
+            } else if (
+              e?.detail?.source === "paid" ||
+              e?.detail?.source === "book"
+            ) {
+              // Payment/book promotion: remove from cart-hold badge sets
+              const ch = (window.__travoozSessionCartHolds ||= {
+                inventoryIds: new Set(),
+                roomNumbers: new Set(),
+              });
+              setClientCartHeldInventoryIds((prev) =>
+                prev.filter((id) => !ids.includes(id))
+              );
+              setClientCartHeldRoomNumbers((prev) =>
+                prev.filter((num) => !nums.includes(num))
+              );
+              ids.forEach((id) => ch.inventoryIds.delete(String(id)));
+              nums.forEach((n) => ch.roomNumbers.delete(String(n)));
+            }
+          } catch {
+            // ignore
+          }
         }
       } catch {
         // ignore
@@ -202,10 +288,10 @@ const RoomTypeInfo = ({
     const handleCancelled = (e) => {
       try {
         const ids = Array.isArray(e?.detail?.inventoryIds)
-          ? e.detail.inventoryIds
+          ? e.detail.inventoryIds.map((x) => String(x))
           : [];
         const nums = Array.isArray(e?.detail?.roomNumbers)
-          ? e.detail.roomNumbers
+          ? e.detail.roomNumbers.map((x) => String(x))
           : [];
 
         if (ids.length > 0 || nums.length > 0) {
@@ -215,6 +301,32 @@ const RoomTypeInfo = ({
           setClientBookedRoomNumbers((prev) =>
             prev.filter((num) => !nums.includes(num))
           );
+          try {
+            const gh = (window.__travoozSessionHolds ||= {
+              inventoryIds: new Set(),
+              roomNumbers: new Set(),
+            });
+            ids.forEach((id) => gh.inventoryIds.delete(id));
+            nums.forEach((n) => gh.roomNumbers.delete(n));
+          } catch {
+            // ignore
+          }
+          try {
+            const ch = (window.__travoozSessionCartHolds ||= {
+              inventoryIds: new Set(),
+              roomNumbers: new Set(),
+            });
+            setClientCartHeldInventoryIds((prev) =>
+              prev.filter((id) => !ids.includes(id))
+            );
+            setClientCartHeldRoomNumbers((prev) =>
+              prev.filter((num) => !nums.includes(num))
+            );
+            ids.forEach((id) => ch.inventoryIds.delete(id));
+            nums.forEach((n) => ch.roomNumbers.delete(n));
+          } catch {
+            // ignore
+          }
         }
       } catch {
         // ignore
@@ -487,17 +599,24 @@ const RoomTypeInfo = ({
                           {rd.room_number}
                         </td>
                         <td className="px-4 py-4">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${
-                              rd.current_status === "available"
-                                ? "bg-green-50 text-green-700 border-green-200"
-                                : rd.current_status === "occupied"
-                                ? "bg-red-50 text-red-600 border-red-200"
-                                : "bg-gray-100 text-gray-700 border-gray-200"
-                            }`}
-                          >
-                            {rd.current_status || "—"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${
+                                rd.current_status === "available"
+                                  ? "bg-green-50 text-green-700 border-green-200"
+                                  : rd.current_status === "occupied"
+                                  ? "bg-red-50 text-red-600 border-red-200"
+                                  : "bg-gray-100 text-gray-700 border-gray-200"
+                              }`}
+                            >
+                              {rd.current_status || "—"}
+                            </span>
+                            {rd.__clientCartHeld && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                in your cart
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-600">
                           {rd.room_status || "—"}

@@ -85,7 +85,7 @@ const RoomTypeDetails = () => {
     // Prefill dates if passed from previous page and auto-submit
     const ci = fromState.checkIn ? toISODate(fromState.checkIn) : "";
     const co = fromState.checkOut ? toISODate(fromState.checkOut) : "";
-    console.log("RoomTypeDetails - Received dates:", { ci, co, fromState });
+    // Removed debug console.log statement
     if (ci) setCheckIn(ci);
     if (co) setCheckOut(co);
     if (ci && co) {

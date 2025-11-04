@@ -1,29 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { homestayServices } from "../api/homestays";
-
-/**
- * RoomTypeInfo
- * Displays detailed info and availability for a specific room type within a date range.
- *
- * Props:
- * - roomTypeId: number|string (required)
- * - startDate: string YYYY-MM-DD (required)
- * - endDate: string YYYY-MM-DD (required)
- * - onAddToCart?: function(cartItem)
- * - onBookNow?: function(cartItem)
- */
 const RoomTypeInfo = ({
   roomTypeId,
   startDate,
   endDate,
   onAddToCart,
   onBookNow,
-  bookedInventoryIds = [], // inventory_ids that were just booked in this session
-  bookedRoomNumbers = [], // room numbers that were just booked in this session
+  enablePolling = true, // Allow parent to control polling
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
+  const [lastFetched, setLastFetched] = useState(null);
+  const [clientBookedInventoryIds, setClientBookedInventoryIds] = useState([]);
+  const [clientBookedRoomNumbers, setClientBookedRoomNumbers] = useState([]);
 
   const hasDates = Boolean(startDate && endDate);
 
@@ -53,97 +43,192 @@ const RoomTypeInfo = ({
     }
   };
 
-  // Real-time optimistic updates for booked rooms
-  const bookedSet = useMemo(
-    () =>
-      new Set(
-        Array.isArray(bookedInventoryIds)
-          ? bookedInventoryIds.map((v) => String(v))
-          : []
-      ),
-    [bookedInventoryIds]
-  );
-
-  const bookedRoomNumberSet = useMemo(
-    () =>
-      new Set(
-        Array.isArray(bookedRoomNumbers)
-          ? bookedRoomNumbers.map((v) => String(v))
-          : []
-      ),
-    [bookedRoomNumbers]
-  );
-
-  // Use only confirmed/booked values from parent/broadcasts
-  const allBookedInventorySet = bookedSet;
-  const allBookedRoomNumberSet = bookedRoomNumberSet;
-
+  // Filter rooms by status - only show rooms with current_status === "available"
+  // Also respect client-side booked rooms for immediate feedback
   const derivedRoomDetails = useMemo(() => {
     if (!Array.isArray(data?.room_details)) return [];
-    return data.room_details.map((rd) => {
-      if (
-        allBookedInventorySet.has(String(rd.inventory_id)) ||
-        allBookedRoomNumberSet.has(String(rd.room_number))
-      ) {
-        return {
-          ...rd,
-          is_available: false,
-          current_status:
-            rd.current_status === "occupied" ? rd.current_status : "occupied",
-          // Reflect booking dates for just-booked rooms
-          check_in_date: rd.check_in_date || startDate,
-          check_out_date: rd.check_out_date || endDate,
-        };
-      }
-      return rd;
+
+    // Show only rooms with status "available" (case-insensitive)
+    // AND not in client-side booked list (optimistic UI)
+    const filtered = data.room_details.filter((room) => {
+      const isApiAvailable = room.current_status?.toLowerCase() === "available";
+      const isClientBooked =
+        clientBookedInventoryIds.includes(room.inventory_id) ||
+        clientBookedRoomNumbers.includes(room.room_number);
+
+      return isApiAvailable && !isClientBooked;
     });
-  }, [data, allBookedInventorySet, allBookedRoomNumberSet, startDate, endDate]);
+
+    return filtered;
+  }, [data, clientBookedInventoryIds, clientBookedRoomNumbers]);
 
   const availability = useMemo(() => {
-    if (!Array.isArray(derivedRoomDetails) || derivedRoomDetails.length === 0) {
-      return data?.availability_summary || {};
-    }
-    const total = derivedRoomDetails.length;
-    const availableRooms = derivedRoomDetails.filter(
-      (rd) => rd.is_available
-    ).length;
-    const occupiedRooms = total - availableRooms;
+    // Use API availability summary, adjusted for client-side bookings
+    const apiSummary = data?.availability_summary || {};
+    const clientBookedCount = new Set([
+      ...clientBookedInventoryIds,
+      ...clientBookedRoomNumbers,
+    ]).size;
+
     return {
-      ...(data?.availability_summary || {}),
-      total_rooms: total,
-      available_rooms: availableRooms,
-      occupied_rooms: occupiedRooms,
+      ...apiSummary,
+      available_rooms: Math.max(
+        0,
+        (apiSummary.available_rooms || 0) - clientBookedCount
+      ),
+      occupied_rooms: (apiSummary.occupied_rooms || 0) + clientBookedCount,
     };
-  }, [derivedRoomDetails, data]);
+  }, [data, clientBookedInventoryIds, clientBookedRoomNumbers]);
 
   useEffect(() => {
     let cancelled = false;
-    const fetchData = async () => {
+    let pollInterval = null;
+    let isPageVisible = !document.hidden;
+
+    const fetchData = async (isPolling = false) => {
       if (!roomTypeId || !hasDates) return;
-      setLoading(true);
-      setError(null);
-      setData(null);
+
+      // Only show loading on initial fetch, not during polling
+      if (!isPolling) {
+        setLoading(true);
+        setError(null);
+        setData(null);
+      }
+
       const res = await homestayServices.getRoomTypeAvailability({
         roomTypeId,
         startDate,
         endDate,
       });
+
       if (cancelled) return;
+
       if (res.success) {
         setData(res.data);
+        setLastFetched(new Date().toISOString());
       } else {
         setError(res.error || "Failed to load room availability");
       }
-      setLoading(false);
+
+      if (!isPolling) {
+        setLoading(false);
+      }
     };
 
-    fetchData();
+    const startPolling = () => {
+      // Clear any existing interval
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+
+      // Only start polling if enabled and page is visible
+      if (enablePolling && isPageVisible) {
+        pollInterval = setInterval(() => {
+          // Double-check visibility before fetching
+          if (!document.hidden) {
+            fetchData(true);
+          }
+        }, 15000); // 15 seconds
+      }
+    };
+
+    const stopPolling = () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    };
+
+    // Handle page visibility changes
+    const handleVisibilityChange = () => {
+      isPageVisible = !document.hidden;
+
+      if (isPageVisible && enablePolling) {
+        // Page became visible - fetch fresh data and restart polling
+        fetchData(true);
+        startPolling();
+      } else {
+        // Page hidden - stop polling to save resources
+        stopPolling();
+      }
+    };
+
+    // Initial fetch
+    fetchData(false);
+
+    // Start polling if enabled and page is visible
+    if (enablePolling && isPageVisible) {
+      startPolling();
+    }
+
+    // Listen for visibility changes
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       cancelled = true;
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [roomTypeId, startDate, endDate, hasDates]);
+  }, [roomTypeId, startDate, endDate, hasDates, enablePolling]);
 
-  // No optimistic mark; no cancel listener required
+  // Listen for booking events to provide immediate UI feedback
+  useEffect(() => {
+    const handleBooked = (e) => {
+      try {
+        const ids = Array.isArray(e?.detail?.inventoryIds)
+          ? e.detail.inventoryIds
+          : [];
+        const nums = Array.isArray(e?.detail?.roomNumbers)
+          ? e.detail.roomNumbers
+          : [];
+
+        if (ids.length > 0 || nums.length > 0) {
+          setClientBookedInventoryIds((prev) => {
+            const set = new Set(prev);
+            ids.forEach((id) => set.add(id));
+            return Array.from(set);
+          });
+          setClientBookedRoomNumbers((prev) => {
+            const set = new Set(prev);
+            nums.forEach((n) => set.add(n));
+            return Array.from(set);
+          });
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    const handleCancelled = (e) => {
+      try {
+        const ids = Array.isArray(e?.detail?.inventoryIds)
+          ? e.detail.inventoryIds
+          : [];
+        const nums = Array.isArray(e?.detail?.roomNumbers)
+          ? e.detail.roomNumbers
+          : [];
+
+        if (ids.length > 0 || nums.length > 0) {
+          setClientBookedInventoryIds((prev) =>
+            prev.filter((id) => !ids.includes(id))
+          );
+          setClientBookedRoomNumbers((prev) =>
+            prev.filter((num) => !nums.includes(num))
+          );
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    window.addEventListener("travooz:booked", handleBooked);
+    window.addEventListener("travooz:booking-cancelled", handleCancelled);
+
+    return () => {
+      window.removeEventListener("travooz:booked", handleBooked);
+      window.removeEventListener("travooz:booking-cancelled", handleCancelled);
+    };
+  }, []);
 
   if (!roomTypeId) {
     return (
@@ -252,31 +337,50 @@ const RoomTypeInfo = ({
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Summary Row */}
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${
-              availability.available_rooms > 0
-                ? "bg-green-50 text-green-700 border-green-200"
-                : "bg-red-50 text-red-600 border-red-200"
-            }`}
-          >
-            {availability.available_rooms > 0 ? "Available" : "Not Available"}
-          </span>
-          {availability.total_rooms != null && (
-            <span className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-700 border border-gray-200">
-              Total: {availability.total_rooms}
+        {/* Summary Row with Live Status */}
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${
+                availability.available_rooms > 0
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-red-50 text-red-600 border-red-200"
+              }`}
+            >
+              {availability.available_rooms > 0 ? "Available" : "Not Available"}
             </span>
-          )}
-          {availability.available_rooms != null && (
-            <span className="px-3 py-1.5 rounded-full text-sm bg-green-50 text-green-700 border border-green-200">
-              Available: {availability.available_rooms}
-            </span>
-          )}
-          {availability.occupied_rooms != null && (
-            <span className="px-3 py-1.5 rounded-full text-sm bg-amber-50 text-amber-700 border border-amber-200">
-              Occupied: {availability.occupied_rooms}
-            </span>
+            {availability.total_rooms != null && (
+              <span className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-700 border border-gray-200">
+                Total: {availability.total_rooms}
+              </span>
+            )}
+            {availability.available_rooms != null && (
+              <span className="px-3 py-1.5 rounded-full text-sm bg-green-50 text-green-700 border border-green-200">
+                Available: {availability.available_rooms}
+              </span>
+            )}
+            {availability.occupied_rooms != null && (
+              <span className="px-3 py-1.5 rounded-full text-sm bg-amber-50 text-amber-700 border border-amber-200">
+                Occupied: {availability.occupied_rooms}
+              </span>
+            )}
+          </div>
+
+          {/* Live Update Indicator */}
+          {lastFetched && enablePolling && (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span>
+                Live updates • Last refreshed:{" "}
+                {new Date(lastFetched).toLocaleTimeString()}
+              </span>
+              <span className="text-gray-400">
+                • Auto-refreshes every 15s when visible
+              </span>
+            </div>
           )}
         </div>
 
@@ -399,10 +503,10 @@ const RoomTypeInfo = ({
                           {rd.room_status || "—"}
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-600">
-                          {rd.check_in_date || "—"}
+                          {rd.check_in_date || startDate || "—"}
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-600">
-                          {rd.check_out_date || "—"}
+                          {rd.check_out_date || endDate || "—"}
                         </td>
                         <td className="px-4 py-4">
                           {rd.is_available ? (

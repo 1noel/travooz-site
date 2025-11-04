@@ -57,8 +57,7 @@ const RoomTypeDetails = () => {
   const [pendingAction, setPendingAction] = useState(null); // 'add' | 'book'
   const [pendingItem, setPendingItem] = useState(null);
   const [guestInfo, setGuestInfo] = useState(null);
-  const [bookedInventoryIds, setBookedInventoryIds] = useState([]);
-  const [bookedRoomNumbers, setBookedRoomNumbers] = useState([]);
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
 
   // Persist and restore recent bookings so coming back to this page shows occupied
   const STORAGE_KEY = "travooz-recent-bookings";
@@ -82,89 +81,37 @@ const RoomTypeDetails = () => {
     }
   };
 
-  const loadRecentForCurrent = () => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const arr = stored ? JSON.parse(stored) : [];
-      const now = Date.now();
-      const weekMs = 7 * 24 * 60 * 60 * 1000;
-      const filtered = arr.filter(
-        (it) =>
-          it &&
-          String(it.roomTypeId) === String(roomTypeId) &&
-          it.startDate === checkIn &&
-          it.endDate === checkOut &&
-          now - (it.ts || 0) < weekMs
-      );
-      const ids = Array.from(
-        new Set(
-          filtered
-            .map((it) => it.inventoryId)
-            .filter((v) => v !== null && v !== undefined)
-        )
-      );
-      const nums = Array.from(
-        new Set(
-          filtered
-            .map((it) => it.roomNumber)
-            .filter((v) => v !== null && v !== undefined)
-        )
-      );
-      setBookedInventoryIds(ids);
-      setBookedRoomNumbers(nums);
-    } catch {
-      // ignore
-    }
-  };
-
   useEffect(() => {
     // Prefill dates if passed from previous page and auto-submit
     const ci = fromState.checkIn ? toISODate(fromState.checkIn) : "";
     const co = fromState.checkOut ? toISODate(fromState.checkOut) : "";
+    // Removed debug console.log statement
     if (ci) setCheckIn(ci);
     if (co) setCheckOut(co);
     if (ci && co) {
       setSubmitted(true);
+      setShowAvailabilityModal(true); // Auto-open modal when dates provided
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reload recent bookings for this room type and date range
+  // Handle ESC key to close modal
   useEffect(() => {
-    if (roomTypeId && checkIn && checkOut) {
-      loadRecentForCurrent();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomTypeId, checkIn, checkOut, submitted]);
-
-  // Listen for global booking events (e.g., booked via cart) and update local state
-  useEffect(() => {
-    const handleBooked = (e) => {
-      try {
-        const ids = Array.isArray(e?.detail?.inventoryIds)
-          ? e.detail.inventoryIds
-          : [];
-        const nums = Array.isArray(e?.detail?.roomNumbers)
-          ? e.detail.roomNumbers
-          : [];
-        if (ids.length > 0 || nums.length > 0) {
-          setBookedInventoryIds((prev) => {
-            const set = new Set(prev);
-            ids.forEach((id) => set.add(id));
-            return Array.from(set);
-          });
-          setBookedRoomNumbers((prev) => {
-            const set = new Set(prev);
-            nums.forEach((n) => set.add(n));
-            return Array.from(set);
-          });
-        }
-      } catch {
-        // ignore
+    const handleEscape = (e) => {
+      if (e.key === "Escape" && showAvailabilityModal) {
+        setShowAvailabilityModal(false);
       }
     };
-    window.addEventListener("travooz:booked", handleBooked);
-    return () => window.removeEventListener("travooz:booked", handleBooked);
-  }, []);
+
+    if (showAvailabilityModal) {
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
+    };
+  }, [showAvailabilityModal]);
 
   // Validate date range
   useEffect(() => {
@@ -187,6 +134,7 @@ const RoomTypeDetails = () => {
     if (!checkIn || !checkOut) return;
     if (dateError) return;
     setSubmitted(true);
+    setShowAvailabilityModal(true);
   };
 
   const showToast = (message, type = "success") => setToast({ message, type });
@@ -346,18 +294,59 @@ const RoomTypeDetails = () => {
         </form>
       )}
 
-      {/* Results */}
-      {submitted && checkIn && checkOut && !dateError && (
-        <RoomTypeInfo
-          roomTypeId={roomTypeId}
-          startDate={checkIn}
-          endDate={checkOut}
-          onAddToCart={handleAddToCart}
-          onBookNow={handleBookNow}
-          bookedInventoryIds={bookedInventoryIds}
-          bookedRoomNumbers={bookedRoomNumbers}
-        />
-      )}
+      {/* Availability Modal with Blur */}
+      {showAvailabilityModal &&
+        submitted &&
+        checkIn &&
+        checkOut &&
+        !dateError && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowAvailabilityModal(false)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Room Availability
+                </h2>
+                <button
+                  onClick={() => setShowAvailabilityModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <RoomTypeInfo
+                  roomTypeId={roomTypeId}
+                  startDate={checkIn}
+                  endDate={checkOut}
+                  onAddToCart={handleAddToCart}
+                  onBookNow={handleBookNow}
+                  enablePolling={showAvailabilityModal}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
       <BookingModal
         isOpen={showPayment}
@@ -402,12 +391,6 @@ const RoomTypeDetails = () => {
           const invId = bookingItem?.metadata?.inventoryId;
           const roomNum = bookingItem?.metadata?.roomNumber;
           if (invId || roomNum) {
-            setBookedInventoryIds((prev) =>
-              invId && !prev.includes(invId) ? [...prev, invId] : prev
-            );
-            setBookedRoomNumbers((prev) =>
-              roomNum && !prev.includes(roomNum) ? [...prev, roomNum] : prev
-            );
             // Persist to storage so returning to this page shows it occupied
             addRecentBooking({
               roomTypeId,

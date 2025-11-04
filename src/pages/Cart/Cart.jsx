@@ -29,26 +29,43 @@ const Cart = () => {
   });
   const [showHistory, setShowHistory] = useState(false);
 
-  // Persist recent booked rooms so room pages show them as occupied on return
-  const STORAGE_KEY = "travooz-recent-bookings";
-  const persistRecentBookedRooms = (bookedRooms) => {
+  // In-memory session holds for fake occupied (reset on refresh)
+  const addSessionHold = (invId, roomNum) => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const arr = stored ? JSON.parse(stored) : [];
-      const entries = bookedRooms.map((it) => ({
-        roomTypeId: it?.metadata?.roomTypeId
-          ? String(it.metadata.roomTypeId)
-          : null,
-        inventoryId: it?.metadata?.inventoryId ?? null,
-        roomNumber: it?.metadata?.roomNumber ?? null,
-        startDate: it?.metadata?.checkIn || null,
-        endDate: it?.metadata?.checkOut || null,
-        ts: Date.now(),
-      }));
-      const merged = [...entries, ...arr].slice(0, 200);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      const gh = (window.__travoozSessionHolds ||= {
+        inventoryIds: new Set(),
+        roomNumbers: new Set(),
+      });
+      if (invId) gh.inventoryIds.add(String(invId));
+      if (roomNum) gh.roomNumbers.add(String(roomNum));
     } catch {
-      // ignore storage errors
+      // ignore
+    }
+  };
+  const releaseSessionHold = (invId, roomNum) => {
+    try {
+      const gh = (window.__travoozSessionHolds ||= {
+        inventoryIds: new Set(),
+        roomNumbers: new Set(),
+      });
+      if (invId) gh.inventoryIds.delete(String(invId));
+      if (roomNum) gh.roomNumbers.delete(String(roomNum));
+    } catch {
+      // ignore
+    }
+  };
+
+  // Cart-only holds store (used for the "in your cart" badge). We'll clear these on payment.
+  const releaseCartHold = (invId, roomNum) => {
+    try {
+      const ch = (window.__travoozSessionCartHolds ||= {
+        inventoryIds: new Set(),
+        roomNumbers: new Set(),
+      });
+      if (invId) ch.inventoryIds.delete(String(invId));
+      if (roomNum) ch.roomNumbers.delete(String(roomNum));
+    } catch {
+      // ignore
     }
   };
 
@@ -245,14 +262,18 @@ const Cart = () => {
       const roomNumbers = bookedRooms
         .map((it) => it.metadata?.roomNumber)
         .filter(Boolean);
-      // Persist to storage so navigating back shows occupied
-      if (bookedRooms.length > 0) {
-        persistRecentBookedRooms(bookedRooms);
-      }
       if (bookedIds.length > 0 || roomNumbers.length > 0) {
+        // Keep session holds so other pages in this session reflect fake occupied
+        bookedRooms.forEach((it) => {
+          const inv = it.metadata?.inventoryId;
+          const num = it.metadata?.roomNumber;
+          addSessionHold(inv, num);
+          // Remove any cart-only hold badges now that it's paid
+          releaseCartHold(inv, num);
+        });
         window.dispatchEvent(
           new CustomEvent("travooz:booked", {
-            detail: { inventoryIds: bookedIds, roomNumbers },
+            detail: { inventoryIds: bookedIds, roomNumbers, source: "paid" },
           })
         );
       }
@@ -771,7 +792,29 @@ const Cart = () => {
                       </div>
                       <button
                         type="button"
-                        onClick={() => removeItem(item.id, item.type)}
+                        onClick={() => {
+                          // If removing a room from cart, release the local hold so it shows available again
+                          try {
+                            if (item.type === "room") {
+                              const invId = item?.metadata?.inventoryId;
+                              const roomNum = item?.metadata?.roomNumber;
+                              if (invId || roomNum) {
+                                releaseSessionHold(invId, roomNum);
+                                window.dispatchEvent(
+                                  new CustomEvent("travooz:booking-cancelled", {
+                                    detail: {
+                                      inventoryIds: invId ? [invId] : [],
+                                      roomNumbers: roomNum ? [roomNum] : [],
+                                    },
+                                  })
+                                );
+                              }
+                            }
+                          } catch {
+                            // ignore broadcast errors
+                          }
+                          removeItem(item.id, item.type);
+                        }}
                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all duration-200"
                       >
                         <svg

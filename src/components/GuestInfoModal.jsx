@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const initialState = {
-  firstName: "",
+  fullName: "",
   email: "",
   phone: "",
   specialRequest: "",
@@ -9,7 +9,7 @@ const initialState = {
 
 const validate = (values) => {
   const errors = {};
-  if (!values.firstName.trim()) errors.firstName = "First name is required";
+  if (!values.fullName?.trim()) errors.fullName = "Full name is required";
   if (!values.email.trim()) {
     errors.email = "Email is required";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
@@ -35,10 +35,12 @@ const GuestInfoModal = ({
   useEffect(() => {
     if (isOpen) {
       // Prefill with initialData when provided (for edit flows)
-      setValues({
-        ...initialState,
-        ...(initialData || {}),
-      });
+      const init = { ...initialState, ...(initialData || {}) };
+      // Backward compatibility: allow initialData.firstName
+      if (!init.fullName && init.firstName) {
+        init.fullName = init.firstName;
+      }
+      setValues(init);
       setErrors({});
       setSubmitting(false);
     }
@@ -58,7 +60,9 @@ const GuestInfoModal = ({
     setSubmitting(true);
     try {
       await Promise.resolve();
-      onSubmit?.(values);
+      // Backward compatibility: also provide firstName derived from fullName
+      const payload = { ...values, firstName: values.fullName };
+      onSubmit?.(payload);
     } finally {
       setSubmitting(false);
     }
@@ -107,12 +111,12 @@ const GuestInfoModal = ({
               value={values.fullName}
               onChange={handleChange}
               className={`w-full border-2 rounded-xl px-4 py-2.5 focus:outline-none focus:border-green-500 ${
-                errors.firstName ? "border-red-300" : "border-gray-200"
+                errors.fullName ? "border-red-300" : "border-gray-200"
               }`}
-              placeholder="John"
+              placeholder="John Doe"
             />
-            {errors.firstName && (
-              <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>
+            {errors.fullName && (
+              <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>
             )}
           </div>
 

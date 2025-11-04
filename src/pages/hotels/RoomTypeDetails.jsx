@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import RoomTypeInfo from "../../components/RoomTypeInfo";
 import { useCart } from "../../context/useCart";
@@ -52,34 +52,16 @@ const RoomTypeDetails = () => {
   const [toast, setToast] = useState(null);
   const [showPayment, setShowPayment] = useState(false);
   const [bookingItem, setBookingItem] = useState(null);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  // Removed state in favor of ref to avoid race conditions
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [pendingAction, setPendingAction] = useState(null); // 'add' | 'book'
   const [pendingItem, setPendingItem] = useState(null);
   const [guestInfo, setGuestInfo] = useState(null);
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  // Use a ref to avoid async state race when modal triggers onClose right after confirm
+  const paymentConfirmedRef = useRef(false);
 
-  // Persist and restore recent bookings so coming back to this page shows occupied
-  const STORAGE_KEY = "travooz-recent-bookings";
-
-  const addRecentBooking = (payload) => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const arr = stored ? JSON.parse(stored) : [];
-      const entry = {
-        roomTypeId: String(payload.roomTypeId || roomTypeId),
-        inventoryId: payload.inventoryId ?? null,
-        roomNumber: payload.roomNumber ?? null,
-        startDate: payload.startDate || checkIn,
-        endDate: payload.endDate || checkOut,
-        ts: Date.now(),
-      };
-      const next = [entry, ...arr].slice(0, 200);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // ignore storage errors
-    }
-  };
+  // Intentionally skip persistence of fake holds; they reset on refresh by request
 
   useEffect(() => {
     // Prefill dates if passed from previous page and auto-submit
@@ -129,6 +111,33 @@ const RoomTypeDetails = () => {
     }
   }, [checkIn, checkOut]);
 
+  // In-memory session holds (reset on refresh)
+  const addSessionHold = (invId, roomNum) => {
+    try {
+      const gh = (window.__travoozSessionHolds ||= {
+        inventoryIds: new Set(),
+        roomNumbers: new Set(),
+      });
+      if (invId) gh.inventoryIds.add(String(invId));
+      if (roomNum) gh.roomNumbers.add(String(roomNum));
+    } catch {
+      // ignore
+    }
+  };
+
+  const releaseSessionHold = (invId, roomNum) => {
+    try {
+      const gh = (window.__travoozSessionHolds ||= {
+        inventoryIds: new Set(),
+        roomNumbers: new Set(),
+      });
+      if (invId) gh.inventoryIds.delete(String(invId));
+      if (roomNum) gh.roomNumbers.delete(String(roomNum));
+    } catch {
+      // ignore
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!checkIn || !checkOut) return;
@@ -152,6 +161,25 @@ const RoomTypeDetails = () => {
     }
     addItem(item);
     showToast("Added to cart", "success");
+    // Fake-occupy this room locally so the UI marks it as held (without changing API counts)
+    try {
+      const invId = item?.metadata?.inventoryId;
+      const roomNum = item?.metadata?.roomNumber;
+      if (invId || roomNum) {
+        addSessionHold(invId, roomNum);
+        window.dispatchEvent(
+          new CustomEvent("travooz:booked", {
+            detail: {
+              inventoryIds: invId ? [invId] : [],
+              roomNumbers: roomNum ? [roomNum] : [],
+              source: "cart",
+            },
+          })
+        );
+      }
+    } catch {
+      // ignore broadcast/persist errors
+    }
   };
 
   const handleBookNow = (item) => {
@@ -166,8 +194,27 @@ const RoomTypeDetails = () => {
       return;
     }
     setBookingItem(item);
-    setPaymentConfirmed(false);
+    paymentConfirmedRef.current = false;
     setShowPayment(true);
+    // Immediately fake-hold this room while payment modal is open
+    try {
+      const invId = item?.metadata?.inventoryId;
+      const roomNum = item?.metadata?.roomNumber;
+      if (invId || roomNum) {
+        addSessionHold(invId, roomNum);
+        window.dispatchEvent(
+          new CustomEvent("travooz:booked", {
+            detail: {
+              inventoryIds: invId ? [invId] : [],
+              roomNumbers: roomNum ? [roomNum] : [],
+              source: "book",
+            },
+          })
+        );
+      }
+    } catch {
+      // ignore
+    }
   };
 
   const saveToHistory = (paymentData) => {
@@ -352,10 +399,11 @@ const RoomTypeDetails = () => {
         isOpen={showPayment}
         onClose={() => {
           // If user cancels/closes without confirming payment, revert optimistic mark
-          if (!paymentConfirmed && bookingItem?.metadata) {
+          if (!paymentConfirmedRef.current && bookingItem?.metadata) {
             try {
               const invId = bookingItem.metadata.inventoryId;
               const roomNum = bookingItem.metadata.roomNumber;
+              releaseSessionHold(invId, roomNum);
               window.dispatchEvent(
                 new CustomEvent("travooz:booking-cancelled", {
                   detail: {
@@ -370,7 +418,7 @@ const RoomTypeDetails = () => {
           }
           setShowPayment(false);
           setBookingItem(null);
-          setPaymentConfirmed(false);
+          paymentConfirmedRef.current = false;
         }}
         bookingType="room"
         itemName={bookingItem?.name || "Room Booking"}
@@ -386,26 +434,20 @@ const RoomTypeDetails = () => {
             };
           }
           saveToHistory(paymentData);
-          setPaymentConfirmed(true);
+          paymentConfirmedRef.current = true;
           // Real-time local update for booked room
           const invId = bookingItem?.metadata?.inventoryId;
           const roomNum = bookingItem?.metadata?.roomNumber;
           if (invId || roomNum) {
-            // Persist to storage so returning to this page shows it occupied
-            addRecentBooking({
-              roomTypeId,
-              inventoryId: invId,
-              roomNumber: roomNum,
-              startDate: checkIn,
-              endDate: checkOut,
-            });
             // Optional: broadcast globally (other pages/tabs)
             try {
+              addSessionHold(invId, roomNum);
               window.dispatchEvent(
                 new CustomEvent("travooz:booked", {
                   detail: {
                     inventoryIds: invId ? [invId] : [],
                     roomNumbers: roomNum ? [roomNum] : [],
+                    source: "paid",
                   },
                 })
               );
@@ -448,6 +490,25 @@ const RoomTypeDetails = () => {
             };
             addItem(itemWithGuest);
             showToast("Added to cart", "success");
+            // Fake-occupy this room on add-to-cart for unauthenticated flow as well
+            try {
+              const invId = itemWithGuest?.metadata?.inventoryId;
+              const roomNum = itemWithGuest?.metadata?.roomNumber;
+              if (invId || roomNum) {
+                addSessionHold(invId, roomNum);
+                window.dispatchEvent(
+                  new CustomEvent("travooz:booked", {
+                    detail: {
+                      inventoryIds: invId ? [invId] : [],
+                      roomNumbers: roomNum ? [roomNum] : [],
+                      source: "cart",
+                    },
+                  })
+                );
+              }
+            } catch {
+              // ignore
+            }
           }
           if (pendingAction === "book" && pendingItem) {
             setBookingItem({
@@ -461,6 +522,25 @@ const RoomTypeDetails = () => {
               },
             });
             setShowPayment(true);
+            // Fake-hold on opening payment for unauthenticated book flow
+            try {
+              const invId = pendingItem?.metadata?.inventoryId;
+              const roomNum = pendingItem?.metadata?.roomNumber;
+              if (invId || roomNum) {
+                addSessionHold(invId, roomNum);
+                window.dispatchEvent(
+                  new CustomEvent("travooz:booked", {
+                    detail: {
+                      inventoryIds: invId ? [invId] : [],
+                      roomNumbers: roomNum ? [roomNum] : [],
+                      source: "book",
+                    },
+                  })
+                );
+              }
+            } catch {
+              // ignore
+            }
           }
           setPendingAction(null);
           setPendingItem(null);

@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import RoomTypeInfo from "../../components/RoomTypeInfo";
@@ -58,8 +57,6 @@ const RoomTypeDetails = () => {
   const [pendingAction, setPendingAction] = useState(null); // 'add' | 'book'
   const [pendingItem, setPendingItem] = useState(null);
   const [guestInfo, setGuestInfo] = useState(null);
-  const [bookedInventoryIds, setBookedInventoryIds] = useState([]);
-  const [bookedRoomNumbers, setBookedRoomNumbers] = useState([]);
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
 
   // Persist and restore recent bookings so coming back to this page shows occupied
@@ -84,41 +81,6 @@ const RoomTypeDetails = () => {
     }
   };
 
-  const loadRecentForCurrent = () => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const arr = stored ? JSON.parse(stored) : [];
-      const now = Date.now();
-      const weekMs = 7 * 24 * 60 * 60 * 1000;
-      const filtered = arr.filter(
-        (it) =>
-          it &&
-          String(it.roomTypeId) === String(roomTypeId) &&
-          it.startDate === checkIn &&
-          it.endDate === checkOut &&
-          now - (it.ts || 0) < weekMs
-      );
-      const ids = Array.from(
-        new Set(
-          filtered
-            .map((it) => it.inventoryId)
-            .filter((v) => v !== null && v !== undefined)
-        )
-      );
-      const nums = Array.from(
-        new Set(
-          filtered
-            .map((it) => it.roomNumber)
-            .filter((v) => v !== null && v !== undefined)
-        )
-      );
-      setBookedInventoryIds(ids);
-      setBookedRoomNumbers(nums);
-    } catch {
-      // ignore
-    }
-  };
-
   useEffect(() => {
     // Prefill dates if passed from previous page and auto-submit
     const ci = fromState.checkIn ? toISODate(fromState.checkIn) : "";
@@ -131,14 +93,6 @@ const RoomTypeDetails = () => {
       setShowAvailabilityModal(true); // Auto-open modal when dates provided
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Reload recent bookings for this room type and date range
-  useEffect(() => {
-    if (roomTypeId && checkIn && checkOut) {
-      loadRecentForCurrent();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomTypeId, checkIn, checkOut, submitted]);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -158,36 +112,6 @@ const RoomTypeDetails = () => {
       document.body.style.overflow = "unset";
     };
   }, [showAvailabilityModal]);
-
-  // Listen for global booking events (e.g., booked via cart) and update local state
-  useEffect(() => {
-    const handleBooked = (e) => {
-      try {
-        const ids = Array.isArray(e?.detail?.inventoryIds)
-          ? e.detail.inventoryIds
-          : [];
-        const nums = Array.isArray(e?.detail?.roomNumbers)
-          ? e.detail.roomNumbers
-          : [];
-        if (ids.length > 0 || nums.length > 0) {
-          setBookedInventoryIds((prev) => {
-            const set = new Set(prev);
-            ids.forEach((id) => set.add(id));
-            return Array.from(set);
-          });
-          setBookedRoomNumbers((prev) => {
-            const set = new Set(prev);
-            nums.forEach((n) => set.add(n));
-            return Array.from(set);
-          });
-        }
-      } catch {
-        // ignore
-      }
-    };
-    window.addEventListener("travooz:booked", handleBooked);
-    return () => window.removeEventListener("travooz:booked", handleBooked);
-  }, []);
 
   // Validate date range
   useEffect(() => {
@@ -417,6 +341,7 @@ const RoomTypeDetails = () => {
                   endDate={checkOut}
                   onAddToCart={handleAddToCart}
                   onBookNow={handleBookNow}
+                  enablePolling={showAvailabilityModal}
                 />
               </div>
             </div>
@@ -466,12 +391,6 @@ const RoomTypeDetails = () => {
           const invId = bookingItem?.metadata?.inventoryId;
           const roomNum = bookingItem?.metadata?.roomNumber;
           if (invId || roomNum) {
-            setBookedInventoryIds((prev) =>
-              invId && !prev.includes(invId) ? [...prev, invId] : prev
-            );
-            setBookedRoomNumbers((prev) =>
-              roomNum && !prev.includes(roomNum) ? [...prev, roomNum] : prev
-            );
             // Persist to storage so returning to this page shows it occupied
             addRecentBooking({
               roomTypeId,
